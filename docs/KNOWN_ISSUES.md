@@ -40,3 +40,4 @@ Updated 2026-11-20. Severity: Critical / High / Medium / Low. Close an item only
 | KI-008 (closed) | Dashboard CSP used `'unsafe-inline'` for scripts | Per-request nonce CSP from `src/proxy.ts` with `'strict-dynamic'`; E2E asserts no `unsafe-inline` in `script-src` (styles keep it) | 2026-11-20 |
 | R-010 | Redirect loop: revoked session with an unexpired JWT cookie passed the proxy's local check (`getClaims`) but failed the page's server check (`getUser`) | Proxy now uses `getUser` (found by the stack E2E on mobile WebKit) | 2026-11-20 |
 | R-011 | E2E `getByRole('alert')` matched Next.js's route announcer too | Tests target the form error element | 2026-11-20 |
+| R-012 | Phase 2 security review findings F1-F5 (membership without consent, mutable `created_by`/`public_id`, cross-session checkpoint uploads, unlimited upload registrations) | Migration `20261120000300_security_hardening.sql` + `security-review.test.ts` | 2026-11-20 |

@@ -85,3 +85,20 @@ Phase 2 additions: invitation/QR/upload RPCs with server-generated tokens (no to
 ### Previous status (2026-11-19)
 
 Implemented in foundation: RLS + helpers + tenancy tables + audit triggers + last-owner protection + parent-org enforcement + env validation that blocks service keys in public vars. Tested: see `PROJECT_MASTER.md` section 24. Not yet implemented: everything marked Phase 2+ above. No known unmitigated vulnerabilities in implemented code; open items in [`KNOWN_ISSUES.md`](KNOWN_ISSUES.md).
+
+## 10. Phase 2 backend security review (Stage 2.6, 2026-11-20)
+
+Scope: all 15 public tables, their RLS policies and grants, 20+ SECURITY DEFINER functions and RPCs, storage policies, dashboard auth. Method: Supabase security advisors (`supabase db advisors`, local stack), `supabase db lint`, manual review of every policy against the permission matrix (DATABASE_SCHEMA 4.4) and the threat model, and regression tests for every finding on PGlite and the real local stack.
+
+| ID | Finding | Severity | Fix | Evidence |
+|---|---|---|---|---|
+| F1 | Admins could insert any user id into their organization without consent, then read that user's profile through the org-mates policy | Medium | Direct membership inserts removed; memberships only via `create_organization` and `accept_invitation` (email-bound) | `security-review.test.ts` F1 |
+| F2 | `organizations.created_by` updatable by org admins | Low | Column-restricted UPDATE grant | F2/F3 tests |
+| F3 | `apartments.public_id` (used in asset paths) and `properties`/`apartments` `organization_id` updatable at privilege level (trigger blocked org moves, not `public_id`) | Low | Column-restricted UPDATE grants | F2/F3 tests, rls.test T01 |
+| F4 | A checkpoint could reference an upload of another session or organization | Medium | Trigger `check_checkpoint_upload` | F4 tests (same org, other org) |
+| F5 | Unlimited upload registrations per scan session (storage exhaustion) | Medium | Max 20 per session, session row locked during registration | F5 test |
+
+Supabase security advisors: **0 findings** before and after. Performance advisors: 11 unindexed foreign keys fixed with indexes; remaining INFO items are "unused index" on an empty database.
+
+**Result: no open Critical or High findings in implemented code.** Open items with mitigations: KI-017 (hosted email templates/site URL), KI-018 (JS-readable session cookies, mitigated by nonce CSP), KI-019 (CAPTCHA and leaked-password protection on hosted projects), KI-002/KI-003 (nothing verified on the hosted project yet). Reviewed again at the end of every phase and in Phase 11 (ASVS L2, authorized penetration test on staging).
+

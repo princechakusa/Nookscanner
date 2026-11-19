@@ -107,7 +107,7 @@ Purpose: membership, role, scope.
 - Constraint: `scope = 'properties'` only for roles manager/editor/viewer.
 - Invariant (trigger): an organization always keeps at least one `owner` (AC-05).
 - Indexes: `user_id`.
-- RLS: select if member of org; insert/update/delete need `member.manage`; a non-owner cannot grant or modify `owner` role (trigger).
+- RLS: select if member of org; update/delete need `member.manage`; a non-owner cannot grant or modify `owner` role (trigger). **No client inserts** (since `20261120000300`): rows are created only by `create_organization` and `accept_invitation`.
 
 ### 4.4 `role_permissions` (M)
 Purpose: role -> permission mapping (ADR-011). PK `(role, permission)`. Seeded by migration; readable by authenticated; no writes from clients.
@@ -253,3 +253,4 @@ PK `(property_id, user_id)`; `organization_id`, `property_id FK properties on de
 | `20261119000100_foundation.sql` | extensions, enums (foundation subset), utility triggers, profiles, organizations, members, role_permissions, property_members, properties, apartments, rooms, audit_logs, helper functions, RLS, `create_organization` RPC | Applied on PGlite and the local Supabase stack; not on the hosted project |
 | `20261120000100_invitations_qr_capture.sql` | enums capture_method, scan_status, upload_status, qr_status; `generate_token`; organization_invitations, qr_codes, scan_sessions, scan_checkpoints, media_uploads; extended `enforce_parent_org` and `audit_trigger` (strips `token`/`token_hash`); invitation, QR and upload-registration RPCs; RLS | Applied on PGlite and the local Supabase stack; not on the hosted project |
 | `20261120000200_storage.sql` | five buckets, storage path helpers, `storage.objects` policies | Applied on PGlite (shim) and the local Supabase stack; not on the hosted project |
+| `20261120000300_security_hardening.sql` | Stage 2.6 findings: no direct membership inserts, column-restricted UPDATE grants on organizations/properties/apartments, checkpoint-upload trigger, 20 uploads per session, FK indexes | Applied on PGlite and the local Supabase stack; not on the hosted project |

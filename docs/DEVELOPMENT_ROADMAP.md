@@ -25,7 +25,7 @@ Status legend: `DONE`, `IN PROGRESS`, `BLOCKED (user)`, `TODO`.
 | 1.5 Test infrastructure + CI | Vitest, PGlite, pytest/unittest, Playwright config, GitHub Actions workflow | `npm test` passes locally; workflow file valid YAML | DONE |
 | 1.6 Remote + CI activation | push to GitHub, CI green, branch protection | CI run green on GitHub | DONE: pushed by the user; CI runs 44578429531 and 44579511164 green (2026-11-19). Branch protection is an optional user action on GitHub (Blocked-on-user list) |
 
-## Phase 2: Backend and database - IN PROGRESS
+## Phase 2: Backend and database - DONE locally (2026-11-20); hosted verification BLOCKED (user: `db push`)
 | Stage | Tasks | Acceptance criteria | Status |
 |---|---|---|---|
 | 2.1 Supabase projects | link staging project, apply migrations, configure Auth (confirmations, password policy, redirect URLs, SMTP) | `supabase db push` succeeds on staging; auth emails delivered | PARTIAL: project linked (by the user); config validated with CLI 3.2.0; all migrations apply on the local stack. `db push` to the hosted project and hosted Auth settings: BLOCKED (user) |
@@ -33,7 +33,7 @@ Status legend: `DONE`, `IN PROGRESS`, `BLOCKED (user)`, `TODO`.
 | 2.3 Storage | buckets + storage RLS policies | upload tests: own org allowed, other org denied, anon denied | DONE (Storage API tests on the local real stack; hosted pending 2.1) |
 | 2.4 Auth flows | signup, verify, login, reset, logout in dashboard | E2E auth tests pass on staging (local stack until hosted is migrated) | DONE on the local stack (12/12 E2E: signup, email confirm, sign in/out, reset, open-redirect and enumeration checks); hosted run pending 2.1 |
 | 2.5 DB tests on real stack | run the RLS suites on real Supabase (ADR-013: the same Vitest suites on PGlite and on the local stack, instead of a pgTAP port) | all pass in CI with Docker | DONE locally (64/64); CI job `database-stack` added, first green GitHub run pending the next push |
-| 2.6 Backend tests + audit | security review of policies | no Critical/High open | TODO (next) |
+| 2.6 Backend tests + audit | security review of policies | no Critical/High open | DONE: 5 findings (3 Medium, 2 Low) fixed and regression-tested; Supabase security advisors 0 findings; no Critical/High open (SECURITY.md section 10) |
 
 ## Phase 3: Design system and frontend foundation
 | 3.1 Tokens -> Tailwind theme + CSS vars in both apps | tokens consumed; contrast test passes |

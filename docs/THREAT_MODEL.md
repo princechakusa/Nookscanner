@@ -42,7 +42,7 @@ Version 1.0 (2026-11-19). Method: STRIDE per asset/boundary. Severity: Critical 
 | T13 | T | Stored XSS through instruction Markdown | High | Sanitized rendering allowlist, CSP | Designed (Phase 8) |
 | T14 | R | Manager denies publishing incorrect content | Low | Audit logs for publish/edit | Partially (audit trigger exists) |
 | T15 | I | Personal information visible in published scan | High | Capture guidance, pre-publish confirmation, crop/blur tool (Later) | Designed |
-| T16 | S | Account takeover via credential stuffing | High | Supabase rate limits, CAPTCHA, leaked password protection, MFA for admins | Designed (Phase 2/11) |
+| T16 | S | Account takeover via credential stuffing | High | Supabase rate limits, CAPTCHA, leaked password protection, MFA for admins | Partially: password policy + Auth rate limits + server-verified sessions (Stage 2.4); CAPTCHA/leaked-password on hosted (KI-019); MFA Phase 11 |
 | T17 | D | Guest-events flooding analytics | Medium | Per-session rate limit, batch size limits, schema validation | Designed |
 | T18 | I | Platform admin browsing tenant data without consent | Medium | Support grants with expiry + audit | Designed (Phase 10) |
 | T19 | T | Audit log tampering | High | No client write policies; update/delete revoked | Mitigated in foundation |
@@ -51,6 +51,13 @@ Version 1.0 (2026-11-19). Method: STRIDE per asset/boundary. Severity: Critical 
 | T22 | S | Invitation token stolen from the database, logs or a forwarded email and used by someone else | High | Only SHA-256 stored; token never in audit logs; acceptance requires the signed-in email to match; 7-day expiry; single use; revocable; uniform NOT_FOUND | Mitigated (Stage 2.2, tested on PGlite + real stack) |
 | T23 | T | Member uploads arbitrary files or overwrites another member's footage in the org prefix | High | Storage insert needs a pending registration by the same user; MIME allowlist; no member update/delete | Mitigated (Stage 2.3, Storage API tests) |
 | T24 | I | Capture metadata leaks a home's location | Medium | `device_info` rejects location keys; capture app must not record GPS (Phase 5) | Partially (DB constraint) |
+| T25 | I | Org admin adds an arbitrary user to their org without consent to read the victim's profile | Medium | Memberships only via `create_organization` / email-bound `accept_invitation` | Mitigated (Stage 2.6, F1) |
+| T26 | T | Client changes immutable columns (`created_by`, `public_id`, `organization_id`) | Low | Column-restricted UPDATE grants + triggers | Mitigated (Stage 2.6, F2/F3) |
+| T27 | T | Checkpoint links to another session's or tenant's upload | Medium | Trigger check | Mitigated (Stage 2.6, F4) |
+| T28 | D | Mass upload registrations exhaust storage | Medium | 20 registrations per session; per-org quotas Phase 5 | Partially (Stage 2.6, F5) |
+| T29 | S | Open redirect after sign-in used for phishing | Medium | `safeNextPath` allows same-origin relative paths only; E2E test | Mitigated (Stage 2.4) |
+| T30 | I | Account enumeration through sign-up, sign-in or reset responses | Medium | Uniform responses; Supabase fake-success sign-up | Mitigated (Stage 2.4, E2E) |
+| T31 | T | Mail scanners consume one-time confirmation/reset links | Low | Token used only on POST from `/auth/confirm` | Mitigated (Stage 2.4) |
 
 ## 4. Residual risks accepted for the pilot
 

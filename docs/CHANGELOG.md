@@ -2,6 +2,16 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 2.6 backend security review (Phase 2 complete locally)
+
+### Changed
+- Migration `20261120000300_security_hardening.sql`: memberships only through RPCs, column-restricted UPDATE grants, checkpoint-upload ownership trigger, 20 uploads per scan session, 11 FK indexes.
+- `supabase/tests/security-review.test.ts` (7 tests); membership fixtures seeded as the platform.
+
+### Test results (local)
+- DB on PGlite: 66 passed (+5 stack-only skipped). DB on the real local stack: 71 passed.
+- Supabase security advisors: 0 findings; `db lint`: no errors. `npm run test:e2e:stack`: 12 passed. lint/format: pass.
+
 ## 2026-11-20: Stage 2.4 dashboard auth flows
 
 ### Added

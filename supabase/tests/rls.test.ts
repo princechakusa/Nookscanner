@@ -69,22 +69,23 @@ beforeAll(async () => {
     )
   ).id;
 
-  await asUser(db, u.ownerA, async (tx) => {
-    for (const [user, role] of [
-      [u.adminA, 'admin'],
-      [u.managerA, 'manager'],
-      [u.editorA, 'editor'],
-      [u.viewerA, 'viewer'],
-    ] as const) {
-      await tx.query(
-        `insert into public.organization_members (organization_id, user_id, role) values ($1, $2, $3)`,
-        [orgA, user, role],
-      );
-    }
-    await tx.query(
-      `insert into public.organization_members (organization_id, user_id, role, scope) values ($1, $2, 'manager', 'properties')`,
-      [orgA, u.scopedA],
+  // Memberships are created by accept_invitation in production; seeded here as the platform.
+  for (const [user, role] of [
+    [u.adminA, 'admin'],
+    [u.managerA, 'manager'],
+    [u.editorA, 'editor'],
+    [u.viewerA, 'viewer'],
+  ] as const) {
+    await db.query(
+      `insert into public.organization_members (organization_id, user_id, role) values ($1, $2, $3)`,
+      [orgA, user, role],
     );
+  }
+  await db.query(
+    `insert into public.organization_members (organization_id, user_id, role, scope) values ($1, $2, 'manager', 'properties')`,
+    [orgA, u.scopedA],
+  );
+  await asUser(db, u.ownerA, async (tx) => {
     propA1 = (
       await one(
         tx.query<{ id: string }>(
@@ -238,7 +239,7 @@ describe('tenant isolation (T01)', () => {
         ),
       ),
     );
-    expect(msg).toMatch(/row-level security/);
+    expect(msg).toMatch(/row-level security|permission denied/);
   });
 
   it('cannot move a property to another organization', async () => {
@@ -247,7 +248,7 @@ describe('tenant isolation (T01)', () => {
         tx.query(`update public.properties set organization_id = $1 where id = $2`, [orgB, propA1]),
       ),
     );
-    expect(msg).toMatch(/cannot be changed|row-level security/);
+    expect(msg).toMatch(/cannot be changed|row-level security|permission denied/);
   });
 });
 
@@ -307,7 +308,7 @@ describe('role boundaries', () => {
         ),
       ),
     );
-    expect(member).toMatch(/row-level security/);
+    expect(member).toMatch(/row-level security|permission denied/);
   });
 
   it('nobody can publish by setting status directly', async () => {

@@ -95,22 +95,23 @@ beforeAll(async () => {
   const insertId = (tx: Parameters<Parameters<typeof asUser>[2]>[0], sql: string, p: unknown[]) =>
     one(tx.query<{ id: string }>(sql, p)).then((r) => r.id);
 
-  await asUser(db, u.ownerA, async (tx) => {
-    for (const [user, role] of [
-      [u.adminA, 'admin'],
-      [u.managerA, 'manager'],
-      [u.editorA, 'editor'],
-      [u.viewerA, 'viewer'],
-    ] as const) {
-      await tx.query(
-        `insert into public.organization_members (organization_id, user_id, role) values ($1, $2, $3)`,
-        [orgA, user, role],
-      );
-    }
-    await tx.query(
-      `insert into public.organization_members (organization_id, user_id, role, scope) values ($1, $2, 'manager', 'properties')`,
-      [orgA, u.scopedA],
+  // Memberships are created by accept_invitation in production; seeded here as the platform.
+  for (const [user, role] of [
+    [u.adminA, 'admin'],
+    [u.managerA, 'manager'],
+    [u.editorA, 'editor'],
+    [u.viewerA, 'viewer'],
+  ] as const) {
+    await db.query(
+      `insert into public.organization_members (organization_id, user_id, role) values ($1, $2, $3)`,
+      [orgA, user, role],
     );
+  }
+  await db.query(
+    `insert into public.organization_members (organization_id, user_id, role, scope) values ($1, $2, 'manager', 'properties')`,
+    [orgA, u.scopedA],
+  );
+  await asUser(db, u.ownerA, async (tx) => {
     propA1 = await insertId(
       tx,
       `insert into public.properties (organization_id, name) values ($1, 'P1') returning id`,
