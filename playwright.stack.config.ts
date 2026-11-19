@@ -1,0 +1,27 @@
+import { defineConfig, devices } from '@playwright/test';
+
+/**
+ * E2E tests that need the local Supabase stack (dashboard auth flows, Stage 2.4).
+ * Started by scripts/e2e-stack.mjs, which injects the local stack's public URL and anon key.
+ * The dashboard runs as a production build on http://localhost:3000 (the Auth site_url).
+ */
+export default defineConfig({
+  testDir: 'tests/e2e-stack',
+  fullyParallel: false,
+  workers: 1,
+  forbidOnly: !!process.env.CI,
+  retries: 0,
+  reporter: process.env.CI ? 'github' : 'list',
+  timeout: 60_000,
+  use: { baseURL: 'http://localhost:3000', trace: 'retain-on-failure' },
+  projects: [
+    { name: 'desktop-chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'mobile-webkit', use: { ...devices['iPhone 15'] } },
+  ],
+  webServer: {
+    command: 'npm run build -w @nookscanner/dashboard && npm run start -w @nookscanner/dashboard',
+    url: 'http://localhost:3000/login',
+    reuseExistingServer: false,
+    timeout: 240_000,
+  },
+});

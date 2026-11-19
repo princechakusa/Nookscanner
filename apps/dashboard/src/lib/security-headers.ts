@@ -1,7 +1,8 @@
 /**
  * HTTP security headers for the manager dashboard (docs/SECURITY.md section 6).
- * The CSP will move to per-request nonces when authenticated pages land (Phase 2/3);
- * 'unsafe-inline' for scripts is allowed only in development (needed by the dev overlay).
+ * Static headers are set in next.config.ts. The Content-Security-Policy is set per request by
+ * src/proxy.ts with a fresh nonce, so production scripts need no 'unsafe-inline' (KI-008).
+ * Styles keep 'unsafe-inline' (Next.js/React inline style attributes); no user HTML is rendered.
  */
 export interface Header {
   key: string;
@@ -11,14 +12,19 @@ export interface Header {
 export function contentSecurityPolicy({
   isDev,
   supabaseUrl,
+  nonce,
 }: {
   isDev: boolean;
   supabaseUrl?: string;
+  nonce?: string;
 }): string {
   const supabase = supabaseUrl ? ` ${supabaseUrl} ${supabaseUrl.replace(/^http/, 'ws')}` : '';
+  const scripts = nonce
+    ? `'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}`
+    : `'self'${isDev ? " 'unsafe-inline' 'unsafe-eval'" : ''}`;
   const directives: Record<string, string> = {
     'default-src': "'self'",
-    'script-src': isDev ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'",
+    'script-src': scripts,
     'style-src': "'self' 'unsafe-inline'",
     'img-src': "'self' data: blob:",
     'font-src': "'self'",
@@ -35,12 +41,9 @@ export function contentSecurityPolicy({
     .join('; ');
 }
 
+/** Static headers (everything except the per-request CSP). */
 export function securityHeaders({ isDev }: { isDev: boolean }): Header[] {
   const headers: Header[] = [
-    {
-      key: 'Content-Security-Policy',
-      value: contentSecurityPolicy({ isDev, supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL }),
-    },
     { key: 'X-Content-Type-Options', value: 'nosniff' },
     { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
     { key: 'X-Frame-Options', value: 'DENY' },
@@ -57,4 +60,11 @@ export function securityHeaders({ isDev }: { isDev: boolean }): Header[] {
     });
   }
   return headers;
+}
+
+/** 128-bit random nonce, base64. */
+export function createNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes));
 }

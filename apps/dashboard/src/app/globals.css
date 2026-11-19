@@ -59,3 +59,93 @@ body {
   color: var(--nt-color-neutral-muted);
   font-size: var(--nt-text-sm);
 }
+
+.nt-auth-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+.nt-form {
+  display: grid;
+  gap: var(--nt-space-5);
+  margin-block: var(--nt-space-6);
+}
+
+.nt-field {
+  display: grid;
+  gap: var(--nt-space-2);
+}
+
+.nt-field label {
+  font-weight: 600;
+  font-size: var(--nt-text-sm);
+}
+
+.nt-field input {
+  font: inherit;
+  padding: var(--nt-space-3) var(--nt-space-4);
+  border: 1px solid var(--nt-color-neutral-border);
+  border-radius: var(--nt-radius-md);
+  background: var(--nt-color-neutral-surface);
+  color: var(--nt-color-neutral-ink);
+  min-height: 44px;
+}
+
+.nt-field input[aria-invalid='true'] {
+  border-color: var(--nt-color-status-danger);
+}
+
+.nt-hint {
+  margin: 0;
+  font-size: var(--nt-text-sm);
+  color: var(--nt-color-neutral-muted);
+}
+
+.nt-field-error,
+.nt-form-error {
+  margin: 0;
+  font-size: var(--nt-text-sm);
+  color: var(--nt-color-status-danger);
+}
+
+.nt-notice {
+  padding: var(--nt-space-4);
+  border-radius: var(--nt-radius-md);
+  background: var(--nt-color-neutral-canvas);
+  border: 1px solid var(--nt-color-neutral-border);
+}
+
+.nt-button {
+  font: inherit;
+  font-weight: 600;
+  min-height: 44px;
+  padding: var(--nt-space-3) var(--nt-space-6);
+  border: 0;
+  border-radius: var(--nt-radius-md);
+  background: var(--nt-color-brand-primary);
+  color: var(--nt-color-neutral-surface);
+  cursor: pointer;
+}
+
+.nt-button:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.nt-button-secondary {
+  background: transparent;
+  color: var(--nt-color-brand-primary);
+  border: 1px solid var(--nt-color-brand-primary);
+}
+
+.nt-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--nt-space-4);
+  font-size: var(--nt-text-sm);
+}
+
+.nt-links a {
+  color: var(--nt-color-brand-primary);
+}

@@ -2,6 +2,22 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 2.4 dashboard auth flows
+
+### Added
+- Dashboard: sign-up, email confirmation (`/auth/confirm`, token used on POST only), sign-in, sign-out, forgot/reset password, signed-in landing page `/app`; Next.js 16 `src/proxy.ts` (session refresh, route guard, per-request nonce CSP).
+- `packages/shared/src/auth.ts`: password policy, input schemas, open-redirect guard `safeNextPath`, non-enumerating `mapAuthError` (25 unit tests).
+- Supabase email templates (`supabase/templates`) and local auth rate limit for E2E.
+- `tests/e2e-stack/auth.spec.ts` (Mailpit-driven) and `npm run test:e2e:stack`; CI stack job runs it.
+
+### Test results (local)
+- `npm run test:e2e:stack`: 12 passed (desktop Chromium + iPhone 15 WebKit).
+- `npm test`: shared 49, design-tokens 19, dashboard 19, guest 7, database 59 (+5 stack-only skipped): all pass. `npm run test:db:stack`: 64 passed. `npm run test:e2e` (guest): 6 passed.
+- lint, format, typecheck, build (all dashboard routes dynamic + proxy), secret scan (17 files): pass.
+
+### Fixed during the stage
+R-010 (redirect loop on revoked sessions), R-011; KI-008 closed.
+
 ## 2026-11-20: Phase 1 closed; Phase 2 stages 2.2, 2.3, 2.5 (local real stack); 3D quality bar adopted
 
 ### Added

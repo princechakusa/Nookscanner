@@ -13,6 +13,7 @@ Version 1.0 (2026-11-19). **Rule: record actual results only; never fabricate ev
 | Component (React) | Vitest + Testing Library + jsdom | `apps/*/src` | yes | Implemented (guest shell) |
 | API / Edge Functions | Deno test + Vitest integration against local stack | `supabase/functions/*/test.ts` | yes | Planned Phase 2/9 |
 | E2E | Playwright (Chromium, WebKit, mobile emulation) | `tests/e2e` | yes | Implemented: 3 guest-shell smoke tests x 2 device projects |
+| E2E on the local stack | Playwright + Mailpit API (reads confirmation/reset emails) against a production build of the dashboard | `tests/e2e-stack` (`npm run test:e2e:stack`) | yes (job `database-stack`) | Implemented: 6 auth-flow tests x 2 projects (desktop Chromium, iPhone 15 WebKit) |
 | 3D tests | Playwright + canvas readiness + hotspot projection unit tests + golden screenshots on reference scene | `packages/viewer`, `tests/e2e` | partly | Phase 7 |
 | Performance | Lighthouse CI (guest), custom FPS/memory probe in viewer, WebPageTest on 4G profiles | `tests/perf` | nightly | Phase 7/11 |
 | Load | k6 against staging guest endpoints | `tests/load` | manual | Phase 11 |

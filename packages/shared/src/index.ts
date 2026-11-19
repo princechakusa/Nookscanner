@@ -4,3 +4,4 @@ export * from './env.ts';
 export * from './errors.ts';
 export * from './signing.ts';
 export * from './processing.ts';
+export * from './auth.ts';

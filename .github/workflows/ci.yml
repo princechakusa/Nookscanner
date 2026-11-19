@@ -38,7 +38,7 @@ jobs:
       - run: npm run test:e2e
 
   database-stack:
-    # Same DB suites on a real local Supabase stack (Postgres, Auth, Storage) in Docker (ADR-013).
+    # Real local Supabase stack in Docker (ADR-013): DB suites, Storage API tests, dashboard auth E2E.
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -51,5 +51,7 @@ jobs:
       - run: npx -y supabase@3.2.0 start -x studio,imgproxy,vector,logflare,edge-runtime,realtime,postgres-meta,supavisor
       - run: npx -y supabase@3.2.0 db lint --level warning --fail-on warning
       - run: npm run test:stack -w @nookscanner/database
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm run test:e2e:stack
       - if: always()
         run: npx -y supabase@3.2.0 stop --no-backup

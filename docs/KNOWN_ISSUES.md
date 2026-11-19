@@ -10,7 +10,6 @@ Updated 2026-11-20. Severity: Critical / High / Medium / Low. Close an item only
 | KI-005 | Medium | Vendor | Varjo Teleport pricing inconsistent across sources; not verified | Confirm on sign-up before the bake-off; user approval of spend | User | Open |
 | KI-006 | Low | Brand | No logo; wordmark placeholder only | Professional logo design (user decision) | User | Open |
 | KI-007 | High (before launch) | Legal | Brand "Nookscanner" (nookscanner.com) and app name "Nookscanner" (nookscanner.com): domains NOT purchased, trademarks NOT searched/cleared, no accounts | Official trademark search (USPTO/EUIPO/WIPO, classes 9/42/43) via counsel; buy domains if desired | User | Open |
-| KI-008 | Low | Security | Dashboard CSP uses `'unsafe-inline'` for scripts/styles (Next.js hydration) | Move to nonce-based CSP via middleware when auth pages land (Phase 2/3) | Dev | Open |
 | KI-009 | Low | Tooling | TypeScript pinned to 6.0.x because typescript-eslint 8.73 supports `<6.1.0`; TypeScript 7 not adopted | Re-evaluate when typescript-eslint supports TS 7 | Dev | Open |
 | KI-011 | Medium | Infra | Supabase Free plan caps uploads at 50 MB and has no backups; real walkthrough videos need Pro | Upgrade the `nookscanner` project to Pro before Phase 5 uploads (user decision, cost) | User | Open |
 | KI-012 | Low | Mobile | Nookscanner app is a skeleton; dependencies not installed or built | Phase 5 | Dev | Open |
@@ -18,6 +17,10 @@ Updated 2026-11-20. Severity: Critical / High / Medium / Low. Close an item only
 | KI-014 | Medium | 3D quality | No real footage from any device yet; quality-bar targets (3D_QUALITY_BAR.md) are uncalibrated, and the other-device test (roadmap 6.4) needs an Android and an older-iPhone walkthrough | User supplies pilot iPhone footage plus one Android and one older-iPhone video | User | Open |
 | KI-015 | Low | Storage | Supabase Free caps any single upload at 50 MB; the `raw-footage` bucket deliberately inherits the project limit, so real walkthroughs cannot upload until Pro (see KI-011) | Upgrade to Pro, then set the project upload limit (the 10 GiB pilot cap is enforced in `media_uploads`) | User | Open |
 | KI-016 | Low | Tooling | Local stack uses ports 56520-56583 (other projects' stacks occupy 543xx). Local `.env.local` files must point to `http://127.0.0.1:56521` when testing against the local stack | Documented in `.env.example` and DEPLOYMENT | Dev | Open (by design) |
+| KI-017 | Medium | Auth | Hosted project still uses default email templates and site URL; our links need the templates in `supabase/templates` and site URL = the dashboard host | With the hosted migration: set site URL/redirects and paste both templates (or `supabase config push`), configure custom SMTP before real users | User + dev | Open |
+| KI-018 | Low | Security | `@supabase/ssr` session cookies are readable by JavaScript (library default, needed by the browser client) | Strict nonce CSP (no inline scripts), no user HTML rendering; revisit httpOnly-only server sessions if the browser client is not needed | Dev | Accepted (mitigated) |
+| KI-019 | Medium | Security | CAPTCHA and leaked-password protection not enabled (hosted settings; leaked-password protection is plan-dependent) | Enable on staging/production before real users (Phase 11 at the latest) | User + dev | Open |
+| KI-020 | Low | Performance | Proxy calls the Auth server (`getUser`) on every dashboard request (~1 round trip) | Acceptable for the dashboard; revisit with JWT revocation checks if latency matters | Dev | Accepted |
 
 ## Resolved
 
@@ -34,3 +37,6 @@ Updated 2026-11-20. Severity: Critical / High / Medium / Low. Close an item only
 | R-009 | Stack runs not repeatable (fixed slugs/emails on a persistent DB) | Run-unique `runId` suffix in the harness | 2026-11-20 |
 | KI-001 (closed) | Docker not running, so no local Supabase stack | Docker Desktop running; `supabase start` succeeded; all migrations applied on Postgres 17.12 image | 2026-11-20 |
 | KI-010 (closed) | CI never executed | Pushed by the user; CI green (runs 44578429531, 44579511164) | 2026-11-20 |
+| KI-008 (closed) | Dashboard CSP used `'unsafe-inline'` for scripts | Per-request nonce CSP from `src/proxy.ts` with `'strict-dynamic'`; E2E asserts no `unsafe-inline` in `script-src` (styles keep it) | 2026-11-20 |
+| R-010 | Redirect loop: revoked session with an unexpired JWT cookie passed the proxy's local check (`getClaims`) but failed the page's server check (`getUser`) | Proxy now uses `getUser` (found by the stack E2E on mobile WebKit) | 2026-11-20 |
+| R-011 | E2E `getByRole('alert')` matched Next.js's route announcer too | Tests target the form error element | 2026-11-20 |

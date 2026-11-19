@@ -13,13 +13,13 @@ Version 1.0 (2026-11-19). Threats and mitigations are analysed in [`THREAT_MODEL
 
 | Requirement | Implementation | Phase |
 |---|---|---|
-| Registration | Supabase Auth email/password; password min 10 chars, leaked-password protection (Supabase setting, verify availability on plan) | 2 |
-| Email verification | Required (`enable_confirmations = true`) before org creation | 2 |
-| Login / logout | Supabase Auth; dashboard uses `@supabase/ssr` httpOnly secure cookies; logout revokes refresh token | 2 |
-| Password reset / recovery | Supabase recovery email, PKCE flow, reset link expiry 1 h | 2 |
+| Registration | Supabase Auth email/password; password min 10 chars with lower+upper+digit (config.toml, mirrored in `packages/shared` auth schemas, enforced again by Auth); no account enumeration; leaked-password protection on the hosted project (plan-dependent, KI-019) | 2 (implemented; hosted settings pending) |
+| Email verification | Required (`enable_confirmations = true`); confirmation link handled like recovery (token hash + POST); single use | 2 (implemented) |
+| Login / logout | Supabase Auth via Next.js server actions (built-in Origin check against CSRF); `@supabase/ssr` session cookies (SameSite=Lax, Secure in production; **not httpOnly** by library default, so XSS is mitigated by the nonce CSP, KI-018); logout revokes the refresh token; the proxy verifies every request with the Auth server (`getUser`) so revoked sessions are rejected | 2 (implemented) |
+| Password reset / recovery | Recovery email with a token-hash link to `/auth/confirm` (works on any device); the token is used only on a POST (button), so mail scanners cannot consume it; same response whether or not the account exists; reset link expiry 1 h | 2 (implemented) |
 | Sessions | JWT expiry 1 h, refresh token rotation + reuse detection (Supabase settings) | 2 |
 | MFA | TOTP optional for members, required for owners/admins before production | 11 |
-| Bot protection | CAPTCHA on signup/reset in staging/production | 2 |
+| Bot protection | Supabase Auth rate limits (implemented); CAPTCHA on signup/reset in staging/production (KI-019) | 2/11 |
 | Nookscanner app | session stored in iOS Keychain via expo-secure-store | 5 |
 
 ## 3. Authorization
@@ -78,6 +78,10 @@ Version 1.0 (2026-11-19). Threats and mitigations are analysed in [`THREAT_MODEL
 - Audit: security-relevant changes recorded in `audit_logs`.
 - Legal (user action): privacy policy, terms, DPA for customers, and GDPR/UAE PDPL/Saudi PDPL applicability review by counsel before launch (pilot region to be confirmed by user).
 
-## 9. Current security status (2026-11-19)
+## 9. Current security status (2026-11-20)
+
+Phase 2 additions: invitation/QR/upload RPCs with server-generated tokens (no tokens in audit logs), path-bound storage RLS, dashboard auth flows with per-request nonce CSP (`script-src 'self' 'nonce-…' 'strict-dynamic'`, no inline scripts in production), open-redirect guard, non-enumerating auth responses. All tested on the real local Supabase stack.
+
+### Previous status (2026-11-19)
 
 Implemented in foundation: RLS + helpers + tenancy tables + audit triggers + last-owner protection + parent-org enforcement + env validation that blocks service keys in public vars. Tested: see `PROJECT_MASTER.md` section 24. Not yet implemented: everything marked Phase 2+ above. No known unmitigated vulnerabilities in implemented code; open items in [`KNOWN_ISSUES.md`](KNOWN_ISSUES.md).

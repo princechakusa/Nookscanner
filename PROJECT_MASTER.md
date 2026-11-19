@@ -131,37 +131,40 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 
 ## 24. Current project status
 
-**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2: stages 2.2 (full pre-Phase-5 schema), 2.3 (storage) and 2.5 (DB tests on a real Supabase stack) done on the **local** Supabase stack; 2.1 is partial (project linked by the user; `db push` to the hosted project needs the user's go-ahead). **Next stage: 2.4 (dashboard auth flows: signup, verify, login, reset, logout) against the local stack, then 2.6 (policy security review), then Phase 3.** The binding 3D quality bar (`docs/3D_QUALITY_BAR.md`, ADR-014) is wired into Phases 5, 6, 7 and 12.
+**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2: stages 2.2 (full pre-Phase-5 schema), 2.3 (storage), 2.4 (dashboard auth flows) and 2.5 (DB tests on a real Supabase stack) done on the **local** Supabase stack; 2.1 is partial (project linked by the user; `db push` and hosted Auth settings need the user's go-ahead). **Next stage: 2.6 (backend security review of policies), then Phase 3 (design system and frontend foundation).** The binding 3D quality bar (`docs/3D_QUALITY_BAR.md`, ADR-014) is wired into Phases 5, 6, 7 and 12.
 
 **Implemented**
 - Full documentation set (this file + 18 docs incl. the 3D quality bar).
 - Monorepo tooling, env separation (`.env.example` public values; git-ignored `.env.local` in `apps/dashboard` and `apps/guest` containing only the hosted project's public URL and publishable key).
 - Shared packages, design tokens, dashboard and guest skeletons, Nookscanner skeleton (not installed), worker contract package.
 - Migrations: `20261119000100_foundation.sql`, `20261120000100_invitations_qr_capture.sql`, `20261120000200_storage.sql`. Applied on PGlite and on the local Supabase stack (Postgres 17.12); **not applied to the hosted project**.
-- Dual-target DB tests (PGlite + local stack) incl. Storage API tests; CI jobs `verify` and `database-stack`.
+- Dual-target DB tests (PGlite + local stack) incl. Storage API tests; CI jobs `verify` and `database-stack` (the latter also runs the auth E2E).
+- Dashboard auth: sign-up, email confirmation, sign-in/out, password reset, `/app` landing; proxy with session refresh, route guard and per-request nonce CSP; email templates in `supabase/templates`.
 - Local Supabase stack config validated with CLI 3.2.0 on ports 565xx.
 
 **Tests performed (real results, 2026-11-20, local Windows 11, Node 24.15.0, Python 3.12.10, Docker Desktop, Supabase CLI 3.2.0)**
 | Command | Result |
 |---|---|
 | `npm run lint` / `format:check` / `typecheck` | pass |
-| `npm test` | all workspaces pass (shared 24, design-tokens 19, dashboard 4, guest 7, database on PGlite 59 + 5 stack-only skipped) |
+| `npm test` | all workspaces pass (shared 49, design-tokens 19, dashboard 19, guest 7, database on PGlite 59 + 5 stack-only skipped) |
+| `npm run test:e2e:stack` (dashboard auth on the local stack) | 12 passed (desktop Chromium + iPhone 15 WebKit) |
+| `npm run test:e2e` (guest) | 6 passed |
 | `npm run test:db:stack` (real local Supabase) | 64 passed, 0 failed; repeated run also 64/64 |
 | `supabase db lint --level warning` (local) | no schema errors |
 | `npm run build` | dashboard + guest built; guest initial JS 70.18 kB gzip |
-| `npm run check:secrets` | 14 files, no privileged keys |
+| `npm run check:secrets` | 17 files, no privileged keys |
 | `npm run test:worker` | 14 passed |
 | GitHub CI (previous push) | green: runs 44578429531, 44579511164 |
 
-Failures found and fixed: R-005..R-009 in [`KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md).
+Failures found and fixed: R-005..R-011 in [`KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md).
 
-**Not tested / not done:** anything on the hosted Supabase project (nothing migrated there); the new CI job `database-stack` on GitHub (runs on the next push); dashboard auth flows (2.4); Playwright E2E not re-run this session (no guest/dashboard UI changes); no 3D work yet, so **no 3D quality evidence exists**.
+**Not tested / not done:** anything on the hosted Supabase project (nothing migrated there); the new CI job `database-stack` on GitHub (runs on the next push); auth on the hosted project (templates/site URL not set, KI-017); CAPTCHA/leaked-password protection (KI-019); no 3D work yet, so **no 3D quality evidence exists**.
 
 **Git:** `main` tracks `origin/main`. This session's work is committed locally (stage commits); **not pushed** (push needs the user's approval).
 
 ### Blocked on user (exact actions)
 1. **Approve pushing** the new local commits to `origin/main` (`git push`), so CI (including the new `database-stack` job) runs on GitHub.
-2. **Apply migrations to the hosted project:** from the repo root run `npx supabase@3.2.0 db push --dry-run`, check it lists the 3 migrations, then `npx supabase@3.2.0 db push` (or tell me to run it). Then mirror Auth settings in the hosted dashboard (DEPLOYMENT section 1).
+2. **Apply migrations to the hosted project:** from the repo root run `npx supabase@3.2.0 db push --dry-run`, check it lists the 3 migrations, then `npx supabase@3.2.0 db push` (or tell me to run it). Then in the hosted dashboard set the site URL, paste the two email templates from `supabase/templates`, and mirror the Auth settings (DEPLOYMENT section 1); custom SMTP before real users.
 3. **Optional:** enable branch protection on `main` in GitHub (require CI).
 4. **Before Phase 5:** upgrade the Supabase project to Pro (uploads over 50 MB, backups; KI-011/KI-015); enroll in the Apple Developer Program for Nookscanner Capture device builds.
 5. **Real footage (3D quality bar):** a walkthrough of the pilot apartment from the iPhone 16 Pro Max, **plus real footage from other phones: one Android walkthrough and one older-iPhone walkthrough** (roadmap 6.4); ideally more apartment layouts later (studio, multi-bedroom, dark rooms, glass). Do not commit footage; share via a private location.
@@ -173,3 +176,4 @@ Failures found and fixed: R-005..R-009 in [`KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.
 |---|---|
 | 2026-11-19 | Phase 0 research and full documentation; Phase 1 foundation implemented and tested; Nookscanner name adopted; Supabase project and GitHub repo details received; remote added; foundation staged, not committed (no git identity configured). Commit message to use: `chore: Phase 0 docs and Phase 1 foundation (monorepo, apps, DB tenancy + RLS, tests)` |
 | 2026-11-20 | Found that the user had set the git identity, committed, pushed (CI green) and linked the Supabase project; Phase 1 closed. Docker available: local Supabase stack started (own 565xx ports). Stage 2.2 schema + RPCs, 2.3 storage buckets/policies, 2.5 dual-target DB tests (64/64 on real local Supabase). Adopted the binding 3D quality bar (ADR-014) and the other-device stage 6.4. |
+| 2026-11-20 (cont.) | Stage 2.4: dashboard auth flows with nonce CSP and proxy guard; 12/12 stack E2E; fixed a redirect loop on revoked sessions (R-010); KI-008 closed. |
