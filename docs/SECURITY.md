@@ -100,5 +100,9 @@ Scope: all 15 public tables, their RLS policies and grants, 20+ SECURITY DEFINER
 
 Supabase security advisors: **0 findings** before and after. Performance advisors: 11 unindexed foreign keys fixed with indexes; remaining INFO items are "unused index" on an empty database.
 
+| F6 | Hosted advisor: 13 internal SECURITY DEFINER helpers (and `generate_token`) callable via `/rest/v1/rpc`, e.g. `shares_org_with(uuid)` and `storage_path_apartment(text)` as existence oracles | Medium | Helpers moved to schema `private` (not exposed by PostgREST; `authenticated` keeps usage for policy evaluation, `anon` none) | migrations.test API-surface tests; hosted smoke (helpers return PGRST202) |
+
+Hosted verification (2026-11-20): advisors show only the 7 intended RPCs (`create_organization`, `create_invitation`, `accept_invitation`, `revoke_invitation`, `create_qr_code`, `revoke_qr_code`, `register_media_upload`), each checking `auth.uid()` and permissions internally: **accepted by design**. Anonymous API smoke test 30/30.
+
 **Result: no open Critical or High findings in implemented code.** Open items with mitigations: KI-017 (hosted email templates/site URL), KI-018 (JS-readable session cookies, mitigated by nonce CSP), KI-019 (CAPTCHA and leaked-password protection on hosted projects), KI-002/KI-003 (nothing verified on the hosted project yet). Reviewed again at the end of every phase and in Phase 11 (ASVS L2, authorized penetration test on staging).
 

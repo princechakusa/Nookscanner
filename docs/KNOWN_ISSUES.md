@@ -4,8 +4,7 @@ Updated 2026-11-20. Severity: Critical / High / Medium / Low. Close an item only
 
 | ID | Severity | Area | Issue | Mitigation / next step | Owner | Status |
 |---|---|---|---|---|---|---|
-| KI-002 | Low | Testing | DB suites now also pass on the real local Supabase stack (64/64, ADR-013), but not yet against the hosted project, and the CI `database-stack` job has not had its first GitHub run | After `db push` (KI-003), run the suites' read-only checks against hosted staging; confirm the CI job is green after the next push | Dev | Open (reduced from Medium) |
-| KI-003 | Medium | Infra | No migration applied to the hosted project (ref nfcnckwjrwpofkrzribd): `migration list --remote` shows 3 local, 0 remote (2026-11-20). Project is linked | User authorizes `npx supabase@3.2.0 db push` (dry run first) | User | Open |
+| KI-002 | Low | Testing | Full authenticated RLS suites run on PGlite and the real local stack (73/73), but on the hosted project only read-only catalog checks and anonymous API probes run (30/30): creating test users there needs the service-role key or working confirmation emails | After KI-017 (site URL, templates, SMTP), run the dashboard auth E2E against hosted staging with a dedicated test inbox; never use the service-role key from this machine | User + dev | Open |
 | KI-004 | Medium | Legal | COLMAP third-party dependency licences (Ceres, PoseLib, SiftGPU, VLFeat) not yet reviewed | Review when building the worker container (Phase 6.1) | Dev | Open |
 | KI-005 | Medium | Vendor | Varjo Teleport pricing inconsistent across sources; not verified | Confirm on sign-up before the bake-off; user approval of spend | User | Open |
 | KI-006 | Low | Brand | No logo; wordmark placeholder only | Professional logo design (user decision) | User | Open |
@@ -41,3 +40,5 @@ Updated 2026-11-20. Severity: Critical / High / Medium / Low. Close an item only
 | R-010 | Redirect loop: revoked session with an unexpired JWT cookie passed the proxy's local check (`getClaims`) but failed the page's server check (`getUser`) | Proxy now uses `getUser` (found by the stack E2E on mobile WebKit) | 2026-11-20 |
 | R-011 | E2E `getByRole('alert')` matched Next.js's route announcer too | Tests target the form error element | 2026-11-20 |
 | R-012 | Phase 2 security review findings F1-F5 (membership without consent, mutable `created_by`/`public_id`, cross-session checkpoint uploads, unlimited upload registrations) | Migration `20261120000300_security_hardening.sql` + `security-review.test.ts` | 2026-11-20 |
+| KI-003 (closed) | Migrations not applied to the hosted project | All 5 applied 2026-11-20 with user approval; `migration list --remote` matches local | 2026-11-20 |
+| R-013 | Hosted advisor (newer than the local image) flagged 20 SECURITY DEFINER functions callable as REST RPCs, incl. internal helpers usable as oracles (`shares_org_with`, `storage_path_apartment`) | Migration `20261120000400_private_helpers.sql` moves 14 helpers to the non-exposed `private` schema; 7 intended RPCs remain (accepted); tests assert the exact API surface | 2026-11-20 |

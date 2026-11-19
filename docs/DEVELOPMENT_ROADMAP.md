@@ -25,10 +25,10 @@ Status legend: `DONE`, `IN PROGRESS`, `BLOCKED (user)`, `TODO`.
 | 1.5 Test infrastructure + CI | Vitest, PGlite, pytest/unittest, Playwright config, GitHub Actions workflow | `npm test` passes locally; workflow file valid YAML | DONE |
 | 1.6 Remote + CI activation | push to GitHub, CI green, branch protection | CI run green on GitHub | DONE: pushed by the user; CI runs 44578429531 and 44579511164 green (2026-11-19). Branch protection is an optional user action on GitHub (Blocked-on-user list) |
 
-## Phase 2: Backend and database - DONE locally (2026-11-20); hosted verification BLOCKED (user: `db push`)
+## Phase 2: Backend and database - DONE (2026-11-20); hosted Auth settings BLOCKED (user)
 | Stage | Tasks | Acceptance criteria | Status |
 |---|---|---|---|
-| 2.1 Supabase projects | link staging project, apply migrations, configure Auth (confirmations, password policy, redirect URLs, SMTP) | `supabase db push` succeeds on staging; auth emails delivered | PARTIAL: project linked (by the user); config validated with CLI 3.2.0; all migrations apply on the local stack. `db push` to the hosted project and hosted Auth settings: BLOCKED (user) |
+| 2.1 Supabase projects | link staging project, apply migrations, configure Auth (confirmations, password policy, redirect URLs, SMTP) | `supabase db push` succeeds on staging; auth emails delivered | PARTIAL: all 5 migrations applied to the hosted project (user-approved); hosted lint clean, advisors accepted, anon smoke 30/30. Remaining: site URL, email templates, SMTP, CAPTCHA, leaked-password protection in the hosted dashboard: BLOCKED (user); then auth emails can be verified |
 | 2.2 Full schema | migrations for remaining tables (DATABASE_SCHEMA D items needed before Phase 5: invitations, qr_codes, scan_sessions, scan_checkpoints, media_uploads) | migrations apply on PGlite and real Supabase; docs updated | DONE (local real stack + PGlite; hosted pending 2.1) |
 | 2.3 Storage | buckets + storage RLS policies | upload tests: own org allowed, other org denied, anon denied | DONE (Storage API tests on the local real stack; hosted pending 2.1) |
 | 2.4 Auth flows | signup, verify, login, reset, logout in dashboard | E2E auth tests pass on staging (local stack until hosted is migrated) | DONE on the local stack (12/12 E2E: signup, email confirm, sign in/out, reset, open-redirect and enumeration checks); hosted run pending 2.1 |

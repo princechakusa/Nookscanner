@@ -2,6 +2,12 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Hosted rollout of the database (user-approved)
+
+- `db push --remote`: 5 migrations applied to `nfcnckwjrwpofkrzribd`. New migration `20261120000400_private_helpers.sql` after the hosted advisor flagged API-callable helpers (R-013).
+- `scripts/hosted-smoke.mjs` (`npm run test:hosted:smoke`): 30/30 anonymous read-only checks on hosted. Hosted read-only catalog checks: 15 tables with RLS, 0 anon grants, 0 unpinned definer functions. DB suites: PGlite 68 (+5 skipped), local stack 73/73.
+- Commits pushed to `origin/main` incl. `docs/design` mockups.
+
 ## 2026-11-20: Stage 2.6 backend security review (Phase 2 complete locally)
 
 ### Changed

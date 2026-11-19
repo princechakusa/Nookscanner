@@ -1,6 +1,6 @@
 # Nookscanner: Deployment
 
-Version 1.0 (2026-11-19). **Nothing has been deployed yet.** No command below that changes a hosted service is run without the user's authorization.
+Version 1.1 (2026-11-20). **Database migrations are applied to the hosted project (user-approved, 2026-11-20); nothing else is deployed.** No command below that changes a hosted service is run without the user's authorization.
 
 ## 1. Hosted Supabase project
 
@@ -20,7 +20,7 @@ From the repository root (`C:\Users\Dev Prince\Projects\nooktour`):
 3. `npx supabase@3.2.0 link --project-ref nfcnckwjrwpofkrzribd` (asks for the database password; type it in the terminal, never in chat).
 4. Preview: `npx supabase@3.2.0 db push --dry-run`.
 5. After approval: `npx supabase@3.2.0 db push` (applies `20261119000100_foundation.sql`, `20261120000100_invitations_qr_capture.sql`, `20261120000200_storage.sql`; all three verified on the local stack 2026-11-20).
-   Status 2026-11-20: steps 1 and 3 done by the user (project linked); `migration list --remote` shows nothing applied yet.
+   Status 2026-11-20: all 5 migrations applied with user approval (`db push --remote`, CLI 3.2.0; dry run first). Note: CLI 3.x targets the **local** stack unless `--remote` is passed. Verification: `supabase db lint --remote` no errors; `supabase db advisors --remote`: 7 WARN for the intended RPCs only (accepted), 0 other security findings; read-only catalog checks via `supabase db query --remote --read-only` (15 tables, all RLS, 0 anon grants, 0 unpinned definer functions, 5 buckets, 1 public, 6 storage policies); `npm run test:hosted:smoke` 30/30.
 6. Verify in Studio: tables in `public` show RLS enabled; then run `npx supabase@3.2.0 db lint`.
 
 Email templates: copy `supabase/templates/confirmation.html` and `recovery.html` into Authentication > Email Templates (subjects as in `config.toml`), and set the site URL to the dashboard host (links are `{{ .SiteURL }}/auth/confirm?token_hash=...`). Auth settings to mirror in the hosted dashboard (Authentication > Settings): email confirmations on, minimum password length 10 with letters+digits, refresh token rotation on, site URL and redirect URLs for the dashboard host, custom SMTP before real users.

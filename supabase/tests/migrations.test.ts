@@ -34,10 +34,10 @@ describe('migrations', () => {
     expect(rows).toEqual([]);
   });
 
-  it('pin search_path on every SECURITY DEFINER function in public', async () => {
+  it('pin search_path on every SECURITY DEFINER function in public and private', async () => {
     const { rows } = await db.query<{ proname: string }>(`
       select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-      where n.nspname = 'public' and p.prosecdef
+      where n.nspname in ('public', 'private') and p.prosecdef
         and not exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c where c like 'search_path=%')
     `);
     expect(rows.map((r) => r.proname)).toEqual([]);
@@ -59,6 +59,32 @@ describe('migrations', () => {
         .sort();
       expect(fromDb, `role ${role}`).toEqual([...ROLE_PERMISSIONS[role]].sort());
     }
+  });
+
+  it('expose only the intended RPCs as SECURITY DEFINER functions in public (API surface)', async () => {
+    const { rows } = await db.query<{ proname: string }>(`
+      select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public' and p.prosecdef and p.prorettype <> 'trigger'::regtype
+        and has_function_privilege('authenticated', p.oid, 'execute')
+      order by 1
+    `);
+    expect(rows.map((r) => r.proname)).toEqual([
+      'accept_invitation',
+      'create_invitation',
+      'create_organization',
+      'create_qr_code',
+      'register_media_upload',
+      'revoke_invitation',
+      'revoke_qr_code',
+    ]);
+  });
+
+  it('keep internal helpers in the non-exposed private schema, unusable by anon', async () => {
+    const { rows } = await db.query<{ anon: boolean; authenticated: boolean }>(`
+      select has_schema_privilege('anon', 'private', 'usage') as anon,
+             has_schema_privilege('authenticated', 'private', 'usage') as authenticated
+    `);
+    expect(rows[0]).toEqual({ anon: false, authenticated: true });
   });
 
   it('create a profile automatically for new auth users', async () => {
