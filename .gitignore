@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+.pnp.*
+
+# Builds
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment and secrets (never commit real values; use .env.example)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+supabase/.temp/
+supabase/.branches/
+
+# Test output
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Expo / React Native
+apps/nookscanner/.expo/
+apps/nookscanner/ios/
+apps/nookscanner/android/
+
+# Media and 3D data (never commit real footage or scans)
+*.mp4
+*.mov
+*.ply
+*.sog
+*.spz
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

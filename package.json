@@ -1,0 +1,40 @@
+{
+  "name": "nooktour",
+  "private": true,
+  "description": "Nooktour: photorealistic 3D apartment guest assistant (monorepo root)",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=24.0.0",
+    "npm": ">=11.0.0"
+  },
+  "workspaces": [
+    "packages/shared",
+    "packages/design-tokens",
+    "apps/dashboard",
+    "apps/guest",
+    "supabase"
+  ],
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:db": "npm run test -w @nooktour/database",
+    "test:worker": "python -m unittest discover -s services/reconstruction/tests -t services/reconstruction -v",
+    "test:e2e": "playwright test",
+    "build": "npm run build --workspaces --if-present",
+    "check:secrets": "node scripts/check-client-secrets.mjs",
+    "ci": "npm run lint && npm run format:check && npm run typecheck && npm test && npm run build && npm run check:secrets && npm run test:worker"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "@playwright/test": "1.65.1",
+    "@types/node": "^24.19.2",
+    "eslint": "^10.15.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.10.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.73.0"
+  }
+}

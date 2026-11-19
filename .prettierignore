@@ -1,0 +1,13 @@
+node_modules
+dist
+.next
+coverage
+playwright-report
+test-results
+package-lock.json
+*.md
+*.sql
+supabase/.temp
+services/reconstruction
+apps/nookscanner
+packages/design-tokens/tokens.css

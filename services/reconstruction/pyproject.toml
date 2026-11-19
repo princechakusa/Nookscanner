@@ -1,0 +1,12 @@
+[project]
+name = "nooktour-reconstruction"
+version = "0.1.0"
+description = "Nooktour reconstruction worker: video -> COLMAP/GLOMAP poses -> gsplat 3DGS -> SOG/SPZ (ADR-004)"
+requires-python = ">=3.12"
+license = { text = "UNLICENSED" }
+# Foundation stage: stdlib only. GPU dependencies (torch, gsplat, pycolmap, ffmpeg) are added to the
+# Modal container image in Phase 6, never to this base package.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]

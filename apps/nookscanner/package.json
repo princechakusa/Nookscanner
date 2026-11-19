@@ -1,0 +1,23 @@
+{
+  "name": "@nooktour/nookscanner",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nookscanner: Nooktour's guided apartment capture app (Expo + VisionCamera). Skeleton only; NOT part of the root npm workspace install until Phase 5 (ADR-001, ADR-005).",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start --dev-client",
+    "ios": "expo run:ios",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "expo": "~58.0.26",
+    "expo-secure-store": "~58.0.0",
+    "react": "19.3.1",
+    "react-native": "*",
+    "react-native-vision-camera": "^5.2.4",
+    "tus-js-client": "^4.3.1"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3"
+  }
+}

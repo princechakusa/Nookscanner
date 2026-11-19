@@ -1,0 +1,104 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: var(--nt-color-viewer-background);
+  color: var(--nt-color-viewer-text);
+  font-family: var(--nt-font-latin);
+  -webkit-text-size-adjust: 100%;
+}
+
+:focus-visible {
+  outline: 3px solid var(--nt-color-focus);
+  outline-offset: 2px;
+}
+
+.nt-guest {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.nt-guest__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--nt-space-5) 16px;
+  padding-top: max(var(--nt-space-5), env(safe-area-inset-top));
+}
+
+.nt-guest__brand {
+  font-weight: 600;
+  font-size: var(--nt-text-lg);
+  letter-spacing: -0.01em;
+  color: var(--nt-color-brand-accent);
+}
+
+.nt-guest__lang {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 var(--nt-space-5);
+  border-radius: var(--nt-radius-pill);
+  border: 1px solid rgba(244, 241, 236, 0.3);
+  background: var(--nt-color-viewer-panel);
+  color: var(--nt-color-viewer-text);
+  font: inherit;
+  font-size: var(--nt-text-sm);
+}
+
+.nt-guest__stage {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.nt-guest__panel {
+  max-width: 420px;
+  text-align: center;
+  background: var(--nt-color-viewer-panel);
+  border-radius: var(--nt-radius-lg);
+  padding: var(--nt-space-8) var(--nt-space-7);
+}
+
+.nt-guest__panel h1 {
+  font-size: var(--nt-text-2xl);
+  line-height: var(--nt-leading-2xl);
+  font-weight: 600;
+  margin: 0 0 var(--nt-space-4);
+}
+
+.nt-guest__panel p {
+  margin: 0;
+  line-height: var(--nt-leading-md);
+  opacity: 0.85;
+}
+
+.nt-guest__spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto var(--nt-space-6);
+  border-radius: 50%;
+  border: 3px solid rgba(200, 137, 59, 0.25);
+  border-top-color: var(--nt-color-brand-accent);
+  animation: nt-spin 1s linear infinite;
+}
+
+@keyframes nt-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nt-guest__spinner {
+    animation: none;
+  }
+}
