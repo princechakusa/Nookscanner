@@ -1,4 +1,4 @@
-import { parsePublicEnv, type PublicEnv } from '@nooktour/shared';
+import { parsePublicEnv, type PublicEnv } from '@nookscanner/shared';
 
 /**
  * Public configuration for the dashboard. Throws with a clear message when misconfigured or

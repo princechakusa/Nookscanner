@@ -1,4 +1,4 @@
-# Nooktour: Threat Model
+# Nookscanner: Threat Model
 
 Version 1.0 (2026-11-19). Method: STRIDE per asset/boundary. Severity: Critical / High / Medium / Low. Review at the end of every phase and before production (Phase 11).
 

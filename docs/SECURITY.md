@@ -1,4 +1,4 @@
-# Nooktour: Security Architecture
+# Nookscanner: Security Architecture
 
 Version 1.0 (2026-11-19). Threats and mitigations are analysed in [`THREAT_MODEL.md`](THREAT_MODEL.md); test plan in [`TESTING_STRATEGY.md`](TESTING_STRATEGY.md) section 5. Security applies to **every stage** (stage gate in [`DEVELOPMENT_ROADMAP.md`](DEVELOPMENT_ROADMAP.md)).
 
@@ -69,7 +69,7 @@ Version 1.0 (2026-11-19). Threats and mitigations are analysed in [`THREAT_MODEL
 
 ## 8. Privacy
 
-- Interior recordings are the organization's data; Nooktour processes them only to provide the service.
+- Interior recordings are the organization's data; Nookscanner processes them only to provide the service.
 - Raw footage deleted 90 days after scene approval (configurable per org; pg_cron job + storage delete), PLY master kept while the apartment exists.
 - Managers are reminded during capture to remove personal items/documents and avoid filming people; guests are never filmed.
 - Published scenes are visible to anyone with the QR link: managers must confirm before publishing (checkbox: "This scan shows no personal information").

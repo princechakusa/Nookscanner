@@ -1,4 +1,4 @@
-# Nooktour: Database Schema
+# Nookscanner: Database Schema
 
 Version 1.0 (2026-11-19). Postgres on Supabase. **All schema changes are made through migrations in `supabase/migrations/`; undocumented changes are forbidden.** When a migration changes the schema, this document is updated in the same commit.
 

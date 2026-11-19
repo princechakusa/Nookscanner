@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { brand } from '@nooktour/design-tokens';
-import '@nooktour/design-tokens/tokens.css';
+import { brand } from '@nookscanner/design-tokens';
+import '@nookscanner/design-tokens/tokens.css';
 import './globals.css';
 
 export const metadata: Metadata = {

@@ -1,4 +1,4 @@
-import { brand } from '@nooktour/design-tokens';
+import { brand } from '@nookscanner/design-tokens';
 
 /**
  * Foundation placeholder. The authenticated dashboard shell (sidebar, org switcher) is built in

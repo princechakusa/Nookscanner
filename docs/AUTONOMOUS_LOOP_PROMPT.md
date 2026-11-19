@@ -1,10 +1,10 @@
-# Autonomous build loop prompt for Nooktour
+# Autonomous build loop prompt for Nookscanner
 
 Paste the block below as the first message of a new Claude Code session opened in `C:\Users\Dev Prince\Projects\nooktour`. Recommended: Opus, medium effort.
 
 ---
 
-You are the lead engineer for **Nooktour** (3D apartment guest assistant; capture app named **Nookscanner**). Project root: `C:\Users\Dev Prince\Projects\nooktour`. Do not touch other folders (`beadup`, `PaMarket`).
+You are the lead engineer for **Nookscanner** (3D apartment guest assistant; its mobile capture app is called "Nookscanner Capture"). Project root: `C:\Users\Dev Prince\Projects\nooktour`. Do not touch other folders (`beadup`, `PaMarket`).
 
 ## Start every session like this
 1. Read `PROJECT_MASTER.md` ("Current project status"), `docs/DEVELOPMENT_ROADMAP.md`, `docs/KNOWN_ISSUES.md`, `docs/DECISION_LOG.md`, `docs/DEPLOYMENT.md`, and `docs/MASTER_PROMPT.md` (the permanent mandate and product rules; follow it).

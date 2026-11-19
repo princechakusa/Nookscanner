@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { brand } from '@nooktour/design-tokens';
+import { brand } from '@nookscanner/design-tokens';
 import { detectLocale, directionOf, messages, type Locale } from './i18n.ts';
 import { parseGuestToken } from './route.ts';
 

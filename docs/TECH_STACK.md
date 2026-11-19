@@ -1,4 +1,4 @@
-# Nooktour: Technology Stack
+# Nookscanner: Technology Stack
 
 Verified: **2026-11-19** (npm registry versions read with `npm view` on that date; prices from the vendor pages linked). Each major choice has a full decision record in [`DECISION_LOG.md`](DECISION_LOG.md). 3D research detail: [`3D_TECHNOLOGY.md`](3D_TECHNOLOGY.md).
 

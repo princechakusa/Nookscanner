@@ -1,6 +1,6 @@
 /**
  * Reconstruction worker job contract v1 (docs/API_SPECIFICATION.md section 6).
- * Mirrored in services/reconstruction/nooktour_reconstruction/contract.py.
+ * Mirrored in services/reconstruction/nookscanner_reconstruction/contract.py.
  */
 import { z } from 'zod';
 

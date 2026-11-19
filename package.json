@@ -1,7 +1,7 @@
 {
-  "name": "nooktour",
+  "name": "nookscanner",
   "private": true,
-  "description": "Nooktour: photorealistic 3D apartment guest assistant (monorepo root)",
+  "description": "Nookscanner: photorealistic 3D apartment guest assistant (monorepo root)",
   "license": "UNLICENSED",
   "engines": {
     "node": ">=24.0.0",
@@ -20,7 +20,7 @@
     "format:check": "prettier --check .",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "test:db": "npm run test -w @nooktour/database",
+    "test:db": "npm run test -w @nookscanner/database",
     "test:worker": "python -m unittest discover -s services/reconstruction/tests -t services/reconstruction -v",
     "test:e2e": "playwright test",
     "build": "npm run build --workspaces --if-present",

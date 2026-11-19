@@ -1,4 +1,4 @@
-// Run with: npm run generate -w @nooktour/design-tokens (Node 24 strips TypeScript types natively).
+// Run with: npm run generate -w @nookscanner/design-tokens (Node 24 strips TypeScript types natively).
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { generateCss } from '../src/css.ts';

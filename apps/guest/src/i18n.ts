@@ -7,7 +7,7 @@ export const messages = {
     languageToggleLabel: 'Switch to Arabic',
     scanPromptTitle: 'Scan the QR code in your apartment',
     scanPromptBody:
-      'Your host placed a Nooktour code inside the apartment. Scan it with your phone camera to explore the apartment and see how everything works.',
+      'Your host placed a Nookscanner code inside the apartment. Scan it with your phone camera to explore the apartment and see how everything works.',
     loadingTitle: 'Preparing your apartment',
     loadingBody: 'Your interactive apartment guide is getting ready.',
     notConnected: 'This apartment guide is not available yet.',
@@ -17,7 +17,7 @@ export const messages = {
     languageToggleLabel: 'التبديل إلى الإنجليزية',
     scanPromptTitle: 'امسح رمز QR الموجود في شقتك',
     scanPromptBody:
-      'وضع المضيف رمز Nooktour داخل الشقة. امسحه بكاميرا هاتفك لاستكشاف الشقة ومعرفة طريقة استخدام كل شيء.',
+      'وضع المضيف رمز Nookscanner داخل الشقة. امسحه بكاميرا هاتفك لاستكشاف الشقة ومعرفة طريقة استخدام كل شيء.',
     loadingTitle: 'جارٍ تجهيز شقتك',
     loadingBody: 'دليل شقتك التفاعلي قيد التحضير.',
     notConnected: 'دليل هذه الشقة غير متاح بعد.',

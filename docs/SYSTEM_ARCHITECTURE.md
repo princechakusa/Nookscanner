@@ -1,4 +1,4 @@
-# Nooktour: System Architecture
+# Nookscanner: System Architecture
 
 Version 1.0 (2026-11-19). Related: [`TECH_STACK.md`](TECH_STACK.md), [`DATABASE_SCHEMA.md`](DATABASE_SCHEMA.md), [`API_SPECIFICATION.md`](API_SPECIFICATION.md), [`SECURITY.md`](SECURITY.md), [`INFRASTRUCTURE.md`](INFRASTRUCTURE.md), [`3D_TECHNOLOGY.md`](3D_TECHNOLOGY.md).
 
@@ -40,7 +40,7 @@ Version 1.0 (2026-11-19). Related: [`TECH_STACK.md`](TECH_STACK.md), [`DATABASE_
 |---|---|---|---|
 | Manager dashboard | `apps/dashboard` | Auth UI, org/property/apartment management, uploads, review, hotspot editor, instructions, publishing, QR, analytics | Untrusted client; server parts trusted with user session only |
 | Guest app | `apps/guest` | QR entry, 3D experience, search, instructions, support, EN/AR | Untrusted, anonymous |
-| Nookscanner (Nookscanner app) | `apps/nookscanner` | Guided capture, quality feedback, resumable upload | Untrusted client, user session |
+| Nookscanner Capture (mobile app) | `apps/nookscanner` | Guided capture, quality feedback, resumable upload | Untrusted client, user session |
 | Shared packages | `packages/shared`, `packages/design-tokens`, `packages/viewer` (Phase 7) | Types, Zod schemas, permission matrix, upload rules, tokens, renderer wrapper | Library |
 | Database | `supabase/migrations` | Source of truth, RLS, business invariants (triggers, constraints) | Trusted boundary |
 | Edge Functions | `supabase/functions` | Guest API, processing dispatch, worker callbacks, QR rendering, rate limiting | Trusted (service role, server-side only) |
@@ -52,7 +52,7 @@ Avoid microservices: one database, one function set, one worker service.
 ## 3. Repository structure
 
 ```
-nooktour/
+nookscanner/
   PROJECT_MASTER.md          Source of truth and current status
   README.md                  Quick start
   package.json               npm workspaces root, shared scripts

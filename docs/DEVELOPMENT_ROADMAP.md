@@ -1,4 +1,4 @@
-# Nooktour: Development Roadmap
+# Nookscanner: Development Roadmap
 
 Version 1.0 (2026-11-19). Workflow for every stage: **PROJECT -> PHASE -> STAGE -> IMPLEMENT -> TEST -> AUDIT -> APPROVE -> DOCUMENT -> NEXT STAGE** (MASTER_PROMPT Part 13).
 

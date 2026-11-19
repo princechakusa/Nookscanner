@@ -1,4 +1,4 @@
-# Nooktour: API Specification
+# Nookscanner: API Specification
 
 Version 1.0 (2026-11-19). Status column: `I` implemented, `P` planned (phase).
 
@@ -61,7 +61,7 @@ Direct CRUD on tenant tables is allowed where RLS fully expresses the rule (prop
 Invoked by pg_cron/pg_net with a shared secret header; reads pgmq `reconstruction` queue; signs URLs; calls the worker with HMAC. Never callable by clients (verify secret, reject otherwise).
 
 ### `job-callback` (P6) - worker only
-`POST` `{ jobId, attempt, event: "progress"|"succeeded"|"failed", stage, progress, metrics?, outputs?, errorCode? }`, headers `X-Nooktour-Timestamp`, `X-Nooktour-Signature: v1=<hex hmac_sha256(secret, timestamp + "." + body)>`; reject if |now - timestamp| > 300 s or signature mismatch (constant-time compare); idempotent per `(jobId, attempt, event, stage)`.
+`POST` `{ jobId, attempt, event: "progress"|"succeeded"|"failed", stage, progress, metrics?, outputs?, errorCode? }`, headers `X-Nookscanner-Timestamp`, `X-Nookscanner-Signature: v1=<hex hmac_sha256(secret, timestamp + "." + body)>`; reject if |now - timestamp| > 300 s or signature mismatch (constant-time compare); idempotent per `(jobId, attempt, event, stage)`.
 
 ### `qr-render` (P9) - authenticated
 `GET ?qrId&format=png|svg|pdf` -> print-ready QR (checks `qr.manage`).
@@ -75,7 +75,7 @@ Invoked by pg_cron/pg_net with a shared secret header; reads pgmq `reconstructio
 | Auth (Supabase) | Supabase built-in limits + CAPTCHA (hCaptcha/Turnstile) on signup/reset in production |
 | RPC heavy (publish, submit) | 10/min per user |
 
-## 6. Worker job contract (implemented as types in `packages/shared/src/processing.ts` and `services/reconstruction/nooktour_reconstruction/contract.py`)
+## 6. Worker job contract (implemented as types in `packages/shared/src/processing.ts` and `services/reconstruction/nookscanner_reconstruction/contract.py`)
 
 ```json
 {

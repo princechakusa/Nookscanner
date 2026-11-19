@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "platforms": ["ios"],
     "ios": {
-      "bundleIdentifier": "com.nooktour.nookscanner",
+      "bundleIdentifier": "com.nookscanner.capture",
       "supportsTablet": false,
       "infoPlist": {
         "NSCameraUsageDescription": "Nookscanner uses the camera to record a guided walkthrough of the apartment so it can be turned into a 3D guide for guests.",

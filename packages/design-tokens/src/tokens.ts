@@ -1,10 +1,10 @@
 /**
- * Nooktour design tokens. Source of truth for docs/DESIGN_SYSTEM.md.
- * Changing a value here requires: `npm run generate -w @nooktour/design-tokens` and a docs update.
+ * Nookscanner design tokens. Source of truth for docs/DESIGN_SYSTEM.md.
+ * Changing a value here requires: `npm run generate -w @nookscanner/design-tokens` and a docs update.
  */
 
 export const brand = {
-  name: 'Nooktour',
+  name: 'Nookscanner',
   tagline: 'Your stay, shown not told.',
 } as const;
 

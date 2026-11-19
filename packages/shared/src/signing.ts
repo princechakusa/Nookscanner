@@ -1,7 +1,7 @@
 /**
  * HMAC-SHA256 signing for worker dispatch and callbacks (docs/API_SPECIFICATION.md section 4,
  * threat T09). Uses Web Crypto so the same code runs in Node, Deno (Edge Functions) and browsers.
- * The Python worker implements the identical scheme in nooktour_reconstruction/signing.py; both
+ * The Python worker implements the identical scheme in nookscanner_reconstruction/signing.py; both
  * are tested against the same fixed test vector.
  *
  * signature = "v1=" + hex(HMAC_SHA256(secret, `${timestamp}.${body}`))

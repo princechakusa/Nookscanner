@@ -1,8 +1,8 @@
 import copy
 import unittest
 
-from nooktour_reconstruction.contract import ContractError, parse_job_request
-from nooktour_reconstruction.providers import get_provider
+from nookscanner_reconstruction.contract import ContractError, parse_job_request
+from nookscanner_reconstruction.providers import get_provider
 
 VALID = {
     "contractVersion": 1,

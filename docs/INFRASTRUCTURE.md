@@ -1,4 +1,4 @@
-# Nooktour: Cloud Infrastructure
+# Nookscanner: Cloud Infrastructure
 
 Version 1.0 (2026-11-19). Prices verified 2026-11-19 unless labelled ESTIMATE. **No accounts have been created; nothing has been purchased.** Required user actions are listed in section 6.
 
@@ -24,7 +24,7 @@ Version 1.0 (2026-11-19). Prices verified 2026-11-19 unless labelled ESTIMATE. *
 
 - Variables are listed in `/.env.example` (placeholders only). Real values live in: Vercel project env (dashboard/guest), Supabase function secrets, Modal secrets, GitHub Actions secrets.
 - Naming: public client variables prefixed `NEXT_PUBLIC_` (dashboard) or `VITE_` (guest) may contain **only** the Supabase URL and the publishable/anon key. `packages/shared/src/env.ts` refuses to load a public env that contains a service-role or secret key.
-- Each environment: separate Supabase project, separate Modal app (`nooktour-reconstruction-<env>`), separate HMAC secret, separate buckets.
+- Each environment: separate Supabase project, separate Modal app (`nookscanner-reconstruction-<env>`), separate HMAC secret, separate buckets.
 
 ## 3. Network and data flow
 
@@ -53,15 +53,15 @@ All **ESTIMATES** unless marked verified; they assume pilot scale (1-13 apartmen
 | Apple Developer Program | annual fee (user to verify current price) | - |
 | **Pilot total (ESTIMATE)** | | **~$25-$70/month + ~$50-$160 one-off reconstruction** |
 
-Domain nooktour.com: not purchased; registrar price to be checked by the user.
+Domain nookscanner.com: not purchased; registrar price to be checked by the user.
 
 ## 6. User actions required (exact steps)
 
-1. **Supabase:** DONE by the user: project `nooktour`, ref `nfcnckwjrwpofkrzribd`, URL `https://nfcnckwjrwpofkrzribd.supabase.co`, publishable key wired into `.env.local`. Remaining: `supabase login`, `supabase link`, authorize `db push` (exact commands in [`DEPLOYMENT.md`](DEPLOYMENT.md) section 1); upgrade to Pro before uploading real video (> 50 MB); create a separate production project later. Secret keys and the DB password stay in secret managers only, never in chat or the repo.
+1. **Supabase:** DONE by the user: project `nookscanner`, ref `nfcnckwjrwpofkrzribd`, URL `https://nfcnckwjrwpofkrzribd.supabase.co`, publishable key wired into `.env.local`. Remaining: `supabase login`, `supabase link`, authorize `db push` (exact commands in [`DEPLOYMENT.md`](DEPLOYMENT.md) section 1); upgrade to Pro before uploading real video (> 50 MB); create a separate production project later. Secret keys and the DB password stay in secret managers only, never in chat or the repo.
 2. **GitHub:** DONE by the user: https://github.com/princechakusa/Nookscanner (remote `origin` added locally). Remaining: approve the first push; check the repo is private; enable Dependabot.
 3. **Vercel:** create a team/project linked to the GitHub repo for `apps/dashboard` and `apps/guest`.
 4. **Modal:** create an account, create a token (`modal token new`) on the development machine; set a monthly spend limit.
 5. **Apple Developer Program:** enroll (needed to install the Nookscanner app on the iPhone 16 Pro Max via TestFlight/dev builds).
 6. **Docker Desktop:** start it on the development machine so `npx supabase start` can run the full local stack (it is installed, version 29.7.2, but the daemon was not running).
 7. **Optional (Phase 6 bake-off):** Varjo Teleport developer access request; approve spend.
-8. **Brand/legal:** purchase nooktour.com if desired; trademark search/filing via counsel; privacy policy and terms.
+8. **Brand/legal:** purchase nookscanner.com if desired; trademark search/filing via counsel; privacy policy and terms.

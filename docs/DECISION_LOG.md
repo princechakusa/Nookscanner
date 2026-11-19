@@ -1,10 +1,10 @@
-# Nooktour: Decision Log (ADRs)
+# Nookscanner: Decision Log (ADRs)
 
 Format per decision (Part 5.5): selected, reason, alternatives, advantages, limitations, pricing, licensing, security, integration, migration. Pricing marked **VERIFIED (date, source)** or **ESTIMATE**. New decisions are appended; superseded ones are marked, never deleted.
 
 | ADR | Title | Status | Date |
 |---|---|---|---|
-| ADR-000 | Brand name Nooktour | Accepted (user choice; legal checks pending) | 2026-11-19 |
+| ADR-000 | Brand name Nookscanner | Accepted (user choice; legal checks pending) | 2026-11-19 |
 | ADR-001 | TypeScript monorepo with npm workspaces | Accepted | 2026-11-19 |
 | ADR-002 | Supabase as primary backend | Accepted | 2026-11-19 |
 | ADR-003 | Next.js dashboard + Vite guest SPA | Accepted | 2026-11-19 |
@@ -20,10 +20,10 @@ Format per decision (Part 5.5): selected, reason, alternatives, advantages, limi
 
 ---
 
-## ADR-000: Brand name Nooktour
-- **Selected:** "Nooktour", preferred domain nooktour.com (user's choice after four naming rounds, see [`BRAND_IDENTITY.md`](BRAND_IDENTITY.md)).
+## ADR-000: Brand name Nookscanner
+- **Selected:** "Nookscanner", preferred domain nookscanner.com (user's choice after four naming rounds, see [`BRAND_IDENTITY.md`](BRAND_IDENTITY.md)).
 - **Status of legal/commercial checks:** domain **not purchased**; trademark **not cleared or filed**; **no** social or app store accounts exist. RDAP showed the .com unregistered on 2026-11-19; that does not prove it is buyable at standard price.
-- **Capture app name:** "Nookscanner" (user's choice, 2026-11-19) for the mobile capture app and scanning feature; nookscanner.com reported unregistered but **not purchased**, **no trademark check** done. Code: `apps/nookscanner`, bundle id placeholder `com.nooktour.nookscanner`.
+- **Capture app name:** "Nookscanner" (user's choice, 2026-11-19) for the mobile capture app and scanning feature; nookscanner.com reported unregistered but **not purchased**, **no trademark check** done. Code: `apps/nookscanner`, bundle id placeholder `com.nookscanner.capture`.
 - **Security/migration:** brand string centralized in `packages/design-tokens` (`brand.name`) and app metadata so a rename is a small change.
 
 ## ADR-001: TypeScript monorepo with npm workspaces

@@ -1,4 +1,4 @@
-# Nooktour: Project Master
+# Nookscanner: Project Master
 
 **Permanent source of truth.** Read this first in every session, then the linked documents. Mandate: [`docs/MASTER_PROMPT.md`](docs/MASTER_PROMPT.md). Last updated: **2026-11-19**.
 
@@ -6,12 +6,11 @@
 
 | Item | Value | Status |
 |---|---|---|
-| Product brand | **Nooktour** (working description: 3D Apartment Guest Assistant) | Chosen by the user |
-| Preferred domain | nooktour.com | Showed as unregistered (RDAP, 2026-11-19). **NOT purchased** |
-| Capture app / scanning feature | **Nookscanner** | Chosen by the user |
-| Capture app domain | nookscanner.com | Reported unregistered. **NOT purchased** |
-| Trademarks | Nooktour, Nookscanner | **NOT cleared, NOT filed**; no trademark check done for Nookscanner |
-| Accounts | No social, app store or domain accounts created by us. The user created a Supabase project (`nooktour`) and a GitHub repo (`princechakusa/Nookscanner`) | See section 24 |
+| Product brand | **Nookscanner** (working description: 3D Apartment Guest Assistant) | Chosen by the user |
+| Preferred domain | nookscanner.com | Showed as unregistered (RDAP, 2026-11-19). **NOT purchased** |
+| Capture app / scanning feature | **Nookscanner Capture** (code folder `apps/nookscanner`) | Chosen by the user |
+| Trademarks | Nookscanner | **NOT cleared, NOT filed**; no trademark check done for Nookscanner |
+| Accounts | No social, app store or domain accounts created by us. The user created a Supabase project (`nookscanner`) and a GitHub repo (`princechakusa/Nookscanner`) | See section 24 |
 
 Brand research: [`docs/BRAND_IDENTITY.md`](docs/BRAND_IDENTITY.md). Decision: ADR-000 in [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md).
 
@@ -36,7 +35,7 @@ Brand research: [`docs/BRAND_IDENTITY.md`](docs/BRAND_IDENTITY.md). Decision: AD
 Rule: detail lives in the supporting document; this file summarizes and links. If they ever disagree, fix the discrepancy in the same commit.
 
 ## 1. Product vision
-A cloud platform where a property manager scans a real apartment (with Nookscanner or by uploading an existing walkthrough video), Nooktour reconstructs it as a **photorealistic, connected 3D apartment** (3D Gaussian Splatting), the manager pins appliances at their real positions with verified, model-specific instructions, and guests scan a QR code to explore the apartment in their phone browser (no app, no account), tap or search for an appliance (e.g. "AC" -> living room vs. bedroom 1) and learn how to use it. The 3D apartment is the product; search and the list fallback support it. Pilot: 13 apartments, starting with one, captured on an iPhone 16 Pro Max.
+A cloud platform where a property manager scans a real apartment (with Nookscanner or by uploading an existing walkthrough video), Nookscanner reconstructs it as a **photorealistic, connected 3D apartment** (3D Gaussian Splatting), the manager pins appliances at their real positions with verified, model-specific instructions, and guests scan a QR code to explore the apartment in their phone browser (no app, no account), tap or search for an appliance (e.g. "AC" -> living room vs. bedroom 1) and learn how to use it. The 3D apartment is the product; search and the list fallback support it. Pilot: 13 apartments, starting with one, captured on an iPhone 16 Pro Max.
 
 ## 2. Product requirements
 Functional (AC, PR, CP, UP, RC, RV, PB, HS, AP, IN, GX, SR, SU, AN, NT, AD) and non-functional (performance, reliability, security, privacy, accessibility, i18n) requirements with IDs: [`PRODUCT_REQUIREMENTS.md`](docs/PRODUCT_REQUIREMENTS.md). The 15 product rules of MASTER_PROMPT Part 16 are mapped to requirement IDs there (section 1).
@@ -120,7 +119,7 @@ Video does not guarantee reconstruction quality (featureless walls, mirrors, gla
 | Fast-moving 3DGS ecosystem (library churn) | Medium | Provider and renderer abstractions, keep PLY master |
 | Privacy of interior footage | High | Private buckets, retention, pre-publish confirmation |
 | Vendor pricing changes (Supabase, Modal, Teleport) | Medium | Portable architecture, cost tracking per job |
-| Brand/trademark conflict (Nooktour, Nookscanner) | Medium | Official search via counsel before launch |
+| Brand/trademark conflict (Nookscanner) | Medium | Official search via counsel before launch |
 | Single developer + AI continuity | Medium | This document + stage discipline |
 
 ## 23. Future improvements
@@ -162,7 +161,7 @@ Failures found and fixed during the stage: R-001..R-004 in [`KNOWN_ISSUES.md`](d
 3. Start Docker Desktop (for `supabase start` and pgTAP).
 4. Before Phase 5: upgrade the Supabase project to Pro (uploads > 50 MB, backups); enroll in the Apple Developer Program for Nookscanner device builds.
 5. Before Phase 6: create a Modal account/token and set a spend limit; optionally request Varjo Teleport developer access.
-6. Brand/legal: decide on buying nooktour.com / nookscanner.com and on an official trademark search.
+6. Brand/legal: decide on buying nookscanner.com / nookscanner.com and on an official trademark search.
 
 ## 25. Session log
 | Date | Session summary |

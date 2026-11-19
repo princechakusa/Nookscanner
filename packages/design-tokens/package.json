@@ -1,8 +1,8 @@
 {
-  "name": "@nooktour/design-tokens",
+  "name": "@nookscanner/design-tokens",
   "version": "0.1.0",
   "private": true,
-  "description": "Nooktour design tokens (docs/DESIGN_SYSTEM.md) as TypeScript and CSS custom properties",
+  "description": "Nookscanner design tokens (docs/DESIGN_SYSTEM.md) as TypeScript and CSS custom properties",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",

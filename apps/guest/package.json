@@ -1,8 +1,8 @@
 {
-  "name": "@nooktour/guest",
+  "name": "@nookscanner/guest",
   "version": "0.1.0",
   "private": true,
-  "description": "Nooktour guest web experience (mobile-first static SPA)",
+  "description": "Nookscanner guest web experience (mobile-first static SPA)",
   "type": "module",
   "scripts": {
     "dev": "vite --port 5173",
@@ -12,8 +12,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@nooktour/design-tokens": "*",
-    "@nooktour/shared": "*",
+    "@nookscanner/design-tokens": "*",
+    "@nookscanner/shared": "*",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

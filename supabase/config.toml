@@ -2,8 +2,8 @@
 # Hand-written during the foundation stage (the CLI was not installed). When the user runs
 # `supabase init`, answer NO to overwriting this file; `supabase link --project-ref nfcnckwjrwpofkrzribd`
 # links the hosted project without changing migrations.
-# Hosted project: ref nfcnckwjrwpofkrzribd, URL https://nfcnckwjrwpofkrzribd.supabase.co (project name "nooktour").
-project_id = "nooktour"
+# Hosted project: ref nfcnckwjrwpofkrzribd, URL https://nfcnckwjrwpofkrzribd.supabase.co (project name "nookscanner").
+project_id = "nookscanner"
 
 [api]
 enabled = true

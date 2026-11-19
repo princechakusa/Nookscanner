@@ -1,6 +1,6 @@
 # BRAND NOTE (added by the user's assistant, not part of the original prompt)
 
-The product's chosen brand name is **Nooktour** (preferred domain nooktour.com). The prompt below calls the product "3D Apartment Guest Assistant", which is the working description. Use Nooktour as the brand/product name in the UI, docs and repo.
+The product's chosen brand name is **Nookscanner** (preferred domain nookscanner.com). The prompt below calls the product "3D Apartment Guest Assistant", which is the working description. Use Nookscanner as the brand/product name in the UI, docs and repo.
 - The domain has NOT been purchased, the trademark has NOT been cleared or filed, and no social accounts exist. Research: `docs/BRAND_IDENTITY.md`.
 - Project root: `C:\Users\Dev Prince\Projects\nooktour`. Do not touch sibling projects (`beadup`, `PaMarket`).
 

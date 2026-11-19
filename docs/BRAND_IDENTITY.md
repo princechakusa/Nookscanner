@@ -1,3 +1,5 @@
+> **Note (2026-11-19):** This research was written while the candidate name was Nooktour. The user later chose **Nookscanner** as the product brand (nookscanner.com was seen unregistered in a quick check, not verified in depth; no trademark check done). Names below are historical candidates.
+
 # Brand Identity Research: 3D Apartment Guest Assistant
 
 Research date: 2026-11-19. Status: **recommendation only. Not approved. Nothing purchased, registered or created.**

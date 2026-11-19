@@ -1,8 +1,8 @@
-# Nooktour: Product Requirements
+# Nookscanner: Product Requirements
 
 Status: Approved baseline v1.0 (2026-11-19). Source mandate: [`MASTER_PROMPT.md`](MASTER_PROMPT.md). Master index: [`../PROJECT_MASTER.md`](../PROJECT_MASTER.md).
 
-Nooktour (working description: *3D Apartment Guest Assistant*) is a cloud platform that turns a real apartment into a photorealistic, connected 3D environment where guests find and learn to operate appliances by scanning a QR code in the apartment.
+Nookscanner (working description: *3D Apartment Guest Assistant*) is a cloud platform that turns a real apartment into a photorealistic, connected 3D environment where guests find and learn to operate appliances by scanning a QR code in the apartment.
 
 ## 1. Product principles (non-negotiable, from Part 16)
 
@@ -28,7 +28,7 @@ Nooktour (working description: *3D Apartment Guest Assistant*) is a cloud platfo
 
 | Role | Who | Access |
 |---|---|---|
-| Platform administrator | Nooktour staff | Platform administration, global appliance library, abuse handling. Never browses tenant media without an audited support grant. |
+| Platform administrator | Nookscanner staff | Platform administration, global appliance library, abuse handling. Never browses tenant media without an audited support grant. |
 | Organization owner | Property management company owner | Everything in the organization, including members, deletion and (future) billing |
 | Organization admin | Operations lead | Members, properties, apartments, publishing |
 | Manager | Property manager | Properties/apartments assigned, capture, review, hotspots, publishing |

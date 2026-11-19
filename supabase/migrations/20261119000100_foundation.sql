@@ -1,5 +1,5 @@
 -- =====================================================================================
--- Nooktour foundation migration
+-- Nookscanner foundation migration
 -- Spec: docs/DATABASE_SCHEMA.md (tables marked M), docs/SECURITY.md, ADR-011.
 -- Creates: enums, utility triggers, permission model, tenancy tables (organizations,
 -- members, properties, apartments, rooms), audit log, helper functions, RLS policies,
@@ -316,7 +316,7 @@ create trigger property_members_enforce_parent_org before insert or update
   on public.property_members for each row execute function public.enforce_parent_org();
 
 -- Publishing is only possible through the publish RPC (Phase 8), which sets
--- nooktour.publishing = 'on' for its transaction.
+-- nookscanner.publishing = 'on' for its transaction.
 create function public.guard_publication_status()
 returns trigger
 language plpgsql
@@ -325,7 +325,7 @@ as $$
 begin
   if (new.status = 'published' or (tg_op = 'UPDATE' and old.status = 'published'))
      and (tg_op = 'INSERT' or new.status is distinct from old.status)
-     and coalesce(current_setting('nooktour.publishing', true), '') <> 'on'
+     and coalesce(current_setting('nookscanner.publishing', true), '') <> 'on'
      and current_user not in ('postgres', 'service_role', 'supabase_admin') then
     raise exception 'publication status can only change through publish_apartment' using errcode = '42501';
   end if;

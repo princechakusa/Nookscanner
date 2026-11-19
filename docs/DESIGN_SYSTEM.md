@@ -1,13 +1,13 @@
-# Nooktour: Design System
+# Nookscanner: Design System
 
 Version 1.0 (2026-11-19). Tokens are implemented in `packages/design-tokens` (TypeScript source of truth, generates CSS custom properties). A test verifies WCAG contrast for the documented text/background pairs.
 
 ## 1. Brand identity
 
-- **Name:** Nooktour ("a cosy nook" + "a tour of it"). Tagline (working): *"Your stay, shown not told."*
+- **Name:** Nookscanner ("a cosy nook" + "a tour of it"). Tagline (working): *"Your stay, shown not told."*
 - **Personality:** calm, warm, precise, quietly premium; hospitality first, technology second.
 - **Voice:** short, friendly, plain language ("Tap the AC to see how it works"), no jargon for guests or managers.
-- **Logo (placeholder until designed):** wordmark "nooktour" in the heading font, lowercase, with a small doorway-arch glyph. A professional logo is a user decision (KNOWN_ISSUES KI-006).
+- **Logo (placeholder until designed):** wordmark "nookscanner" in the heading font, lowercase, with a small doorway-arch glyph. A professional logo is a user decision (KNOWN_ISSUES KI-006).
 
 ## 2. Colour
 

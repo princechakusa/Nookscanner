@@ -1,4 +1,4 @@
-# Nooktour: Deployment
+# Nookscanner: Deployment
 
 Version 1.0 (2026-11-19). **Nothing has been deployed yet.** No command below that changes a hosted service is run without the user's authorization.
 
@@ -6,7 +6,7 @@ Version 1.0 (2026-11-19). **Nothing has been deployed yet.** No command below th
 
 | Item | Value |
 |---|---|
-| Project name | `nooktour` (created by the user) |
+| Project name | `nookscanner` (created by the user) |
 | Project ref | `nfcnckwjrwpofkrzribd` |
 | URL | `https://nfcnckwjrwpofkrzribd.supabase.co` |
 | Public key | publishable key in `.env.example` / `.env.local` (public by design) |
@@ -25,14 +25,14 @@ From the repository root (`C:\Users\Dev Prince\Projects\nooktour`):
 Auth settings to mirror in the hosted dashboard (Authentication > Settings): email confirmations on, minimum password length 10 with letters+digits, refresh token rotation on, site URL and redirect URLs for the dashboard host, custom SMTP before real users.
 
 ## 2. Frontends (Phase 3/13)
-- Vercel project `nooktour-dashboard` (root `apps/dashboard`, build `npm run build -w @nooktour/dashboard`) and `nooktour-guest` (root `apps/guest`, output `apps/guest/dist`, SPA rewrite `/a/* -> /index.html`).
+- Vercel project `nookscanner-dashboard` (root `apps/dashboard`, build `npm run build -w @nookscanner/dashboard`) and `nookscanner-guest` (root `apps/guest`, output `apps/guest/dist`, SPA rewrite `/a/* -> /index.html`).
 - Environment variables per environment from `.env.example` (public ones only in Vercel).
 
 ## 3. Edge Functions (Phase 2+)
 `npx supabase functions deploy <name>`; secrets via `npx supabase secrets set NAME=value` (run by the user or CI with a scoped access token).
 
 ## 4. Reconstruction worker (Phase 6)
-`modal deploy services/reconstruction/modal_app.py --env <env>`; secrets in Modal (`nooktour-<env>` secret with HMAC secret and Supabase function URL).
+`modal deploy services/reconstruction/modal_app.py --env <env>`; secrets in Modal (`nookscanner-<env>` secret with HMAC secret and Supabase function URL).
 
 ## 5. Release procedure (production, Phase 13)
 1. CI green on `main`. 2. Migrations dry-run against production. 3. Backup confirmed (latest daily backup timestamp recorded). 4. `db push`. 5. Deploy functions. 6. Deploy worker. 7. Promote Vercel deployments. 8. Smoke tests (guest QR on iOS + Android, dashboard login). 9. Record in CHANGELOG.

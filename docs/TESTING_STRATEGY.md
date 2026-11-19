@@ -1,4 +1,4 @@
-# Nooktour: Testing Strategy
+# Nookscanner: Testing Strategy
 
 Version 1.0 (2026-11-19). **Rule: record actual results only; never fabricate evidence.** Results per stage are recorded in `PROJECT_MASTER.md` section 24 and [`CHANGELOG.md`](CHANGELOG.md).
 

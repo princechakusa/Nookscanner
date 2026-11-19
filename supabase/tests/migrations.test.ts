@@ -1,5 +1,5 @@
 import type { PGlite } from '@electric-sql/pglite';
-import { ORG_ROLES, PERMISSIONS, ROLE_PERMISSIONS } from '@nooktour/shared';
+import { ORG_ROLES, PERMISSIONS, ROLE_PERMISSIONS } from '@nookscanner/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDb, migrationFiles } from './support/db.ts';
 

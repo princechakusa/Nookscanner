@@ -1,5 +1,5 @@
 {
-  "name": "@nooktour/shared",
+  "name": "@nookscanner/shared",
   "version": "0.1.0",
   "private": true,
   "description": "Shared domain types, validation schemas, permission matrix and upload rules",

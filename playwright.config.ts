@@ -16,7 +16,7 @@ export default defineConfig({
     { name: 'mobile-webkit', use: { ...devices['iPhone 15'] } },
   ],
   webServer: {
-    command: 'npm run preview -w @nooktour/guest',
+    command: 'npm run preview -w @nookscanner/guest',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,

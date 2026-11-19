@@ -1,4 +1,4 @@
-# Nooktour: 3D Capture, Reconstruction and Viewing
+# Nookscanner: 3D Capture, Reconstruction and Viewing
 
 Research date: **2026-11-19**. All sources were fetched or searched on that date unless stated. Prices quoted are what the source said on that date; anything computed by us is labelled **ESTIMATE**. Decisions are recorded in [`DECISION_LOG.md`](DECISION_LOG.md) (ADR-004 to ADR-008).
 
