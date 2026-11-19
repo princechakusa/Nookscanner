@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { brand } from '@nookscanner/design-tokens';
+import { DEMO_EXPERIENCE } from './demo.ts';
+import { Experience } from './Experience.tsx';
 import { detectLocale, directionOf, messages, type Locale } from './i18n.ts';
 import { parseGuestToken } from './route.ts';
+import { hasWebGL2 } from './webgl.ts';
 
 export interface AppProps {
   pathname: string;
@@ -9,18 +12,33 @@ export interface AppProps {
 }
 
 /**
- * Guest shell (foundation). The 3D experience, search and instructions are built in Phases 7-9;
- * this shell already provides routing, EN/AR with RTL, and the loading/empty states.
+ * Guest app routes: `/a/<token>` (QR entry, resolved by the Edge Function in Phase 9),
+ * `/demo` (fictional demo apartment for design review and tests), anything else asks the guest
+ * to scan the QR code.
  */
 export function App({ pathname, languages }: AppProps) {
   const [locale, setLocale] = useState<Locale>(() => detectLocale(languages));
+  const [webgl] = useState(() => hasWebGL2());
   const token = parseGuestToken(pathname);
+  const isDemo = /^\/demo\/?$/.test(pathname);
   const t = messages[locale];
 
   useEffect(() => {
     document.documentElement.lang = locale;
     document.documentElement.dir = directionOf(locale);
   }, [locale]);
+
+  if (isDemo) {
+    return (
+      <Experience
+        experience={DEMO_EXPERIENCE}
+        locale={locale}
+        onLocaleChange={setLocale}
+        webgl={webgl}
+        demo
+      />
+    );
+  }
 
   return (
     <div className="nt-guest">

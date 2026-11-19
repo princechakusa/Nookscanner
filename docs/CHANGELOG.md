@@ -2,6 +2,16 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 3.4 guest shell (Phase 3 complete)
+
+### Added
+- `packages/shared/src/guest.ts`: Zod schema for the guest payload (plain text only, https media, bounded sizes), EN/AR appliance search with Arabic normalisation (6 tests).
+- Guest app: top bar with EN/عربي toggle, room chips, search with room per result and alias hints, instruction bottom sheet (native dialog: verified pill, steps with locale digits, troubleshooting, video link, WhatsApp/phone/email support), WebGL2 detection and fallback list, fictional demo apartment at `/demo` only.
+- `tests/e2e/guest-experience.spec.ts`: EN, AR (RTL geometry check), no-WebGL; axe scans; screenshots for review.
+
+### Test results (local)
+- Unit: shared 55, design-tokens 19, ui 6, dashboard 23, guest 14, database 68 (+5). Guest E2E 12/12. Guest initial JS 100.7 kB gzip (budget NFR-PERF-02: 150 kB; zod added with the payload schema).
+
 ## 2026-11-20: Phase 3 stages 3.1-3.3 (tokens, components, dashboard shell)
 
 ### Added

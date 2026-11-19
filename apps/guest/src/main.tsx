@@ -7,6 +7,7 @@ import '@fontsource/ibm-plex-sans-arabic/500.css';
 import '@fontsource/ibm-plex-sans-arabic/600.css';
 import '@nookscanner/design-tokens/tokens.css';
 import './styles.css';
+import './experience.css';
 import { App } from './App.tsx';
 
 const root = document.getElementById('root');

@@ -107,6 +107,7 @@ Visual references: the user's concept mockups in [`docs/design/`](design/) (`01-
 - Bottom stack (bottom to top): search field (glass, pill radius, placeholder "Search: AC, oven, washing machine"), room chips row (horizontal scroll; active chip `brand.primary` with white text, others surface/white with ink text; each chip has a room-type icon).
 - Floating controls (end side, above the chips): 48 px round buttons, "Move/Look" (Lagoon) and "Rooms / overview" (Brass). Controls are not mirrored in RTL (DESIGN_SYSTEM 6).
 - **Decision:** mockup 01 is a landscape tablet; phones use the same structure in portrait with the top bar compacted (brand mark only + name + toggle).
+- **Implemented (3.4):** `apps/guest/src/Experience.tsx` + `experience.css`. Until the 3D viewer exists (Phase 7) the stage shows a status note and the appliance list for the selected room sits below the dock; without WebGL2 the list shows all rooms (fallback). Review notes: Arabic copy avoids tanween in UI strings because Plex Arabic subsets can render the mark offset in WebKit; status badges never sit inside truncated text.
 
 ### 9.2 Guest instruction sheet (from mockups 02 and 04)
 - Bottom sheet over the 3D view (snap 40% / 90%), surface colour, radius lg top corners, grab handle. The 3D view above keeps the appliance highlighted with a Brass glow ring.

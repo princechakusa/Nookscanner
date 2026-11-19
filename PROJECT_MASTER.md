@@ -132,7 +132,7 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 
 ## 24. Current project status
 
-**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2 complete on the **local** Supabase stack: 2.2 schema, 2.3 storage, 2.4 dashboard auth, 2.5 real-stack DB tests, 2.6 security review (5 findings fixed, no Critical/High open). All 5 migrations are applied to the hosted project (user-approved) and verified (lint clean, advisors accepted, anon smoke 30/30); only hosted Auth dashboard settings remain (Blocked on user 1). Phase 3: 3.1 tokens + fonts, 3.2 `packages/ui` components, 3.3 dashboard shell DONE. **Next stage: 3.4 guest shell (mockups 01/02/04), then Phase 4.** The binding 3D quality bar (`docs/3D_QUALITY_BAR.md`, ADR-014) is wired into Phases 5, 6, 7 and 12.
+**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2 complete on the **local** Supabase stack: 2.2 schema, 2.3 storage, 2.4 dashboard auth, 2.5 real-stack DB tests, 2.6 security review (5 findings fixed, no Critical/High open). All 5 migrations are applied to the hosted project (user-approved) and verified (lint clean, advisors accepted, anon smoke 30/30); only hosted Auth dashboard settings remain (Blocked on user 1). Phase 3 DONE: 3.1 tokens + fonts, 3.2 `packages/ui`, 3.3 dashboard shell, 3.4 guest shell (screenshots reviewed against the mockups). **Next stage: Phase 4.1 (organization creation + invitations UI and invitation email), then 4.2-4.4.** The binding 3D quality bar (`docs/3D_QUALITY_BAR.md`, ADR-014) is wired into Phases 5, 6, 7 and 12.
 
 **Implemented**
 - Full documentation set (this file + 18 docs incl. the 3D quality bar).
@@ -147,9 +147,9 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 | Command | Result |
 |---|---|
 | `npm run lint` / `format:check` / `typecheck` | pass |
-| `npm test` | all workspaces pass (shared 49, design-tokens 19, ui 6, dashboard 23, guest 7, database on PGlite 68 + 5 stack-only skipped) |
+| `npm test` | all workspaces pass (shared 49, design-tokens 19, ui 6, dashboard 23, guest 14, database on PGlite 68 + 5 stack-only skipped; shared now 55) |
 | `npm run test:e2e:stack` (dashboard auth + shell + axe on the local stack) | 16 passed (desktop Chromium + iPhone 15 WebKit) |
-| `npm run test:e2e` (guest) | 6 passed |
+| `npm run test:e2e` (guest, Pixel 7 + iPhone 15 emulation, EN/AR, axe) | 12 passed |
 | `npm run test:db:stack` (real local Supabase) | 73 passed, 0 failed (after `db reset`) |
 | Hosted project: `db lint --remote`, `db advisors --remote`, read-only catalog query, `npm run test:hosted:smoke` | no errors; 7 WARN = intended RPCs (accepted); 15/15 tables with RLS, 0 anon grants; smoke 30/30 |
 | `supabase db advisors` (security) / `db lint` | 0 security findings / no errors |
@@ -159,7 +159,7 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 | `npm run test:worker` | 14 passed |
 | GitHub CI (previous push) | green: runs 44578429531, 44579511164 |
 
-Failures found and fixed: R-005..R-015 in [`KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md).
+Failures found and fixed: R-005..R-017 in [`KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md).
 
 **Not tested / not done:** authenticated flows on the hosted project (needs Blocked-on-user 1); auth on the hosted project (templates/site URL not set, KI-017); CAPTCHA/leaked-password protection (KI-019); no 3D work yet, so **no 3D quality evidence exists**.
 
@@ -183,3 +183,4 @@ Failures found and fixed: R-005..R-015 in [`KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.
 | 2026-11-20 (cont.) | Stage 2.6 security review: advisors clean, 5 logic findings fixed (migration 0300), 71/71 on the real stack; Phase 2 complete locally. |
 | 2026-11-20 (cont.) | User approved push + hosted migrations: pushed; 5 migrations applied to hosted; hosted advisor finding fixed (helpers to `private`); hosted smoke 30/30. |
 | 2026-11-20 (cont.) | Phase 3.1-3.3: tokens/fonts, `packages/ui`, dashboard shell; screen designs for all 7 screens recorded; stack E2E 16/16 with axe. |
+| 2026-11-20 (cont.) | Stage 3.4 guest shell per mockups; Phase 3 complete. |

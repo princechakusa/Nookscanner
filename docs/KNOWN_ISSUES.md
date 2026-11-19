@@ -20,6 +20,7 @@ Updated 2026-11-20. Severity: Critical / High / Medium / Low. Close an item only
 | KI-018 | Low | Security | `@supabase/ssr` session cookies are readable by JavaScript (library default, needed by the browser client) | Strict nonce CSP (no inline scripts), no user HTML rendering; revisit httpOnly-only server sessions if the browser client is not needed | Dev | Accepted (mitigated) |
 | KI-019 | Medium | Security | CAPTCHA and leaked-password protection not enabled (hosted settings; leaked-password protection is plan-dependent) | Enable on staging/production before real users (Phase 11 at the latest) | User + dev | Open |
 | KI-020 | Low | Performance | Proxy calls the Auth server (`getUser`) on every dashboard request (~1 round trip) | Acceptable for the dashboard; revisit with JWT revocation checks if latency matters | Dev | Accepted |
+| KI-021 | Low | Performance | Guest initial JS grew to 100.7 kB gzip (from 70 kB) because the payload schema brings zod; budget is 150 kB | Switch the guest to `zod/mini` if the 3D loader or Phase 9 pushes it near the budget | Dev | Open (within budget) |
 
 ## Resolved
 
@@ -44,3 +45,5 @@ Updated 2026-11-20. Severity: Critical / High / Medium / Low. Close an item only
 | R-013 | Hosted advisor (newer than the local image) flagged 20 SECURITY DEFINER functions callable as REST RPCs, incl. internal helpers usable as oracles (`shares_org_with`, `storage_path_apartment`) | Migration `20261120000400_private_helpers.sql` moves 14 helpers to the non-exposed `private` schema; 7 intended RPCs remain (accepted); tests assert the exact API surface | 2026-11-20 |
 | R-014 | Mobile dashboard drawer was only moved off-screen when closed, so its links stayed in the tab order and accessibility tree | Closed drawer gets `visibility: hidden`; E2E asserts the nav is hidden until opened | 2026-11-20 |
 | R-015 | Dashboard build failed: `packages/ui` hooks imported into server components | `'use client'` on the component module | 2026-11-20 |
+| R-016 | Guest search input pointed `aria-controls` at a results region that did not exist yet (axe aria-valid-attr-value) | Attribute set only while results are shown | 2026-11-20 |
+| R-017 | Screenshot review: Demo badge truncated on 393 px; Arabic tanween rendered offset in WebKit | Badge outside the ellipsized name; copy reworded | 2026-11-20 |
