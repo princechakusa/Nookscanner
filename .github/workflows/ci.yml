@@ -29,10 +29,27 @@ jobs:
       - run: npm run build
         env:
           NEXT_PUBLIC_APP_ENV: local
-          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:56521
           NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ci_placeholder
       - run: npm run check:secrets
       - run: npm run test:worker
       - run: npm audit --audit-level=high
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:e2e
+
+  database-stack:
+    # Same DB suites on a real local Supabase stack (Postgres, Auth, Storage) in Docker (ADR-013).
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx -y supabase@3.2.0 start -x studio,imgproxy,vector,logflare,edge-runtime,realtime,postgres-meta,supavisor
+      - run: npx -y supabase@3.2.0 db lint --level warning --fail-on warning
+      - run: npm run test:stack -w @nookscanner/database
+      - if: always()
+        run: npx -y supabase@3.2.0 stop --no-backup

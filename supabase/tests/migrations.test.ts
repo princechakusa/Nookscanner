@@ -1,9 +1,8 @@
-import type { PGlite } from '@electric-sql/pglite';
 import { ORG_ROLES, PERMISSIONS, ROLE_PERMISSIONS } from '@nookscanner/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createTestDb, migrationFiles } from './support/db.ts';
+import { createTestDb, migrationFiles, runId, type TestDb } from './support/db.ts';
 
-let db: PGlite;
+let db: TestDb;
 
 beforeAll(async () => {
   db = await createTestDb();
@@ -66,7 +65,7 @@ describe('migrations', () => {
     const id = crypto.randomUUID();
     await db.query(`insert into auth.users (id, email, raw_user_meta_data) values ($1, $2, $3)`, [
       id,
-      'profile-check@example.test',
+      `profile-check-${runId}@example.test`,
       JSON.stringify({ full_name: 'Profile Check' }),
     ]);
     const { rows } = await db.query<{ full_name: string; is_platform_admin: boolean }>(

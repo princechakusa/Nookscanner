@@ -43,3 +43,36 @@ grant usage on schema public to anon, authenticated, service_role;
 alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
 alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
 alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;
+
+-- Minimal Supabase Storage schema (buckets + objects with RLS), enough to apply storage
+-- migrations and evaluate storage.objects policies in PGlite. The real behaviour (TUS, MIME and
+-- size limits) is covered by the local-stack integration tests (supabase/tests/stack).
+create schema storage;
+
+create table storage.buckets (
+  id text primary key,
+  name text not null unique,
+  owner uuid,
+  public boolean not null default false,
+  file_size_limit bigint,
+  allowed_mime_types text[],
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table storage.objects (
+  id uuid primary key default gen_random_uuid(),
+  bucket_id text references storage.buckets (id),
+  name text not null,
+  owner uuid,
+  owner_id text,
+  metadata jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (bucket_id, name)
+);
+
+alter table storage.objects enable row level security;
+alter table storage.buckets enable row level security;
+grant usage on schema storage to anon, authenticated, service_role;
+grant all on storage.objects, storage.buckets to anon, authenticated, service_role;

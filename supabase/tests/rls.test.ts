@@ -2,11 +2,18 @@
  * Tenant isolation and permission-boundary tests (docs/TESTING_STRATEGY.md section 2,
  * threats T01-T05, T19 in docs/THREAT_MODEL.md).
  */
-import type { PGlite } from '@electric-sql/pglite';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { asAnon, asUser, createTestDb, createUser, expectError } from './support/db.ts';
+import {
+  asAnon,
+  asUser,
+  createTestDb,
+  createUser,
+  expectError,
+  slug,
+  type TestDb,
+} from './support/db.ts';
 
-let db: PGlite;
+let db: TestDb;
 
 // Org A: owner, admin, manager, editor, viewer, a property-scoped manager. Org B: owner.
 const u = {} as Record<
@@ -45,12 +52,20 @@ beforeAll(async () => {
 
   orgA = (
     await asUser(db, u.ownerA, (tx) =>
-      one(tx.query<{ id: string }>(`select public.create_organization('Org A', 'org-a') as id`)),
+      one(
+        tx.query<{ id: string }>(
+          `select public.create_organization('Org A', '${slug('org-a')}') as id`,
+        ),
+      ),
     )
   ).id;
   orgB = (
     await asUser(db, u.ownerB, (tx) =>
-      one(tx.query<{ id: string }>(`select public.create_organization('Org B', 'org-b') as id`)),
+      one(
+        tx.query<{ id: string }>(
+          `select public.create_organization('Org B', '${slug('org-b')}') as id`,
+        ),
+      ),
     )
   ).id;
 
@@ -157,7 +172,7 @@ describe('organization bootstrap', () => {
   it('rejects invalid slugs', async () => {
     const msg = await expectError(
       asUser(db, u.outsider, (tx) =>
-        tx.query(`select public.create_organization('Bad', 'Bad Slug!')`),
+        tx.query(`select public.create_organization('Bad', '${slug('Bad Slug!')}')`),
       ),
     );
     expect(msg).toMatch(/check constraint/);
@@ -471,7 +486,7 @@ describe('anonymous access', () => {
 
   it('anon cannot call create_organization', async () => {
     const msg = await expectError(
-      asAnon(db, (tx) => tx.query(`select public.create_organization('A', 'anon-org')`)),
+      asAnon(db, (tx) => tx.query(`select public.create_organization('A', '${slug('anon-org')}')`)),
     );
     expect(msg).toMatch(/permission denied/);
   });

@@ -1,19 +1,20 @@
 # Supabase CLI configuration (local development stack + settings mirrored to hosted projects).
-# Hand-written during the foundation stage (the CLI was not installed). When the user runs
-# `supabase init`, answer NO to overwriting this file; `supabase link --project-ref nfcnckwjrwpofkrzribd`
-# links the hosted project without changing migrations.
+# Hand-written during the foundation stage; validated against Supabase CLI 3.2.0. Never re-run
+# `supabase init` over it. Local ports use the 565xx range so this stack can run alongside other
+# local Supabase stacks on the same machine (the default 543xx ports are taken by other projects).
 # Hosted project: ref nfcnckwjrwpofkrzribd, URL https://nfcnckwjrwpofkrzribd.supabase.co (project name "nookscanner").
 project_id = "nookscanner"
 
 [api]
 enabled = true
-port = 54321
+port = 56521
 schemas = ["public", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
 [db]
-port = 54322
+port = 56522
+shadow_port = 56520
 major_version = 17
 
 [db.migrations]
@@ -26,13 +27,17 @@ sql_paths = ["./seed.sql"]
 [realtime]
 enabled = true
 
+[analytics]
+enabled = false
+port = 56527
+
 [studio]
 enabled = true
-port = 54323
+port = 56523
 
-[inbucket]
+[local_smtp]
 enabled = true
-port = 54324
+port = 56524
 
 [storage]
 enabled = true
@@ -50,10 +55,11 @@ minimum_password_length = 10
 password_requirements = "lower_upper_letters_digits"
 
 [auth.email]
-enable_signup = true
+enabled = true
 enable_confirmations = true
 double_confirm_changes = true
 secure_password_change = true
 
 [edge_runtime]
 enabled = true
+inspector_port = 56583
