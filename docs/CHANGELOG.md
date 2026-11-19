@@ -2,6 +2,27 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Phase 1 closed; Phase 2 stages 2.2, 2.3, 2.5 (local real stack); 3D quality bar adopted
+
+### Added
+- Migration `20261120000100_invitations_qr_capture.sql`: organization_invitations, qr_codes, scan_sessions, scan_checkpoints, media_uploads; RPCs `create_invitation`, `accept_invitation`, `revoke_invitation`, `create_qr_code`, `revoke_qr_code`, `register_media_upload`; server-side token generation; secrets stripped from the audit log.
+- Migration `20261120000200_storage.sql`: buckets raw-footage, scene-masters, scene-drafts, instruction-media, published-assets with path-bound storage RLS.
+- Dual-target DB test harness (ADR-013): `npm run test:db` (PGlite) and `npm run test:db:stack` (real local Supabase); new suites `capture.test.ts` (24 tests) and `storage-api.test.ts` (5 tests through Auth + PostgREST + Storage API); CI job `database-stack`.
+- `docs/3D_QUALITY_BAR.md` adopted as binding (ADR-014); roadmap Phases 5, 6, 7, 12 rewritten with quality gates, device tiers and the other-device footage stage 6.4.
+
+### Changed
+- `supabase/config.toml` validated with Supabase CLI 3.2.0 (`[local_smtp]`, `auth.email.enabled`); local ports moved to 565xx.
+
+### Test results (local, Windows 11, Node 24.15.0, Docker Desktop, Supabase CLI 3.2.0, Postgres image 17.12.0.000)
+- `npm run lint`, `npm run format:check`, `npm run typecheck`: pass.
+- `npm test`: all workspaces pass; database on PGlite 59 passed + 5 stack-only skipped.
+- `npm run test:db:stack`: 64 passed, 0 failed (run twice to confirm repeatability).
+- `supabase db lint --level warning` (local): no schema errors.
+- `npm run build`: pass (guest initial JS 70.18 kB gzip). `npm run check:secrets`: no privileged keys. `npm run test:worker`: 14 passed.
+
+### Fixed during the stage
+R-005..R-009 in `KNOWN_ISSUES.md`.
+
 ## 2026-11-19: Phase 0 complete; Phase 1 foundation (stages 1.1-1.5)
 
 ### Added

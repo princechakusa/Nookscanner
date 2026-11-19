@@ -8,7 +8,7 @@ Version 1.0 (2026-11-19). **Rule: record actual results only; never fabricate ev
 |---|---|---|---|---|
 | Unit (TS) | Vitest | `packages/*/src/**/*.test.ts`, `apps/*/src/**/*.test.ts(x)` | yes | Implemented |
 | Database migrations + RLS + tenant isolation | Vitest + PGlite (+ Supabase shim) | `supabase/tests/*.test.ts` | yes | Implemented |
-| Database (real Supabase) | pgTAP via `supabase test db` | `supabase/tests/pgtap/` | yes (with Docker) | Planned Phase 2 |
+| Database (real Supabase) | Same Vitest suites against the local Supabase stack (ADR-013) + Storage API tests through Auth/PostgREST/Storage + `supabase db lint` | `supabase/tests/*.test.ts` (`npm run test:db:stack`) | yes (job `database-stack`, Docker) | Implemented (64 tests) |
 | Worker unit | pytest (falls back to stdlib unittest if pytest absent) | `services/reconstruction/tests` | yes | Implemented |
 | Component (React) | Vitest + Testing Library + jsdom | `apps/*/src` | yes | Implemented (guest shell) |
 | API / Edge Functions | Deno test + Vitest integration against local stack | `supabase/functions/*/test.ts` | yes | Planned Phase 2/9 |
@@ -31,6 +31,7 @@ Authz on each RPC/Edge Function; Zod rejects malformed input; body limits; rate 
 Type/size validation (client + DB), interrupted upload resumes, retry after token refresh, unauthorized path rejected, other-org path rejected.
 
 ### 3D
+Governed by [`3D_QUALITY_BAR.md`](3D_QUALITY_BAR.md) (ADR-014): measured evidence per device tier (T1-T5) is required before any 3D stage is DONE.
 Reconstruction quality metrics (PSNR/SSIM on held-out frames, registered-frame ratio >= 90%), room continuity checklist, hotspot coordinate round-trip (world -> screen -> world), object selection (raycast hit within 10 cm of placed point on reference scene), room navigation (camera reaches viewpoint), asset loading (LoD first frame time), mobile performance (fps, memory).
 
 ### Device/performance
@@ -42,7 +43,7 @@ Synthetic only (seed files). Real apartment footage only in staging/production w
 
 ## 4. CI pipeline (`.github/workflows/ci.yml`)
 
-`npm ci` -> lint -> typecheck -> unit + DB (PGlite) tests -> build dashboard + guest -> worker tests -> npm audit (high+) -> (Phase 2) supabase start + pgTAP -> (Phase 3) Playwright.
+Job `verify`: `npm ci` -> lint -> format -> typecheck -> unit + DB (PGlite) tests -> build -> secret scan -> worker tests -> npm audit (high+) -> Playwright. Job `database-stack`: `supabase start` (Docker) -> `supabase db lint --fail-on warning` -> DB suites + Storage API tests on the real stack.
 
 ## 5. Security testing plan
 

@@ -17,6 +17,8 @@ Format per decision (Part 5.5): selected, reason, alternatives, advantages, limi
 | ADR-010 | Testing toolchain incl. PGlite for RLS tests | Accepted | 2026-11-19 |
 | ADR-011 | Role model: fixed roles + role_permissions table + property scoping | Accepted | 2026-11-19 |
 | ADR-012 | Guest access via unguessable QR token through an Edge Function, no direct table access | Accepted | 2026-11-19 |
+| ADR-013 | Same DB test suites on PGlite and on the real local Supabase stack (instead of a pgTAP port) | Accepted | 2026-11-20 |
+| ADR-014 | 3D quality bar is binding; device tiers; measured evidence gates 3D stages | Accepted (user requirement) | 2026-11-20 |
 
 ---
 
@@ -109,3 +111,17 @@ Format per decision (Part 5.5): selected, reason, alternatives, advantages, limi
 - **Selected:** each QR encodes `https://<guest-host>/a/<token>` where `token` is a 128-bit random URL-safe string. The guest app calls the `guest-experience` Edge Function, which resolves the token (service role, server-side), checks the apartment is published and the QR active, and returns only published, guest-safe data plus CDN asset URLs. `anon` has **no** direct SELECT on tenant tables.
 - **Reason:** no enumeration of apartments, revocable/rotatable QR, minimal data exposure, rate limiting at one choke point.
 - **Alternatives:** RLS policies for `anon` on published rows (larger attack surface, harder rate limiting).
+
+## ADR-013: Dual-target database tests (PGlite + real local Supabase stack)
+- **Selected:** one set of Vitest suites (`supabase/tests/*.test.ts`) with a harness that targets either PGlite + the documented shim (default, fast, no Docker) or the real local Supabase stack (`npm run test:db:stack`, `DB_TEST_TARGET=stack`). Stack-only suites (Storage API through Auth + PostgREST + Storage) are skipped on PGlite. CI runs both (job `database-stack` starts the stack in Docker and also runs `supabase db lint --fail-on warning`).
+- **Reason:** the roadmap planned to port the RLS tests to pgTAP. Keeping one suite avoids two copies drifting apart, keeps tests in TypeScript next to the shared permission matrix, and the real-stack run already exposed one shim difference (real Storage forbids direct SQL deletes on `storage.objects`).
+- **Alternatives:** pgTAP via `supabase test db` (standard, but a second test language and duplicated scenarios); stack only (slower and needs Docker on every machine).
+- **Limitations:** suites must be idempotent on a persistent database (run-unique slugs and emails via `runId`); stack runs are sequential. Hosted-project verification still needs `db push` (KI-003).
+- **Security:** stack tests read the local stack's development keys from `supabase status` in memory; nothing is written to disk or committed. Local stack ports 565xx so it never collides with other projects' stacks.
+
+## ADR-014: 3D quality bar is binding; device tiers
+- **Selected:** [`3D_QUALITY_BAR.md`](3D_QUALITY_BAR.md) (user requirement, 2026-11-19/20) governs Phases 5, 6, 7 and 12. No 3D stage is marked DONE without the measured evidence it requires. Device tiers T1 recent iPhone Pro (pilot), T2 older/standard iPhone, T3 high-end Android, T4 mid-range Android, T5 existing video from any source (Method B). Capture profiles, gate thresholds and viewer budgets are data selected from device capabilities and video metadata, never constants for one phone, apartment or organisation.
+- **Roadmap changes:** Phase 5 gains device tiers/capture profiles and full Method B validation (codec incl. HEVC, rotation, VFR, bitrate); Phase 6 gains a stored quality report (PSNR/SSIM/LPIPS, SfM registration, per-room and doorway checks), an **other-device footage stage (6.4)** before the pipeline is finalised (one Android and one older iPhone video, compared with the pilot iPhone and used to adjust gates), the bake-off (quality first, then cost), and baseline calibration on varied layouts; Phase 7 measures performance per tier on real devices; Phase 12 acceptance requires quality-bar section 7 for every publishable scene.
+- **Reason:** the product is for many managers with many phones; tuning only for the pilot iPhone would fail in the field. Quality must be the best achievable and is therefore measured, not asserted.
+- **Limitations:** needs real footage from several devices and layouts (user-supplied); until then, targets are initial and stages that need them stay open (Blocked-on-user list).
+- **Alternatives considered:** pilot-device-only tuning (rejected: violates section 1b); fixed global thresholds (rejected: different sensors and codecs need different gates).

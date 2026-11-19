@@ -1,5 +1,7 @@
 # Nookscanner: 3D Capture, Reconstruction and Viewing
 
+> **Binding quality bar:** [`3D_QUALITY_BAR.md`](3D_QUALITY_BAR.md) (ADR-014). It defines device tiers, capture protocol, capture/upload gates, the per-scene quality report and viewer budgets. Calibrated values and measured evidence are recorded here and in `PROJECT_MASTER.md`. None yet: no real footage received (KI-014).
+
 Research date: **2026-11-19**. All sources were fetched or searched on that date unless stated. Prices quoted are what the source said on that date; anything computed by us is labelled **ESTIMATE**. Decisions are recorded in [`DECISION_LOG.md`](DECISION_LOG.md) (ADR-004 to ADR-008).
 
 ## 1. The problem in one paragraph

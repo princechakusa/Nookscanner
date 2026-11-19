@@ -19,10 +19,14 @@ From the repository root (`C:\Users\Dev Prince\Projects\nooktour`):
 2. Do **not** run `supabase init` again: `supabase/config.toml` and migrations already exist. If you do run it, answer **no** to overwriting.
 3. `npx supabase@3.2.0 link --project-ref nfcnckwjrwpofkrzribd` (asks for the database password; type it in the terminal, never in chat).
 4. Preview: `npx supabase@3.2.0 db push --dry-run`.
-5. After approval: `npx supabase@3.2.0 db push` (applies `20261119000100_foundation.sql`).
+5. After approval: `npx supabase@3.2.0 db push` (applies `20261119000100_foundation.sql`, `20261120000100_invitations_qr_capture.sql`, `20261120000200_storage.sql`; all three verified on the local stack 2026-11-20).
+   Status 2026-11-20: steps 1 and 3 done by the user (project linked); `migration list --remote` shows nothing applied yet.
 6. Verify in Studio: tables in `public` show RLS enabled; then run `npx supabase@3.2.0 db lint`.
 
 Auth settings to mirror in the hosted dashboard (Authentication > Settings): email confirmations on, minimum password length 10 with letters+digits, refresh token rotation on, site URL and redirect URLs for the dashboard host, custom SMTP before real users.
+
+## 1b. Local Supabase stack
+`npx supabase@3.2.0 start` from the repo root. Ports are in the 565xx range (API `http://127.0.0.1:56521`, DB 56522, Studio 56523, Mailpit 56524) so the stack runs next to other projects' stacks. `npx supabase@3.2.0 db reset` re-applies migrations and seed (local only). DB tests on the stack: `npm run test:db:stack`.
 
 ## 2. Frontends (Phase 3/13)
 - Vercel project `nookscanner-dashboard` (root `apps/dashboard`, build `npm run build -w @nookscanner/dashboard`) and `nookscanner-guest` (root `apps/guest`, output `apps/guest/dist`, SPA rewrite `/a/* -> /index.html`).

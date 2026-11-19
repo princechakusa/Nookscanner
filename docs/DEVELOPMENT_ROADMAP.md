@@ -1,8 +1,10 @@
 # Nookscanner: Development Roadmap
 
-Version 1.0 (2026-11-19). Workflow for every stage: **PROJECT -> PHASE -> STAGE -> IMPLEMENT -> TEST -> AUDIT -> APPROVE -> DOCUMENT -> NEXT STAGE** (MASTER_PROMPT Part 13).
+Version 1.1 (2026-11-20). 3D work is governed by the binding [`3D_QUALITY_BAR.md`](3D_QUALITY_BAR.md) (ADR-014), including section 1b: many managers, many devices; nothing hardcoded to one phone, apartment or organisation. Workflow for every stage: **PROJECT -> PHASE -> STAGE -> IMPLEMENT -> TEST -> AUDIT -> APPROVE -> DOCUMENT -> NEXT STAGE** (MASTER_PROMPT Part 13).
 
 **Universal stage gate** (applies to every stage in addition to its own criteria): lint + typecheck + all tests pass in CI; new tables have RLS + isolation tests; security implications reviewed and threat model updated; docs updated (PROJECT_MASTER status, this roadmap, CHANGELOG, KNOWN_ISSUES, affected specs); evidence recorded with real outputs.
+
+**3D quality gate** (applies to every stage in Phases 5, 6, 7 and 12, from [`3D_QUALITY_BAR.md`](3D_QUALITY_BAR.md)): a 3D stage is never marked DONE without the measured evidence the quality bar requires (capture-gate measurements, per-scene quality report with PSNR/SSIM/LPIPS on held-out frames and SfM registration, per-room and doorway checks, viewer performance per device tier). Targets are initial and must be calibrated on real footage; calibrated values go into `3D_TECHNOLOGY.md` and `PROJECT_MASTER.md`. Device tiers (section 1b): T1 recent iPhone Pro (pilot iPhone 16 Pro Max), T2 older/standard iPhone, T3 high-end Android, T4 mid-range Android, T5 existing video from any camera, gimbal or drone (Method B).
 
 Status legend: `DONE`, `IN PROGRESS`, `BLOCKED (user)`, `TODO`.
 
@@ -13,25 +15,25 @@ Status legend: `DONE`, `IN PROGRESS`, `BLOCKED (user)`, `TODO`.
 | 0.2 Technology research | 3DGS options, capture, viewers, Supabase, frontend/mobile, cloud | 3D_TECHNOLOGY.md + TECH_STACK.md with sources and verification dates; no invented prices | DONE |
 | 0.3 Recommendations | ADRs | DECISION_LOG ADR-000..012 | DONE |
 
-## Phase 1: Architecture and foundation - IN PROGRESS
+## Phase 1: Architecture and foundation - DONE (2026-11-20)
 | Stage | Tasks | Acceptance criteria | Status |
 |---|---|---|---|
 | 1.1 Documentation set | PROJECT_MASTER + 17 docs | All files exist, cross-linked, consistent | DONE |
 | 1.2 Repository + tooling | git init, npm workspaces, TS strict, ESLint, Prettier, EditorConfig, .gitignore, .env.example | `npm ci`, `npm run lint`, `npm run typecheck` pass | DONE (see PROJECT_MASTER 24) |
 | 1.3 App skeletons | dashboard (Next.js), guest (Vite), capture (Expo skeleton, not installed), shared packages, worker package | dashboard + guest build; guest component test passes | DONE |
 | 1.4 DB foundation | first migration, Supabase config, PGlite test harness | migration applies; RLS/isolation tests pass | DONE |
-| 1.5 Test infrastructure + CI | Vitest, PGlite, pytest/unittest, Playwright config, GitHub Actions workflow | `npm test` passes locally; workflow file valid YAML | DONE (CI not yet run on GitHub: no remote) |
-| 1.6 Remote + CI activation | push to GitHub, CI green, branch protection | CI run green on GitHub | BLOCKED (user go-ahead to push to https://github.com/princechakusa/Nookscanner; remote `origin` added; files staged; commit needs a git author identity set by the user) |
+| 1.5 Test infrastructure + CI | Vitest, PGlite, pytest/unittest, Playwright config, GitHub Actions workflow | `npm test` passes locally; workflow file valid YAML | DONE |
+| 1.6 Remote + CI activation | push to GitHub, CI green, branch protection | CI run green on GitHub | DONE: pushed by the user; CI runs 44578429531 and 44579511164 green (2026-11-19). Branch protection is an optional user action on GitHub (Blocked-on-user list) |
 
-## Phase 2: Backend and database
-| Stage | Tasks | Acceptance criteria |
-|---|---|---|
-| 2.1 Supabase projects | link staging project, apply migrations, configure Auth (confirmations, password policy, redirect URLs, SMTP) | `supabase db push` succeeds on staging; auth emails delivered |
-| 2.2 Full schema | migrations for remaining tables (DATABASE_SCHEMA D items needed before Phase 5: invitations, qr_codes, scan_sessions, scan_checkpoints, media_uploads) | migrations apply on PGlite and real Supabase; docs updated |
-| 2.3 Storage | buckets + storage RLS policies | upload tests: own org allowed, other org denied, anon denied |
-| 2.4 Auth flows | signup, verify, login, reset, logout in dashboard | E2E auth tests pass on staging |
-| 2.5 pgTAP on real stack | port RLS tests to pgTAP, run with `supabase test db` | all pass in CI with Docker |
-| 2.6 Backend tests + audit | security review of policies | no Critical/High open |
+## Phase 2: Backend and database - IN PROGRESS
+| Stage | Tasks | Acceptance criteria | Status |
+|---|---|---|---|
+| 2.1 Supabase projects | link staging project, apply migrations, configure Auth (confirmations, password policy, redirect URLs, SMTP) | `supabase db push` succeeds on staging; auth emails delivered | PARTIAL: project linked (by the user); config validated with CLI 3.2.0; all migrations apply on the local stack. `db push` to the hosted project and hosted Auth settings: BLOCKED (user) |
+| 2.2 Full schema | migrations for remaining tables (DATABASE_SCHEMA D items needed before Phase 5: invitations, qr_codes, scan_sessions, scan_checkpoints, media_uploads) | migrations apply on PGlite and real Supabase; docs updated | DONE (local real stack + PGlite; hosted pending 2.1) |
+| 2.3 Storage | buckets + storage RLS policies | upload tests: own org allowed, other org denied, anon denied | DONE (Storage API tests on the local real stack; hosted pending 2.1) |
+| 2.4 Auth flows | signup, verify, login, reset, logout in dashboard | E2E auth tests pass on staging (local stack until hosted is migrated) | TODO (next) |
+| 2.5 DB tests on real stack | run the RLS suites on real Supabase (ADR-013: the same Vitest suites on PGlite and on the local stack, instead of a pgTAP port) | all pass in CI with Docker | DONE locally (64/64); CI job `database-stack` added, first green GitHub run pending the next push |
+| 2.6 Backend tests + audit | security review of policies | no Critical/High open | TODO |
 
 ## Phase 3: Design system and frontend foundation
 | 3.1 Tokens -> Tailwind theme + CSS vars in both apps | tokens consumed; contrast test passes |
@@ -40,31 +42,43 @@ Status legend: `DONE`, `IN PROGRESS`, `BLOCKED (user)`, `TODO`.
 | 3.4 Guest shell (EN/AR, RTL, loading, fallback list) | Playwright mobile emulation EN + AR screenshots reviewed |
 
 ## Phase 4: Property management
-| 4.1 Organizations + invitations | create org, invite, accept, roles; isolation tests |
+| 4.1 Organizations + invitations (DB tables + RPCs done in 2.2; this stage adds UI + invitation email) | create org, invite, accept, roles; isolation tests |
 | 4.2 Properties + apartments CRUD (with layout questionnaire) | E2E CRUD; property-scoped member sees only assigned |
 | 4.3 Rooms (pre-scan list from questionnaire) | rooms created; ordering |
-| 4.4 QR foundation (`qr_codes`, token generation, rotate/revoke) | token entropy test; revoke test |
+| 4.4 QR foundation (`qr_codes` + RPCs done in 2.2; this stage adds UI + QR rendering) | token entropy test; revoke test |
 
 ## Phase 5: Capture and uploads
-| 5.1 Upload registration + TUS upload in dashboard | resume after network drop (E2E with throttling); other-org path denied |
-| 5.2 Server validation (ffprobe in worker "validate" job) | report for good/bad sample videos |
-| 5.3 Nookscanner: auth, apartment select, checkpoint plan, VisionCamera recording, pause/resume/review | runs on iPhone 16 Pro Max (dev build); manual test script passed |
-| 5.4 On-device quality feedback (blur, exposure, speed) | thresholds tuned on sample footage; unit tests for metrics |
-| 5.5 Background resumable upload from app | upload survives app backgrounding |
+Quality bar sections 1b, 2 and 3 apply. Capture settings and gate thresholds are data (per device tier and per video metadata), never constants tied to one phone.
+| Stage | Acceptance criteria |
+|---|---|
+| 5.1 Upload registration + TUS upload in dashboard | resume after network drop (E2E with throttling); other-org path denied; MP4/MOV from any device accepted for validation (Method B is first-class) |
+| 5.2 Server validation (ffprobe in worker "validate" job) | validates resolution, bitrate, codec (H.264, HEVC incl. iPhone HDR/Dolby Vision, Android variants), rotation metadata, variable frame rate and duration; every failure gives a specific, manager-readable reason and re-capture guidance; reports recorded for sample videos from at least tiers T1, T2, T3 or T4, and T5 |
+| 5.3 Device tiers + capture profiles | tier table with minimum capture specs (resolution, fps, stabilisation) recorded in `3D_QUALITY_BAR.md` / `3D_TECHNOLOGY.md`; capture profile chosen from the device's reported capabilities, not its model name; unit tests for tier selection including unknown devices |
+| 5.4 Nookscanner: auth, apartment select, checkpoint plan, VisionCamera recording, pause/resume/review | runs on the pilot iPhone (dev build) **and** at least one other iPhone tier; manual test script passed; capture metadata (device, resolution, fps, lens, exposure mode) recorded per capture |
+| 5.5 On-device quality feedback (blur, exposure, speed, doorway overlap) | quality-bar section 3 metrics computed; per-tier thresholds calibrated on real sample footage from several devices (measured values recorded); unit tests for metrics |
+| 5.6 Background resumable upload from app | upload survives app backgrounding |
 
 ## Phase 6: 3D reconstruction
-| 6.1 Worker container (ffmpeg, COLMAP/GLOMAP, gsplat, SplatTransform) on Modal | processes public sample dataset end to end |
+Quality bar sections 4, 5 and 8 apply. A stage that produces a scene is DONE only with a stored quality report (measured numbers, not estimates).
+| Stage | Acceptance criteria |
+|---|---|
+| 6.1 Worker container (ffmpeg, COLMAP/GLOMAP, gsplat, SplatTransform) on Modal | processes a public sample dataset end to end; then (section 8) one real apartment video end to end as early as possible |
 | 6.2 Dispatch + callbacks + queue + retries | HMAC tests; idempotency; retry on transient failure |
-| 6.3 Bake-off on pilot apartment: self-hosted vs Teleport | metrics + side-by-side review; decision recorded (ADR update) |
-| 6.4 Quality validation (registered frames >= 90%, held-out PSNR recorded, room checklist) | manager review UI shows metrics |
-| 6.5 Asset packaging (SOG + LoD, SPZ, preview) | first-LoD <= 10 MB, total <= 60 MB for pilot apartment |
+| 6.3 Quality report | per scene: PSNR, SSIM, LPIPS on ~10% held-out frames; SfM registered-camera ratio and reprojection error; per-room and whole-apartment numbers; doorway/seam alignment within a stated tolerance; artefact checklist; stored and shown to the manager next to the preview |
+| 6.4 Other-device footage test (before the pipeline is finalised) | one walkthrough from an Android phone (T3/T4) and one from an older iPhone (T2), each through the full pipeline; quality report per video compared with the pilot iPhone (T1); differences recorded; capture/upload gates and per-tier thresholds adjusted from the measurements. If the user has not supplied this footage, "real footage from other phones" goes on the Blocked-on-user list and other stages continue; the pipeline is not marked final until this stage passes |
+| 6.5 Pipeline bake-off on the pilot apartment (section 5): own pipeline settings vs Teleport / other credible options | blind-style visual comparison, metrics, fly-throughs, room continuity, processing time, verified cost, licence; winner chosen on quality first; ADR recorded |
+| 6.6 Baseline + calibration | first real apartment's best result sets the baseline; targets calibrated on varied layouts (studio, multi-bedroom, dark rooms, open plan, glass) as footage becomes available; new scenes outside the margin flagged "needs re-capture" |
+| 6.7 Asset packaging (SOG + LoD, SPZ, preview) | first LoD <= 10 MB, total <= 60 MB for the pilot apartment (initial budget; calibrate per section 6) |
 
 ## Phase 7: Interactive 3D viewer
-| 7.1 `packages/viewer` wrapper over Spark (load, LoD, budget) | loads pilot SOG on iPhone + mid Android at >= 30 fps |
+Quality bar sections 1b and 6 apply: performance is measured per device tier, never on the pilot phone only. Splat budgets and LoD adapt to the guest device's capabilities at runtime.
+| Stage | Acceptance criteria |
+|---|---|
+| 7.1 `packages/viewer` wrapper over Spark (load, LoD, budget) | loads the pilot SOG; measured time to first view, fps, download size and memory recorded on a real iPhone, a mid-range Android, a tablet and desktop, plus throttled 4G |
 | 7.2 Camera controls + constraints | E2E controls; no floor clipping |
 | 7.3 Alignment tools (floor, scale, crop) | measured door width within 3% |
-| 7.4 Rooms + viewpoints + transitions | navigation tests pass |
-| 7.5 Performance tuning | NFR-PERF-03/05 met on test devices |
+| 7.4 Rooms + viewpoints + transitions | navigation tests pass; every room reachable from the entrance |
+| 7.5 Performance tuning per device tier | NFR-PERF-03/05 met on the measured device matrix; per-tier budgets recorded; fallback list view works when 3D fails or is too slow |
 
 ## Phase 8: Appliance hotspots
 | 8.1 Categories + model library + appliances | CRUD + isolation tests |
@@ -91,7 +105,7 @@ Status legend: `DONE`, `IN PROGRESS`, `BLOCKED (user)`, `TODO`.
 Security audit (ASVS L2), ZAP scans, penetration test (authorized), performance + load tests (k6), accessibility audit (axe + manual), device matrix, backup/restore drill. Acceptance: no open Critical/High; budgets met; restore drill succeeded.
 
 ## Phase 12: Real apartment pilot
-Scan one apartment, validate visual quality and room connections, place real hotspots, guest testing on iOS/Android, measure load performance, collect feedback, fix. Acceptance: full Part 15 workflow passes with real footage; documented evidence.
+Scan one apartment, validate visual quality and room connections, place real hotspots, guest testing on iOS/Android, measure load performance, collect feedback, fix. Acceptance: full Part 15 workflow passes with real footage; every publishable scene meets quality-bar section 7 (capture gates passed or override recorded, quality report stored, manager approval, rooms connected and navigable, hotspot positions verified, performance measured on at least one real iPhone and one Android browser); measured evidence for the pilot iPhone, one older iPhone and one Android-recorded video, across more than one apartment layout where available; documented in `PROJECT_MASTER.md`.
 
 ## Phase 13: Production deployment
 Production config, backup verification, infra deploy, monitoring, logging, error reporting, deployment docs, production readiness audit (PROJECT_MASTER section 20). Acceptance: checklist 100%.

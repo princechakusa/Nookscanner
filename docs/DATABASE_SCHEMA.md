@@ -1,6 +1,6 @@
 # Nookscanner: Database Schema
 
-Version 1.0 (2026-11-19). Postgres on Supabase. **All schema changes are made through migrations in `supabase/migrations/`; undocumented changes are forbidden.** When a migration changes the schema, this document is updated in the same commit.
+Version 1.1 (2026-11-20). Postgres on Supabase. **All schema changes are made through migrations in `supabase/migrations/`; undocumented changes are forbidden.** When a migration changes the schema, this document is updated in the same commit.
 
 Implementation status per table is in the last column of the overview (`M` = migrated and tested, `D` = designed, migration scheduled).
 
@@ -24,13 +24,13 @@ Implementation status per table is in the last column of the overview (`M` = mig
 | 3 | `organization_members` | User membership + role + scope | M |
 | 4 | `role_permissions` | Role -> permission key mapping (seeded, read-only to users) | M |
 | 5 | `property_members` | Property scoping for members with `scope='properties'` | M |
-| 6 | `organization_invitations` | Pending email invitations | D (Phase 4) |
+| 6 | `organization_invitations` | Pending email invitations | M |
 | 7 | `properties` | Buildings/sites | M |
 | 8 | `apartments` | Units within a property | M |
 | 9 | `rooms` | Rooms within an apartment + scene-space geometry | M |
-| 10 | `scan_sessions` | One capture attempt (guided or upload) | D (Phase 5) |
-| 11 | `scan_checkpoints` | Guided checkpoints within a session | D (Phase 5) |
-| 12 | `media_uploads` | Uploaded videos/files and their validation | D (Phase 5) |
+| 10 | `scan_sessions` | One capture attempt (guided or upload) | M |
+| 11 | `scan_checkpoints` | Guided checkpoints within a session | M |
+| 12 | `media_uploads` | Uploaded videos/files and their validation | M |
 | 13 | `processing_jobs` | Reconstruction jobs | D (Phase 6) |
 | 14 | `processing_results` | Metrics + review outcome per job | D (Phase 6) |
 | 15 | `scene_versions` | A reconstructed scene of an apartment + alignment | D (Phase 6) |
@@ -43,7 +43,7 @@ Implementation status per table is in the last column of the overview (`M` = mig
 | 22 | `instruction_versions` | Versioned, per-locale instruction content + verification | D (Phase 8) |
 | 23 | `instruction_media` | Images/videos for instructions | D (Phase 8) |
 | 24 | `published_versions` | Immutable guest snapshot per publication | D (Phase 8/9) |
-| 25 | `qr_codes` | Guest access tokens per apartment | D (Phase 4) |
+| 25 | `qr_codes` | Guest access tokens per apartment | M |
 | 26 | `guest_sessions` | Anonymous guest visits | D (Phase 9) |
 | 27 | `analytics_events` | Guest and system events | D (Phase 9/10) |
 | 28 | `support_interactions` | Guest support contacts | D (Phase 9) |
@@ -145,8 +145,9 @@ Purpose: role -> permission mapping (ADR-011). PK `(role, permission)`. Seeded b
 ### 4.5 `property_members` (M)
 PK `(property_id, user_id)`; `organization_id`, `property_id FK properties on delete cascade`, `user_id FK auth.users on delete cascade`. Trigger checks org consistency and that the user is a member of the org. RLS: select if `member.read`; write needs `member.manage`.
 
-### 4.6 `organization_invitations` (D)
+### 4.6 `organization_invitations` (M)
 `id`, `organization_id`, `email citext`, `role org_role`, `scope member_scope`, `property_ids uuid[]`, `token_hash text unique` (SHA-256 of a random token; the token itself is only emailed), `expires_at` (7 days), `accepted_at`, `invited_by`. RLS: `member.manage`. Acceptance via RPC that verifies hash, expiry and email match.
+- **As implemented (migration `20261120000100`):** `email text` stored lower-cased with a format check (no `citext` extension, so PGlite and Supabase behave identically); `role` can never be `owner` (ownership transfer is a separate owner-only action); `scope='properties'` iff `property_ids` is non-empty; extra columns `accepted_by`, `revoked_at`; one open invitation per (org, email). RPCs: `create_invitation(org, email, role, scope, property_ids)` returns the plaintext token once (only `token_hash` = SHA-256 hex is stored); `accept_invitation(token)` returns a uniform `NOT_FOUND` for unknown/used/revoked/expired tokens and `FORBIDDEN` when the signed-in email differs; `revoke_invitation(id)`. No direct client writes.
 
 ### 4.7 `properties` (M)
 - `id`, `organization_id`, `name text (1..120)`, `address_line1/2 text`, `city text`, `country_code char(2)`, `timezone text not null default 'UTC'`, `default_locale locale_code`, `support_phone text`, `support_email text`, `support_whatsapp text`, `archived_at timestamptz`.
@@ -162,14 +163,16 @@ PK `(property_id, user_id)`; `organization_id`, `property_id FK properties on de
 - `id`, `organization_id`, `apartment_id FK apartments on delete cascade`, `name_en text not null`, `name_ar text`, `room_type room_type not null`, `sort_order int default 0`, `floor_polygon jsonb` (array of [x,z] in metres, scene space), `height_range numrange`, `viewpoints jsonb not null default '[]'` (array of {position:[x,y,z], target:[x,y,z]}), `connections uuid[] default '{}'` (adjacent room ids), unique `(apartment_id, name_en)`.
 - RLS: read `apartment.read`; write `room.write` (scoped through apartment's property).
 
-### 4.10 `scan_sessions` (D)
+### 4.10 `scan_sessions` (M)
 `id`, `organization_id`, `apartment_id`, `method capture_method`, `status scan_status`, `checkpoint_plan jsonb`, `device_info jsonb` (model, OS, app version; no location), `created_by`, `submitted_at`, `notes`. Index `(apartment_id, created_at desc)`. RLS read `scan.read`, write `scan.create`.
+- **As implemented:** `device_info` rejects location keys (`location`, `latitude`, `longitude`, `gps`); `created_by` must equal the caller; members may only set capture states (`draft`..`submitted`, `cancelled`), processing states are platform-only; `apartment_id`, `method`, `created_by` immutable; delete only while `draft`/`cancelled`.
 
-### 4.11 `scan_checkpoints` (D)
-`id`, `organization_id`, `scan_session_id`, `sequence int`, `label_en`, `label_ar`, `room_type`, `room_id uuid null`, `media_upload_id uuid null`, `start_ms int`, `end_ms int`, `quality jsonb` (blur/exposure/speed summary), `status text check in ('pending','recorded','skipped')`. Unique `(scan_session_id, sequence)`.
+### 4.11 `scan_checkpoints` (M)
+`id`, `organization_id`, `scan_session_id`, `sequence int`, `label_en`, `label_ar`, `room_type`, `room_id uuid null`, `media_upload_id uuid null`, `start_ms int`, `end_ms int`, `quality jsonb` (blur/exposure/speed summary), `status text check in ('pending','recorded','skipped')`. Unique `(scan_session_id, sequence)`. **As implemented:** `room_id` must belong to the scanned apartment (trigger).
 
-### 4.12 `media_uploads` (D)
+### 4.12 `media_uploads` (M)
 `id`, `organization_id`, `scan_session_id`, `bucket text`, `object_path text unique`, `original_filename text (<=255)`, `mime_type text check in allowed list`, `size_bytes bigint check > 0 and <= plan max`, `sha256 text`, `duration_ms int`, `width int`, `height int`, `fps numeric`, `codec text`, `status upload_status`, `validation_report jsonb`, `retain_until timestamptz`, `created_by`. Index `(scan_session_id)`, `(status)`.
+- **As implemented:** created only by `register_media_upload(session, filename, mime, size)`, which checks `scan.create`, allows `video/mp4` and `video/quicktime`, size 1 B..10 GiB, builds `object_path = org/<org>/scans/<session>/<upload>.<ext>` server-side and moves the session to `uploading`. Members can only read; status/metadata are written by the platform (validation worker, Phase 5). `object_path`, `bucket`, `scan_session_id`, `created_by` immutable.
 
 ### 4.13 `processing_jobs` (D)
 `id`, `organization_id`, `scan_session_id`, `provider text check in ('self_hosted_gsplat','varjo_teleport')`, `status job_status`, `attempt int default 1`, `idempotency_key text unique`, `provider_job_id text`, `stage text`, `progress numeric(5,2) check 0..100`, `error_code text`, `error_message text` (sanitized), `parameters jsonb`, `queued_at`, `started_at`, `finished_at`, `cost_estimate_usd numeric(10,4)`. Index `(status, queued_at)`. Writes only by service role (callbacks); members read with `scan.read`; cancel via RPC.
@@ -207,8 +210,9 @@ PK `(property_id, user_id)`; `organization_id`, `property_id FK properties on de
 ### 4.24 `published_versions` (D)
 `id`, `organization_id`, `apartment_id`, `version int`, `scene_version_id`, `snapshot jsonb` (guest payload), `published_by`, `published_at`. Insert only via `publish_apartment` RPC. Immutable.
 
-### 4.25 `qr_codes` (D)
+### 4.25 `qr_codes` (M)
 `id`, `organization_id`, `apartment_id`, `token text unique` (>= 128-bit random, base64url), `label`, `status qr_status`, `created_by`, `revoked_at`, `revoked_by`. RLS: `qr.manage`; guests never query directly (Edge Function).
+- **As implemented:** tokens are 32 random bytes (from two `gen_random_uuid()` CSPRNG values, 244 random bits) base64url (43 chars), generated only inside `create_qr_code(apartment, label)`; clients cannot insert or change tokens or status (only `label` is updatable); `revoke_qr_code(id)` is one-way (rotate = revoke + create). Tokens are stripped from `audit_logs`.
 
 ### 4.26 `guest_sessions` (D)
 `id`, `organization_id`, `apartment_id`, `qr_code_id`, `started_at`, `last_seen_at`, `locale`, `device_class text` (mobile/tablet/desktop), `browser_family text`, `webgl2 boolean`. **No IP, no full user agent, no name.** Insert via Edge Function only. Retention 13 months.
@@ -240,8 +244,12 @@ PK `(property_id, user_id)`; `organization_id`, `property_id FK properties on de
 | `instruction-media` | No | Draft images/videos | read/write `instruction.write` |
 | `published-assets` | Yes | Content-hashed published SOG, previews, instruction media | write service role only (publish RPC/Edge Function) |
 
+**As implemented (migration `20261120000200_storage.sql`):** all five buckets created. `raw-footage`: insert only when a `pending` `media_uploads` row with the same `object_path` was registered by the same user who still holds `scan.create`; read with `scan.read` on the session; MIME allowlist `video/mp4`, `video/quicktime`; no per-bucket size limit (project limit applies, KI-015). `scene-drafts`: read `scan.read` via path `org/<org>/apartments/<apartment>/...` (org in path must match the apartment's org). `instruction-media`: read `apartment.read`, insert/update `instruction.write`, same path rule, 100 MB, image/video allowlist. Malformed paths, `..` and `//` are rejected. No member deletes anywhere. Helper functions: `storage_path_apartment`, `can_upload_raw_footage`, `can_read_raw_footage`, `can_access_storage_apartment`.
+
 ## 6. Migration list
 
 | File | Content | Status |
 |---|---|---|
-| `20261119000100_foundation.sql` | extensions, enums (foundation subset), utility triggers, profiles, organizations, members, role_permissions, property_members, properties, apartments, rooms, audit_logs, helper functions, RLS, `create_organization` RPC | Applied in PGlite tests; not yet applied to any hosted Supabase project |
+| `20261119000100_foundation.sql` | extensions, enums (foundation subset), utility triggers, profiles, organizations, members, role_permissions, property_members, properties, apartments, rooms, audit_logs, helper functions, RLS, `create_organization` RPC | Applied on PGlite and the local Supabase stack; not on the hosted project |
+| `20261120000100_invitations_qr_capture.sql` | enums capture_method, scan_status, upload_status, qr_status; `generate_token`; organization_invitations, qr_codes, scan_sessions, scan_checkpoints, media_uploads; extended `enforce_parent_org` and `audit_trigger` (strips `token`/`token_hash`); invitation, QR and upload-registration RPCs; RLS | Applied on PGlite and the local Supabase stack; not on the hosted project |
+| `20261120000200_storage.sql` | five buckets, storage path helpers, `storage.objects` policies | Applied on PGlite (shim) and the local Supabase stack; not on the hosted project |
