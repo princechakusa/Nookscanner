@@ -19,8 +19,8 @@
   --nt-color-status-danger: #B42318;
   --nt-color-status-info: #1D5FD1;
   --nt-color-focus: #2F80ED;
-  --nt-font-latin: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --nt-font-arabic: 'IBM Plex Sans Arabic', 'Inter', system-ui, sans-serif;
+  --nt-font-latin: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --nt-font-arabic: 'IBM Plex Sans Arabic', 'Inter Variable', 'Inter', system-ui, sans-serif;
   --nt-text-xs: 0.75rem;
   --nt-leading-xs: 1rem;
   --nt-text-sm: 0.875rem;

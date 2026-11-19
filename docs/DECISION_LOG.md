@@ -19,6 +19,7 @@ Format per decision (Part 5.5): selected, reason, alternatives, advantages, limi
 | ADR-012 | Guest access via unguessable QR token through an Edge Function, no direct table access | Accepted | 2026-11-19 |
 | ADR-013 | Same DB test suites on PGlite and on the real local Supabase stack (instead of a pgTAP port) | Accepted | 2026-11-20 |
 | ADR-014 | 3D quality bar is binding; device tiers; measured evidence gates 3D stages | Accepted (user requirement) | 2026-11-20 |
+| ADR-015 | Styling: design-token CSS variables + `packages/ui`, no Tailwind | Accepted | 2026-11-20 |
 
 ---
 
@@ -125,3 +126,10 @@ Format per decision (Part 5.5): selected, reason, alternatives, advantages, limi
 - **Reason:** the product is for many managers with many phones; tuning only for the pilot iPhone would fail in the field. Quality must be the best achievable and is therefore measured, not asserted.
 - **Limitations:** needs real footage from several devices and layouts (user-supplied); until then, targets are initial and stages that need them stay open (Blocked-on-user list).
 - **Alternatives considered:** pilot-device-only tuning (rejected: violates section 1b); fixed global thresholds (rejected: different sensors and codecs need different gates).
+
+## ADR-015: Styling with design-token CSS variables and a shared `packages/ui`, no Tailwind
+- **Selected:** components in `packages/ui` (React, `'use client'`), styled with plain CSS that uses only the generated `--nt-*` custom properties and logical properties; apps import `tokens.css` + `ui.css`. Fonts self-hosted via Fontsource (pinned 5.3.0).
+- **Reason:** tokens already exist as CSS variables (single source of truth in TypeScript, contrast-tested); one stylesheet works unchanged in Next.js and Vite; no build plugin in two different bundlers; no class-name generation to keep in sync with CSP; RTL handled by logical properties; the guest bundle stays small (guest CSS 9.6 kB gzip incl. font-face rules).
+- **Alternatives:** Tailwind CSS 4 (fast authoring, but a second token pipeline and plugin config in both bundlers), CSS-in-JS (runtime cost, CSP friction), component libraries such as Radix/shadcn (good accessibility primitives; can be added per component later if needed).
+- **Limitations:** hand-written CSS needs discipline (lint for raw colours is a possible future check); no utility classes.
+- **Supply chain:** new dev dependencies pinned to releases at least two weeks old (axe-core 4.14.0, @axe-core/playwright 4.14.0, @testing-library/user-event 14.6.8).

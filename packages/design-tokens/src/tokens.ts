@@ -39,8 +39,8 @@ export const color = {
 } as const;
 
 export const font = {
-  latin: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
-  arabic: "'IBM Plex Sans Arabic', 'Inter', system-ui, sans-serif",
+  latin: "'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+  arabic: "'IBM Plex Sans Arabic', 'Inter Variable', 'Inter', system-ui, sans-serif",
 } as const;
 
 /** [font-size rem, line-height rem] */

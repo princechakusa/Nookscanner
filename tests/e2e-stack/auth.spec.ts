@@ -3,63 +3,16 @@
  * (signup -> email confirmation -> sign in/out -> password reset), emails read from Mailpit.
  * Run with `npm run test:e2e:stack` (scripts/e2e-stack.mjs).
  */
-import { expect, test, type Page } from '@playwright/test';
-
-const MAILPIT = process.env.MAILPIT_URL ?? 'http://127.0.0.1:56524';
-const run = Math.random().toString(36).slice(2, 8);
-const PASSWORD = 'Apartment2026';
-const NEW_PASSWORD = 'Apartment2027x';
-
-interface MailSummary {
-  ID: string;
-  Subject: string;
-}
-
-async function latestLink(email: string, subject: RegExp): Promise<string> {
-  for (let attempt = 0; attempt < 30; attempt += 1) {
-    const res = await fetch(
-      `${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}`,
-    );
-    const body = (await res.json()) as { messages: MailSummary[] };
-    const msg = body.messages.find((m) => subject.test(m.Subject));
-    if (msg) {
-      const full = (await (await fetch(`${MAILPIT}/api/v1/message/${msg.ID}`)).json()) as {
-        HTML: string;
-      };
-      const href = /href="([^"]*\/auth\/confirm[^"]*)"/.exec(full.HTML)?.[1];
-      if (!href) throw new Error('no confirm link in email');
-      return href.replace(/&amp;/g, '&');
-    }
-    await new Promise((r) => setTimeout(r, 500));
-  }
-  throw new Error(`no email "${subject}" for ${email}`);
-}
-
-async function signIn(page: Page, email: string, password: string, next?: string) {
-  await page.goto(next ? `/login?next=${encodeURIComponent(next)}` : '/login');
-  await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(password);
-  await page.getByRole('button', { name: 'Sign in' }).click();
-}
-
-async function signOut(page: Page) {
-  await page.getByRole('button', { name: 'Sign out' }).click();
-  await expect(page).toHaveURL(/\/login$/);
-}
-
-async function signUpAndConfirm(page: Page, email: string) {
-  await page.goto('/signup');
-  await page.getByLabel('Full name').fill('Test Manager');
-  await page.getByLabel('Work email').fill(email);
-  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await page.getByRole('button', { name: 'Create account' }).click();
-  await expect(page.getByRole('status')).toContainText('Check your email');
-  const link = await latestLink(email, /Confirm your Nookscanner account/);
-  await page.goto(link);
-  await page.getByRole('button', { name: 'Confirm email' }).click();
-  await expect(page).toHaveURL(/\/app$/);
-  return link;
-}
+import { expect, test } from '@playwright/test';
+import {
+  NEW_PASSWORD,
+  PASSWORD,
+  latestLink,
+  run,
+  signIn,
+  signOut,
+  signUpAndConfirm,
+} from './helpers.ts';
 
 test('signed-out visitors are sent to sign-in, keeping the target path', async ({ page }) => {
   await page.goto('/app');

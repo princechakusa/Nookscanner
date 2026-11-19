@@ -35,11 +35,13 @@ Status legend: `DONE`, `IN PROGRESS`, `BLOCKED (user)`, `TODO`.
 | 2.5 DB tests on real stack | run the RLS suites on real Supabase (ADR-013: the same Vitest suites on PGlite and on the local stack, instead of a pgTAP port) | all pass in CI with Docker | DONE locally (64/64); CI job `database-stack` added, first green GitHub run pending the next push |
 | 2.6 Backend tests + audit | security review of policies | no Critical/High open | DONE: 5 findings (3 Medium, 2 Low) fixed and regression-tested; Supabase security advisors 0 findings; no Critical/High open (SECURITY.md section 10) |
 
-## Phase 3: Design system and frontend foundation
-| 3.1 Tokens -> Tailwind theme + CSS vars in both apps | tokens consumed; contrast test passes |
-| 3.2 Core components (button, input, select, modal, toast, table, empty/error/loading) | component tests + a11y (axe) pass |
-| 3.3 Dashboard shell (sidebar, org switcher, auth guard) | Playwright: unauthenticated redirect, shell renders |
-| 3.4 Guest shell (EN/AR, RTL, loading, fallback list) | Playwright mobile emulation EN + AR screenshots reviewed |
+## Phase 3: Design system and frontend foundation - IN PROGRESS
+| Stage | Acceptance criteria | Status |
+|---|---|---|
+| 3.1 Tokens -> CSS vars in both apps + self-hosted fonts (ADR-015: no Tailwind) | tokens consumed; contrast test passes | DONE (design-tokens 19 tests incl. contrast) |
+| 3.2 Core components (button, input, select, modal, toast, table, empty/error/loading) in `packages/ui` | component tests + a11y (axe) pass | DONE (6 tests, axe clean) |
+| 3.3 Dashboard shell (sidebar, org switcher, auth guard) | Playwright: unauthenticated redirect, shell renders | DONE (stack E2E 16/16 incl. axe WCAG 2.2 AA on desktop + iPhone WebKit) |
+| 3.4 Guest shell (EN/AR, RTL, loading, fallback list) per mockups 01/02/04 | Playwright mobile emulation EN + AR screenshots reviewed | TODO (next) |
 
 ## Phase 4: Property management
 | 4.1 Organizations + invitations (DB tables + RPCs done in 2.2; this stage adds UI + invitation email) | create org, invite, accept, roles; isolation tests |

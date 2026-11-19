@@ -2,7 +2,11 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import type { ReactNode } from 'react';
 import { brand } from '@nookscanner/design-tokens';
+import '@fontsource-variable/inter/wght.css';
+import '@fontsource/ibm-plex-sans-arabic/400.css';
+import '@fontsource/ibm-plex-sans-arabic/600.css';
 import '@nookscanner/design-tokens/tokens.css';
+import '@nookscanner/ui/ui.css';
 import './globals.css';
 
 export const metadata: Metadata = {

@@ -2,6 +2,21 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Phase 3 stages 3.1-3.3 (tokens, components, dashboard shell)
+
+### Added
+- `packages/ui`: Button, TextField, SelectField, Modal (native dialog), toasts, StatusPill, DataTable (stacks below md), Empty/Error/Skeleton/Spinner; token-only CSS; 6 tests with axe.
+- Self-hosted Inter (variable) and IBM Plex Sans Arabic in both apps; font tokens updated.
+- Dashboard shell: collapsible sidebar, org switcher (validated httpOnly preference cookie), breadcrumbs, mobile drawer, skip link; section pages for Apartments, Properties, Scans, Appliances, Analytics, Settings.
+- `tests/e2e-stack/shell.spec.ts` with `@axe-core/playwright` (WCAG 2.2 AA tags); shared `tests/e2e-stack/helpers.ts`.
+- DESIGN_SYSTEM section 9: screen designs from the user's mockups and for the four screens without mockups; ADR-015.
+
+### Test results (local)
+- Unit: shared 49, design-tokens 19, ui 6, dashboard 23, guest 7, database 68 (+5 stack-only). Stack E2E 16/16 (desktop Chromium + iPhone 15 WebKit, axe clean). Guest E2E 6/6. Lint, format, typecheck, build, secret scan (19 files): pass.
+
+### Fixed
+R-014 (drawer accessibility), R-015.
+
 ## 2026-11-20: Hosted rollout of the database (user-approved)
 
 - `db push --remote`: 5 migrations applied to `nfcnckwjrwpofkrzribd`. New migration `20261120000400_private_helpers.sql` after the hosted advisor flagged API-callable helpers (R-013).

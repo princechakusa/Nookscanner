@@ -21,6 +21,7 @@ Brand research: [`docs/BRAND_IDENTITY.md`](docs/BRAND_IDENTITY.md). Decision: AD
 | Requirements, roles, journeys, modules | [`docs/PRODUCT_REQUIREMENTS.md`](docs/PRODUCT_REQUIREMENTS.md) |
 | Architecture, repo layout, workflows | [`docs/SYSTEM_ARCHITECTURE.md`](docs/SYSTEM_ARCHITECTURE.md) |
 | Technology stack and research sources | [`docs/TECH_STACK.md`](docs/TECH_STACK.md), [`docs/3D_TECHNOLOGY.md`](docs/3D_TECHNOLOGY.md) |
+| Design references (concept mockups) and screen designs | [`docs/design/`](docs/design/), [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) section 9 |
 | **3D quality bar (binding)**: device tiers, capture protocol, quality gates, quality report, viewer budgets | [`docs/3D_QUALITY_BAR.md`](docs/3D_QUALITY_BAR.md) (ADR-014) |
 | Decisions (ADRs) | [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md) |
 | Database | [`docs/DATABASE_SCHEMA.md`](docs/DATABASE_SCHEMA.md) |
@@ -131,7 +132,7 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 
 ## 24. Current project status
 
-**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2 complete on the **local** Supabase stack: 2.2 schema, 2.3 storage, 2.4 dashboard auth, 2.5 real-stack DB tests, 2.6 security review (5 findings fixed, no Critical/High open). All 5 migrations are applied to the hosted project (user-approved) and verified (lint clean, advisors accepted, anon smoke 30/30); only hosted Auth dashboard settings remain (Blocked on user 1). **Next stage: Phase 3.1 (design tokens consumed in both apps), then 3.2-3.4 (core components, dashboard shell, guest shell using the mockups in `docs/design/`).** The binding 3D quality bar (`docs/3D_QUALITY_BAR.md`, ADR-014) is wired into Phases 5, 6, 7 and 12.
+**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2 complete on the **local** Supabase stack: 2.2 schema, 2.3 storage, 2.4 dashboard auth, 2.5 real-stack DB tests, 2.6 security review (5 findings fixed, no Critical/High open). All 5 migrations are applied to the hosted project (user-approved) and verified (lint clean, advisors accepted, anon smoke 30/30); only hosted Auth dashboard settings remain (Blocked on user 1). Phase 3: 3.1 tokens + fonts, 3.2 `packages/ui` components, 3.3 dashboard shell DONE. **Next stage: 3.4 guest shell (mockups 01/02/04), then Phase 4.** The binding 3D quality bar (`docs/3D_QUALITY_BAR.md`, ADR-014) is wired into Phases 5, 6, 7 and 12.
 
 **Implemented**
 - Full documentation set (this file + 18 docs incl. the 3D quality bar).
@@ -146,19 +147,19 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 | Command | Result |
 |---|---|
 | `npm run lint` / `format:check` / `typecheck` | pass |
-| `npm test` | all workspaces pass (shared 49, design-tokens 19, dashboard 19, guest 7, database on PGlite 68 + 5 stack-only skipped) |
-| `npm run test:e2e:stack` (dashboard auth on the local stack) | 12 passed (desktop Chromium + iPhone 15 WebKit) |
+| `npm test` | all workspaces pass (shared 49, design-tokens 19, ui 6, dashboard 23, guest 7, database on PGlite 68 + 5 stack-only skipped) |
+| `npm run test:e2e:stack` (dashboard auth + shell + axe on the local stack) | 16 passed (desktop Chromium + iPhone 15 WebKit) |
 | `npm run test:e2e` (guest) | 6 passed |
 | `npm run test:db:stack` (real local Supabase) | 73 passed, 0 failed (after `db reset`) |
 | Hosted project: `db lint --remote`, `db advisors --remote`, read-only catalog query, `npm run test:hosted:smoke` | no errors; 7 WARN = intended RPCs (accepted); 15/15 tables with RLS, 0 anon grants; smoke 30/30 |
 | `supabase db advisors` (security) / `db lint` | 0 security findings / no errors |
 | `supabase db lint --level warning` (local) | no schema errors |
 | `npm run build` | dashboard + guest built; guest initial JS 70.18 kB gzip |
-| `npm run check:secrets` | 17 files, no privileged keys |
+| `npm run check:secrets` | 19 files, no privileged keys |
 | `npm run test:worker` | 14 passed |
 | GitHub CI (previous push) | green: runs 44578429531, 44579511164 |
 
-Failures found and fixed: R-005..R-013 in [`KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md).
+Failures found and fixed: R-005..R-015 in [`KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md).
 
 **Not tested / not done:** authenticated flows on the hosted project (needs Blocked-on-user 1); auth on the hosted project (templates/site URL not set, KI-017); CAPTCHA/leaked-password protection (KI-019); no 3D work yet, so **no 3D quality evidence exists**.
 
@@ -181,3 +182,4 @@ Failures found and fixed: R-005..R-013 in [`KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.
 | 2026-11-20 (cont.) | Stage 2.4: dashboard auth flows with nonce CSP and proxy guard; 12/12 stack E2E; fixed a redirect loop on revoked sessions (R-010); KI-008 closed. |
 | 2026-11-20 (cont.) | Stage 2.6 security review: advisors clean, 5 logic findings fixed (migration 0300), 71/71 on the real stack; Phase 2 complete locally. |
 | 2026-11-20 (cont.) | User approved push + hosted migrations: pushed; 5 migrations applied to hosted; hosted advisor finding fixed (helpers to `private`); hosted smoke 30/30. |
+| 2026-11-20 (cont.) | Phase 3.1-3.3: tokens/fonts, `packages/ui`, dashboard shell; screen designs for all 7 screens recorded; stack E2E 16/16 with axe. |
