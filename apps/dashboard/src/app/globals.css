@@ -425,3 +425,64 @@ body {
     transition: none;
   }
 }
+
+.ns-form {
+  display: grid;
+  gap: var(--nt-space-5);
+  max-inline-size: 640px;
+}
+.ns-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--nt-space-5);
+}
+@media (max-width: 767px) {
+  .ns-form__row {
+    grid-template-columns: 1fr;
+  }
+}
+.ns-fieldset {
+  display: grid;
+  gap: var(--nt-space-2);
+  border: 1px solid var(--nt-color-neutral-border);
+  border-radius: var(--nt-radius-md);
+  padding: var(--nt-space-4);
+}
+.ns-check {
+  display: flex;
+  align-items: center;
+  gap: var(--nt-space-3);
+  min-block-size: 32px;
+}
+.ns-notice__title {
+  margin: 0 0 var(--nt-space-2);
+  font-weight: 600;
+}
+.ns-copy {
+  display: flex;
+  gap: var(--nt-space-3);
+  margin-block-start: var(--nt-space-3);
+}
+.ns-copy .ns-input {
+  flex: 1;
+  min-inline-size: 0;
+}
+.ns-member-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nt-space-3);
+}
+.ns-inline-form {
+  display: flex;
+  align-items: center;
+  gap: var(--nt-space-2);
+}
+.ns-visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

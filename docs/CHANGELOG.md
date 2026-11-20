@@ -2,6 +2,20 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 4.1 organizations + invitations UI (IN PROGRESS)
+
+### Added
+- Shared `org.ts`: slugify, invitation input schema (no owner invites, scoped roles only) - 7 tests.
+- Dashboard: create organization (overview + settings), members table with per-person role change/remove/leave, invite form with a one-time copy link (email delivery waits for SMTP), pending invitations with revoke, `/invite/[token]` accept page (POST, no-referrer), `/invite` protected by the proxy.
+- Sign-out now clears all Supabase auth cookies and the active-org preference.
+- `packages/ui` split into server-safe and client modules.
+
+### Test results (local)
+- Unit: shared 62, design-tokens 19, ui 6, dashboard 24, guest 14, database 68 (+5). Stack E2E 16 passed, 2 skipped (`org.spec.ts` marked `test.fixme`, KI-022). Guest E2E 12/12. Build, lint, format, typecheck, secret scan (20 files): pass.
+
+### Open
+- KI-022 blocks completing 4.1.
+
 ## 2026-11-20: Stage 3.4 guest shell (Phase 3 complete)
 
 ### Added

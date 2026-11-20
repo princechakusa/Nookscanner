@@ -1,5 +1,5 @@
 /** Route classification used by the proxy guard (unit-tested). */
-const PROTECTED_PREFIXES = ['/app', '/reset-password'] as const;
+const PROTECTED_PREFIXES = ['/app', '/reset-password', '/invite'] as const;
 const AUTH_PAGES = ['/login', '/signup', '/forgot-password'] as const;
 
 const matches = (pathname: string, prefix: string) =>

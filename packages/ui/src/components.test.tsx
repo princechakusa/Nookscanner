@@ -15,7 +15,7 @@ import {
   TextField,
   ToastProvider,
   useToast,
-} from './components.tsx';
+} from './index.ts';
 
 afterEach(cleanup);
 

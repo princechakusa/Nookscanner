@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { createSupabaseServerClient } from '../../lib/supabase/server.ts';
+import { CreateOrgForm } from './forms.tsx';
+import { createOrganizationAction } from './org-actions.ts';
 
 export const metadata: Metadata = { title: 'Overview' };
 
@@ -33,13 +35,19 @@ export default async function OverviewPage({
       <p className="ns-muted" data-testid="signed-in-email">
         Signed in as {data.user?.email}
       </p>
+      {params.joined === '1' && (
+        <p className="ns-notice" role="status">
+          You joined the organization.
+        </p>
+      )}
       {!count && (
         <section className="ns-panel">
           <h2 className="ns-panel__title">Set up your organization</h2>
           <p className="ns-muted">
-            You are not a member of an organization yet. Creating an organization and inviting your
-            team arrive in the next stage.
+            Create an organization for your company, or open an invitation link from a colleague to
+            join theirs.
           </p>
+          <CreateOrgForm action={createOrganizationAction} />
         </section>
       )}
     </div>

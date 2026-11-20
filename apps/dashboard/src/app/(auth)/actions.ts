@@ -11,6 +11,7 @@ import {
   type AuthFieldErrors,
 } from '@nookscanner/shared';
 import type { EmailOtpType } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '../../lib/supabase/server.ts';
 
@@ -127,8 +128,23 @@ export async function confirmEmailAction(
   redirect(type === 'recovery' ? '/reset-password' : safeNextPath(str(form, 'next')));
 }
 
+/** Removes every Supabase auth cookie (session chunks and PKCE flow verifiers) plus UI prefs. */
+async function clearAuthCookies(): Promise<void> {
+  const store = await cookies();
+  for (const c of store.getAll()) {
+    if (c.name.startsWith('sb-')) store.delete(c.name);
+  }
+  store.delete({ name: 'ns_org', path: '/app' });
+}
+
+/**
+ * Signs out and clears all auth state so the next person on a shared device starts clean.
+ * Leftover PKCE flow cookies from an earlier sign-up made a following sign-up lose its
+ * session (KNOWN_ISSUES R-018).
+ */
 export async function signOutAction(): Promise<void> {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
+  await clearAuthCookies();
   redirect('/login');
 }

@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { isAuthPage, isProtectedPath } from './routes.ts';
 
 describe('route guard classification', () => {
-  it.each(['/app', '/app/', '/app/properties/1', '/reset-password'])('%s is protected', (p) =>
-    expect(isProtectedPath(p)).toBe(true),
+  it.each(['/app', '/app/', '/app/properties/1', '/reset-password', '/invite/abc'])(
+    '%s is protected',
+    (p) => expect(isProtectedPath(p)).toBe(true),
   );
 
   it.each(['/', '/login', '/signup', '/application', '/apps', '/auth/confirm'])(
