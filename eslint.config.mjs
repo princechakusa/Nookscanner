@@ -17,6 +17,8 @@ export default tseslint.config(
       'apps/nookscanner/android/**',
       'apps/nookscanner/metro.config.js',
       'services/**',
+      // Node CLI scripts that drive Playwright for the store screenshots (not shipped code).
+      'store/screenshot-harness/*.cjs',
       '**/next-env.d.ts',
     ],
   },

@@ -1,4 +1,4 @@
-import { formatDuration, type UploadJob } from '@nookscanner/shared';
+import { estimateRemainingMs, formatDuration, type UploadJob } from '@nookscanner/shared';
 import { useCallback, useEffect, useState } from 'react';
 import { AppState, ScrollView, Text, View } from 'react-native';
 import { loadQueue, runQueue, type UploadProgress } from '../lib/uploads.ts';
@@ -13,7 +13,15 @@ const mb = (n: number) => `${(n / (1024 * 1024)).toFixed(0)} MB`;
 export function Uploads({ onDone }: { onDone: () => void }) {
   const [jobs, setJobs] = useState<UploadJob[] | null>(null);
   const [progress, setProgress] = useState<UploadProgress | null>(null);
-  const [startedAt] = useState(() => Date.now());
+  // Speed is measured from the first progress this screen saw, not from when it opened: bytes
+  // sent before (in the background or an earlier visit) must not make the estimate too short.
+  const [baseline, setBaseline] = useState<{ uploadId: string; at: number; sent: number } | null>(
+    null,
+  );
+  useEffect(() => {
+    if (progress && baseline?.uploadId !== progress.uploadId)
+      setBaseline({ uploadId: progress.uploadId, at: Date.now(), sent: progress.sentBytes });
+  }, [progress, baseline]);
 
   const refresh = useCallback(async () => setJobs(await loadQueue()), []);
   const run = useCallback(async () => {
@@ -31,8 +39,14 @@ export function Uploads({ onDone }: { onDone: () => void }) {
 
   const active = progress && jobs?.find((j) => j.uploadId === progress.uploadId);
   const fraction = progress ? progress.sentBytes / progress.totalBytes : 0;
-  const elapsed = Date.now() - startedAt;
-  const remainingMs = progress && fraction > 0.02 ? (elapsed / fraction) * (1 - fraction) : null;
+  const remainingMs =
+    progress && baseline?.uploadId === progress.uploadId
+      ? estimateRemainingMs(
+          progress.sentBytes - baseline.sent,
+          Date.now() - baseline.at,
+          progress.totalBytes - progress.sentBytes,
+        )
+      : null;
 
   return (
     <Screen title="Uploading">

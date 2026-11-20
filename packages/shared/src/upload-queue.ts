@@ -158,3 +158,17 @@ export function partUploadUrl(supabaseUrl: string, objectPath: string): string {
     .join('/');
   return `${supabaseUrl.replace(/\/+$/, '')}/storage/v1/object/raw-footage/${path}`;
 }
+
+/**
+ * Time left for an upload from the speed measured over this session only (bytes sent since the
+ * screen started watching, over the time since then). Null until there is enough to measure:
+ * at least 2 s and 1 MiB, so the first jumpy seconds do not show a wild estimate.
+ */
+export function estimateRemainingMs(
+  sentSinceStart: number,
+  msSinceStart: number,
+  bytesLeft: number,
+): number | null {
+  if (msSinceStart < 2000 || sentSinceStart < 1024 * 1024 || bytesLeft < 0) return null;
+  return (bytesLeft / sentSinceStart) * msSinceStart;
+}

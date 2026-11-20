@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createJob,
+  estimateRemainingMs,
   isComplete,
   jobProgress,
   markPart,
@@ -84,5 +85,17 @@ describe('upload queue', () => {
     expect(partUploadUrl('https://x.supabase.co/', 'org/a b/part-00001.mov')).toBe(
       'https://x.supabase.co/storage/v1/object/raw-footage/org/a%20b/part-00001.mov',
     );
+  });
+});
+
+describe('estimateRemainingMs', () => {
+  const MB = 1024 * 1024;
+  it('uses only the speed seen since watching started (bytes sent earlier do not count)', () => {
+    // 10 MB in 10 s since opening; 50 MB left -> 50 s, however much was sent before.
+    expect(estimateRemainingMs(10 * MB, 10_000, 50 * MB)).toBe(50_000);
+  });
+  it('waits for enough data before estimating', () => {
+    expect(estimateRemainingMs(10 * MB, 1000, 50 * MB)).toBeNull();
+    expect(estimateRemainingMs(MB / 2, 10_000, 50 * MB)).toBeNull();
   });
 });
