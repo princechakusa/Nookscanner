@@ -5,7 +5,9 @@
     "scheme": "nookscanner",
     "version": "0.1.0",
     "orientation": "portrait",
-    "platforms": ["ios"],
+    "platforms": [
+      "ios"
+    ],
     "ios": {
       "bundleIdentifier": "com.nookscanner.capture",
       "supportsTablet": false,
@@ -15,8 +17,13 @@
       }
     },
     "plugins": [
-      ["react-native-vision-camera", { "enableMicrophonePermission": false }],
       "expo-secure-store"
-    ]
+    ],
+    "owner": "princechakusa",
+    "extra": {
+      "eas": {
+        "projectId": "696c9a99-ebbb-4d16-810d-6e1bd5cbdef6"
+      }
+    }
   }
 }
