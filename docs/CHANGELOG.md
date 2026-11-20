@@ -2,6 +2,15 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 6.1 reconstruction pipeline (CPU-tested; GPU run pending)
+
+### Added
+- Worker modules `frames.py`, `commands.py`, `packaging.py`, `pipeline.py`; root dev dependency `@playcanvas/splat-transform` 3.12.0 (MIT).
+- Tests: 18 new (worker 53), including a CPU end-to-end run with a real video and real SplatTransform packaging, resume after failure, low-registration flag, and invalid video stopped before any GPU work.
+
+### Notes
+- Job contract v1 (single file per input, four single-file outputs) does not fit chunked uploads or streamed LODs; it is revised in 6.2 together with dispatch.
+
 ## 2026-11-20: Stage 5.6 background resumable upload from the capture app
 
 ### Added
