@@ -32,6 +32,22 @@ const SCENES = [
     pins: [{ x: 47, y: 67, label: 'Oven', icon: 'oven', active: true }],
     open: 'Oven',
   },
+  {
+    name: '0-search',
+    room: 'Living room',
+    photo: 'lounge.jpg',
+    position: '100% 50%',
+    pins: [{ x: 62, y: 63, label: 'Wi-Fi router', icon: 'wifi', active: true }],
+    search: 'wifi',
+  },
+  {
+    name: '0-wifi',
+    room: 'Living room',
+    photo: 'lounge.jpg',
+    position: '100% 50%',
+    pins: [{ x: 62, y: 63, label: 'Wi-Fi router', icon: 'wifi', active: true }],
+    open: 'Wi-Fi router',
+  },
 ];
 
 const ICONS = {
@@ -111,6 +127,10 @@ const ICONS = {
       },
       { scene, src: photo(scene.photo), icons: ICONS, debug },
     );
+    if (scene.search) {
+      await page.locator('input[type="search"]').fill(scene.search);
+      await page.waitForTimeout(500);
+    }
     if (scene.open) {
       await page.locator('.g-row', { hasText: scene.open }).first().click();
       await page.waitForTimeout(600);
