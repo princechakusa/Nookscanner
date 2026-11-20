@@ -57,6 +57,12 @@ class SplatTransformTests(unittest.TestCase):
         self.assertEqual(stream.count("-l"), 4)
         self.assertEqual(stream[stream.index(str(Path("/w/scene.ply"))) + 2], "0")
 
+    def test_cpu_device_for_machines_without_gpu(self) -> None:
+        cpu = splat_transform_commands(Path("/w/scene.ply"), Path("/w/out"), PipelineSettings(splat_gpu="cpu"))
+        self.assertTrue(all(c[1:4] == ["-w", "-g", "cpu"] for c in cpu))
+        gpu = splat_transform_commands(Path("/w/scene.ply"), Path("/w/out"), PipelineSettings(splat_gpu=None))
+        self.assertTrue(all("-g" not in c for c in gpu))
+
 
 IMAGES_TXT = """# Image list with two lines of data per image:
 #   IMAGE_ID, QW, QX, QY, QZ, TX, TY, TZ, CAMERA_ID, NAME

@@ -48,3 +48,20 @@ def get_provider(name: str) -> ReconstructionProvider:
     if name not in providers:
         raise KeyError(f"unknown provider {name}")
     return providers[name]()
+
+
+def pipeline_provider(job, videos, workdir, report):  # type: ignore[no-untyped-def]
+    """Adapter used by runner.run_job: the self-hosted pipeline on the first input video.
+
+    Several inputs per scan are allowed by the contract (re-captured rooms); merging them into one
+    reconstruction is not implemented yet, so only one input is accepted (KNOWN_ISSUES KI-024).
+    """
+    from .pipeline import PipelineConfig, PipelineError, run_pipeline
+
+    if job.provider != SelfHostedGsplatProvider.name:
+        raise PipelineError("PROVIDER_UNAVAILABLE", f"Provider {job.provider} is not available.")
+    if len(videos) != 1:
+        raise PipelineError("MULTI_INPUT_UNSUPPORTED", "Upload the walkthrough as one video for now.")
+    # Same workdir as the runner: the pipeline writes the publishable files to workdir/package.
+    return run_pipeline(videos[0], workdir, PipelineConfig(), report=report)
+

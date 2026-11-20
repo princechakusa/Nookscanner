@@ -2,6 +2,18 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 6.2 dispatch, callbacks, queue and retries
+
+### Added
+- Migration `20261120000600_processing_jobs.sql`: jobs and results tables, member RPCs `submit_scan_for_processing` / `cancel_processing_job`, platform functions `private.claim_processing_jobs` (skip-locked), `private.apply_job_event` (idempotent per attempt, monotonic progress, back-off retries), `private.requeue_stalled_jobs`. Applied locally and to the hosted project.
+- Job contract v2 in `packages/shared/src/processing.ts` and `contract.py` with a shared fixture; header constants and `sceneOutputPath`.
+- Edge Functions `dispatch-processing` and `job-callback` (`supabase/functions`), logic in `_shared/jobs.ts`, Postgres adapter `_shared/sql-db.ts`, storage adapter `_shared/storage.ts`.
+- Worker `runner.py` and `providers.pipeline_provider`.
+- Hosted smoke test now 36 checks (new tables, RPCs and private helpers).
+
+### Test results
+- Unit/DB: shared 164, design-tokens 19, ui 6, dashboard 29, guest 14, database 85 (+6 stack-only) on PGlite; database 91/91 on the real local stack; worker 59 (incl. 9 runner tests with a real HMAC-signed HTTP round trip). Edge Functions served on the local Edge runtime: unsigned callback 401, dispatcher 200 with Postgres reached. Hosted: `db lint` clean, advisors only the 10 intended RPCs, smoke 36/36.
+
 ## 2026-11-20: Stage 6.1 reconstruction pipeline (CPU-tested; GPU run pending)
 
 ### Added

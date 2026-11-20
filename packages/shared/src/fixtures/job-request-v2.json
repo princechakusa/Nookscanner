@@ -1,0 +1,65 @@
+{
+  "valid": {
+    "contractVersion": 2,
+    "jobId": "0b9f5c1e-8a51-4c5e-9d43-2f0c7b1a8e11",
+    "attempt": 1,
+    "organizationId": "2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e6f",
+    "apartmentId": "7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d",
+    "provider": "self_hosted_gsplat",
+    "inputs": [
+      {
+        "uploadId": "11111111-2222-4333-8444-555555555555",
+        "mime": "video/quicktime",
+        "sizeBytes": 47186920,
+        "parts": [
+          {
+            "partNumber": 1,
+            "sizeBytes": 47185920,
+            "downloadUrl": "https://example.supabase.co/storage/v1/object/sign/raw-footage/p1.mov?token=t"
+          },
+          {
+            "partNumber": 2,
+            "sizeBytes": 1000,
+            "downloadUrl": "https://example.supabase.co/storage/v1/object/sign/raw-footage/p2.mov?token=t"
+          }
+        ]
+      }
+    ],
+    "callbackUrl": "https://example.supabase.co/functions/v1/job-callback",
+    "parameters": {
+      "maxGaussians": 3000000,
+      "trainingSteps": 30000,
+      "frameSampleFps": 2,
+      "captureTier": "T1"
+    }
+  },
+  "invalid": {
+    "http download": {
+      "path": ["inputs", 0, "parts", 0, "downloadUrl"],
+      "value": "http://evil.test/x"
+    },
+    "file callback": { "path": ["callbackUrl"], "value": "file:///etc/passwd" },
+    "bad job id": { "path": ["jobId"], "value": "../../x" },
+    "unknown provider": { "path": ["provider"], "value": "inria_original" },
+    "old contract": { "path": ["contractVersion"], "value": 1 },
+    "parts do not add up": { "path": ["inputs", 0, "sizeBytes"], "value": 47186921 },
+    "part numbering gap": { "path": ["inputs", 0, "parts", 1, "partNumber"], "value": 3 },
+    "part over 45 MiB": { "path": ["inputs", 0, "parts", 0, "sizeBytes"], "value": 47185921 },
+    "fps out of range": { "path": ["parameters", "frameSampleFps"], "value": 11 },
+    "unknown tier": { "path": ["parameters", "captureTier"], "value": "T9" }
+  },
+  "outputPaths": {
+    "safe": ["scene.sog", "stream/lod-meta.json", "stream/0_0/means_l.webp", "preview.jpg"],
+    "unsafe": [
+      "../x.sog",
+      "/abs.sog",
+      "stream/../../x.json",
+      ".hidden.json",
+      "scene.exe",
+      "Scene.SOG",
+      "a/b/c/d/e.json",
+      "stream\\x.json",
+      ""
+    ]
+  }
+}

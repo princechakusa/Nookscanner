@@ -8,6 +8,8 @@ first GPU run, never assumed.
 
 from __future__ import annotations
 
+import os
+
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -28,6 +30,9 @@ class PipelineSettings:
     test_every: int = 10
     # SplatTransform
     lod_fractions: tuple[int, ...] = (50, 25, 10)  # percent of splats kept per lower LOD
+    # WebGPU adapter index, or "cpu" on machines without a GPU (CI runners). SOG compression is
+    # slower on CPU but gives the same files; the GPU worker leaves it unset (default adapter).
+    splat_gpu: str | None = field(default_factory=lambda: os.environ.get("NOOK_SPLAT_GPU") or None)
 
 
 def colmap_commands(workdir: Path, s: PipelineSettings = PipelineSettings()) -> list[list[str]]:
@@ -80,13 +85,14 @@ def gsplat_command(workdir: Path, s: PipelineSettings = PipelineSettings()) -> l
 
 def splat_transform_commands(ply: Path, outdir: Path, s: PipelineSettings = PipelineSettings()) -> list[list[str]]:
     """Single-file SOG for the first load, plus decimated LODs bundled as streamed SOG."""
-    cmds = [["splat-transform", "-w", str(ply), str(outdir / "scene.sog")]]
+    tool = ["splat-transform", "-w", *(["-g", s.splat_gpu] if s.splat_gpu else [])]
+    cmds = [[*tool, str(ply), str(outdir / "scene.sog")]]
     lods = [str(ply)]
     for pct in s.lod_fractions:
         out = outdir / f"lod_{pct}.ply"
-        cmds.append(["splat-transform", "-w", str(ply), "-d", f"{pct}%", str(out)])
+        cmds.append([*tool, str(ply), "-d", f"{pct}%", str(out)])
         lods.append(str(out))
-    stream: list[str] = ["splat-transform", "-w"]
+    stream: list[str] = [*tool]
     for level, path in enumerate(lods):
         stream += [path, "-l", str(level)]
     stream.append(str(outdir / "stream" / "lod-meta.json"))

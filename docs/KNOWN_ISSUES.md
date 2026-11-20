@@ -22,6 +22,8 @@ Updated 2026-11-20. Severity: Critical / High / Medium / Low. Close an item only
 | KI-020 | Low | Performance | Proxy calls the Auth server (`getUser`) on every dashboard request (~1 round trip) | Acceptable for the dashboard; revisit with JWT revocation checks if latency matters | Dev | Accepted |
 | KI-021 | Low | Performance | Guest initial JS grew to 100.7 kB gzip (from 70 kB) because the payload schema brings zod; budget is 150 kB | Switch the guest to `zod/mini` if the 3D loader or Phase 9 pushes it near the budget | Dev | Open (within budget) |
 | KI-023 | Low | Mobile / supply chain | Capture app (`apps/nookscanner`, Expo SDK 58, react-native 0.88.1) installs with 3 moderate `npm audit` advisories in the Expo/React Native toolchain; `npm audit fix --force` would break SDK alignment | Re-check with each Expo SDK patch (`npx expo install --fix`); review before Phase 5 release builds | Dev | Open |
+| KI-025 | Low | Reconstruction | The contract allows several input videos per scan, but the pipeline adapter accepts one (`MULTI_INPUT_UNSUPPORTED`, permanent failure with a clear message) | Merge multiple walkthroughs into one reconstruction (frames from all inputs into one SfM run) when re-capture of single rooms is built | Dev | Open |
+| KI-026 | Medium | Deployment | Edge Functions `dispatch-processing` and `job-callback` exist and are tested locally but are not deployed to the hosted project; they need secrets (`WORKER_HMAC_SECRET`, `DISPATCH_SECRET`, `WORKER_URL`) and a schedule for the dispatcher | User runs the commands in DEPLOYMENT section 3 (or approves the deploy); the Modal worker URL comes with Blocked-on-user Modal item | User + dev | Open |
 
 ## Resolved
 

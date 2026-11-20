@@ -77,3 +77,10 @@ email_sent = 100
 [edge_runtime]
 enabled = true
 inspector_port = 56583
+
+# Worker and scheduler authenticate with HMAC / a bearer secret, not a user JWT.
+[functions.job-callback]
+verify_jwt = false
+
+[functions.dispatch-processing]
+verify_jwt = false

@@ -35,6 +35,13 @@ Email templates: copy `supabase/templates/confirmation.html` and `recovery.html`
 ## 3. Edge Functions (Phase 2+)
 `npx supabase functions deploy <name>`; secrets via `npx supabase secrets set NAME=value` (run by the user or CI with a scoped access token).
 
+Reconstruction (Stage 6.2), run by the user from the repo root:
+1. Create two random secrets of at least 32 characters (e.g. `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"` twice). Never paste them into chat or commit them.
+2. `npx supabase@3.2.0 secrets set WORKER_HMAC_SECRET=<secret1> DISPATCH_SECRET=<secret2> WORKER_URL=<https Modal endpoint>` (the same `WORKER_HMAC_SECRET` goes into the Modal secret `nookscanner-<env>`).
+3. `npx supabase@3.2.0 functions deploy job-callback --no-verify-jwt` and `npx supabase@3.2.0 functions deploy dispatch-processing --no-verify-jwt` (both authenticate with HMAC / bearer secret; `config.toml` also sets `verify_jwt = false`).
+4. Schedule the dispatcher every minute (Supabase Cron, Integrations > Cron): HTTP POST to `https://nfcnckwjrwpofkrzribd.supabase.co/functions/v1/dispatch-processing` with header `Authorization: Bearer <secret2>`.
+Local test: `npx supabase@3.2.0 functions serve --env-file <file with the three variables>`; unsigned callbacks return 401, the dispatcher with the right bearer returns `{"requeued":0,"dispatched":[],"failed":[]}` on an empty queue (verified 2026-11-20).
+
 ## 4. Reconstruction worker (Phase 6)
 `modal deploy services/reconstruction/modal_app.py --env <env>`; secrets in Modal (`nookscanner-<env>` secret with HMAC secret and Supabase function URL).
 

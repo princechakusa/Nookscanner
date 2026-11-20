@@ -52,6 +52,9 @@ const TABLES = [
   'scan_sessions',
   'scan_checkpoints',
   'media_uploads',
+  'media_upload_parts',
+  'processing_jobs',
+  'processing_results',
 ];
 for (const t of TABLES) {
   const { data, error } = await sb.from(t).select('*').limit(1);
@@ -66,6 +69,7 @@ for (const [fn, args] of [
   ['create_organization', { p_name: 'x', p_slug: 'anon-probe' }],
   ['accept_invitation', { p_token: 'A'.repeat(43) }],
   ['create_qr_code', { p_apartment: '00000000-0000-0000-0000-000000000000' }],
+  ['submit_scan_for_processing', { p_session: '00000000-0000-0000-0000-000000000000' }],
 ]) {
   const { error } = await sb.rpc(fn, args);
   check(`anon cannot call ${fn}`, Boolean(error), error?.code ?? 'no error');
@@ -73,6 +77,8 @@ for (const [fn, args] of [
 
 // Internal helpers must not be reachable through the API at all (migration 0400).
 for (const fn of [
+  'apply_job_event',
+  'claim_processing_jobs',
   'shares_org_with',
   'is_org_member',
   'storage_path_apartment',

@@ -70,6 +70,7 @@ describe('migrations', () => {
     `);
     expect(rows.map((r) => r.proname)).toEqual([
       'accept_invitation',
+      'cancel_processing_job',
       'complete_media_upload_part',
       'create_invitation',
       'create_organization',
@@ -77,6 +78,7 @@ describe('migrations', () => {
       'register_media_upload',
       'revoke_invitation',
       'revoke_qr_code',
+      'submit_scan_for_processing',
     ]);
   });
 
