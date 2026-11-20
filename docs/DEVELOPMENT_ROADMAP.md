@@ -73,6 +73,7 @@ Quality bar sections 4, 5 and 8 apply. A stage that produces a scene is DONE onl
 | 6.5 Pipeline bake-off on the pilot apartment (section 5): own pipeline settings vs Teleport / other credible options | blind-style visual comparison, metrics, fly-throughs, room continuity, processing time, verified cost, licence; winner chosen on quality first; ADR recorded | TODO |
 | 6.6 Baseline + calibration | first real apartment's best result sets the baseline; targets calibrated on varied layouts (studio, multi-bedroom, dark rooms, open plan, glass) as footage becomes available; new scenes outside the margin flagged "needs re-capture" | TODO |
 | 6.7 Asset packaging (SOG + LoD, SPZ, preview) | first LoD <= 10 MB, total <= 60 MB for the pilot apartment (initial budget; calibrate per section 6) | TODO |
+| 6.8 Compute targets at $0 (ADR-018): Modal app on the free monthly credit with a hard spend limit, and the same worker on the user's own NVIDIA PC in pull mode | Modal app deploys and runs the pipeline on a public sample (needs the user's Modal account); PC worker claims a job through a signed Edge Function, runs it and reports back (tested locally end to end with the CPU test path); no public address needed for the PC | TODO |
 
 ## Phase 7: Interactive 3D viewer
 Quality bar sections 1b and 6 apply: performance is measured per device tier, never on the pilot phone only. Splat budgets and LoD adapt to the guest device's capabilities at runtime.

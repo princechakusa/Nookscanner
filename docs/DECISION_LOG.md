@@ -22,6 +22,7 @@ Format per decision (Part 5.5): selected, reason, alternatives, advantages, limi
 | ADR-015 | Styling: design-token CSS variables + `packages/ui`, no Tailwind | Accepted | 2026-11-20 |
 | ADR-016 | Stay on Supabase Free: chunked uploads under the 50 MB per-file limit | Accepted (user decision) | 2026-11-20 |
 | ADR-017 | Upload client: tus-js-client per part, sequential parts, database-verified part completion | Accepted | 2026-11-20 |
+| ADR-018 | 3D compute at $0: Modal free monthly credit with a hard spend limit now; own NVIDIA PC worker (pull mode) later | Accepted (user decision) | 2026-11-20 |
 
 ---
 
@@ -148,3 +149,9 @@ Format per decision (Part 5.5): selected, reason, alternatives, advantages, limi
 - **Retry rule:** tus-js-client's default refuses to retry while the browser reports itself offline, which is the common phone case; we retry network errors, 5xx, 423 and 429, and when retries run out while offline the part continues on the `online` event.
 - **Alternatives:** Uppy (heavier UI framework for one component); parallel parts (faster on fibre, worse on mobile data, more complex resume); signed upload URLs per part (no resumability within a part).
 - **Security:** Storage accepts only pending part paths registered by the same user with `scan.create`; the bucket caps objects at 45 MiB; parts are readable with `scan.read` only. `complete_media_upload_part` is a SECURITY DEFINER RPC (8th intended advisor WARN) that checks `auth.uid()`, the uploader and the permission itself.
+
+## ADR-018: 3D compute at no cost: Modal free credit now, own NVIDIA PC later
+- **Context (user, 2026-11-20):** the user does not want to pay for GPU processing. The user's PC has Intel Iris Xe graphics (no NVIDIA GPU, so it cannot run COLMAP/gsplat training).
+- **Selected:** (1) **Modal** with its free monthly credit (USD 30/month on the Starter plan, verified 2026-11-19 in INFRASTRUCTURE.md) and a **hard workspace spend limit equal to the free credit**, so the bill stays USD 0; when the credit is used up, jobs wait in the queue (Stage 6.2 back-off) until the next month. At the ESTIMATE of USD 2-6 per apartment this covers roughly 5-15 apartments per month. (2) The same worker also runs on **the user's own PC with an NVIDIA GPU** in **pull mode**: it asks the platform for work while it is switched on (signed request to an Edge Function), so it needs no public address and does not have to be always on. Minimum for a PC: NVIDIA RTX with 12 GB VRAM (16-24 GB for large apartments), 32 GB RAM, Windows + WSL2 or Linux with CUDA.
+- **Rejected for now:** on-device 3D training inside the capture app (months of native Metal work, lower quality, room-scale limits, only recent high-end iPhones: conflicts with quality bar 1b); paid per-scan services (cost). An "upload a ready-made 3D file" fallback was offered and not chosen.
+- **Consequences:** Stage 6.8 adds the Modal app and the PC pull worker; the dispatcher must not burn retries while the credit is exhausted (GPU_UNAVAILABLE stays transient with back-off); cost per job is recorded so monthly usage is visible.
