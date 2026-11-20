@@ -12,6 +12,13 @@ const MESSAGES: Record<string, string> = {
   NOT_FOUND:
     'This invitation is invalid, expired, already used or was sent to a different email address.',
   UNAUTHENTICATED: 'Sign in again to continue.',
+  TOO_LONG: 'This is too long.',
+  INVALID_VALUE: 'Choose one of the options.',
+  INVALID_COUNTRY: 'Use the two-letter country code, for example AE.',
+  INVALID_PHONE: 'Enter a phone number with digits only, for example +971 4 123 4567.',
+  INVALID_COUNT: 'Enter a whole number within the allowed range.',
+  PROPERTY_REQUIRED: 'Choose a property.',
+  CONFIRM_REQUIRED: 'Tick the box to confirm.',
   UNKNOWN: 'Something went wrong. Try again.',
 };
 

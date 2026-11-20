@@ -448,6 +448,36 @@ body {
   border-radius: var(--nt-radius-md);
   padding: var(--nt-space-4);
 }
+.ns-fieldset--plain {
+  border: 0;
+  padding: 0;
+  gap: var(--nt-space-5);
+}
+.ns-form__row--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@media (max-width: 767px) {
+  .ns-form__row--4 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.ns-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nt-space-3);
+}
+.ns-room-list {
+  margin: 0;
+  padding-inline-start: var(--nt-space-5);
+  columns: 2;
+}
+@media (max-width: 767px) {
+  .ns-room-list {
+    columns: 1;
+  }
+}
 .ns-check {
   display: flex;
   align-items: center;

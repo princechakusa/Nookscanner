@@ -14,6 +14,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { ACTIVE_ORG_COOKIE } from '../../lib/active-org.ts';
+import { dbErrorCode } from '../../lib/db-errors.ts';
 import { getOrgContext } from '../../lib/org-context.ts';
 import { createSupabaseServerClient } from '../../lib/supabase/server.ts';
 
@@ -21,26 +22,13 @@ export interface FormState {
   status: 'idle' | 'error' | 'done';
   fieldErrors?: AuthFieldErrors;
   formError?: string;
+  /**
+   * Submitted text values, echoed back on errors: React 19 resets a form after its action, so
+   * without them the person would lose what they typed (KNOWN_ISSUES R-021).
+   */
+  values?: Record<string, string>;
   /** Relative path of a newly created invitation link (shown once). */
   invitePath?: string;
-}
-
-/** Maps database/RPC error messages to stable codes (never echoes internal details). */
-function dbErrorCode(error: { message?: string; code?: string } | null): string {
-  const m = `${error?.code ?? ''} ${error?.message ?? ''}`;
-  for (const code of [
-    'LAST_OWNER',
-    'OWNER_ROLE_REQUIRED',
-    'FORBIDDEN',
-    'CONFLICT',
-    'NOT_FOUND',
-    'UNAUTHENTICATED',
-  ]) {
-    if (m.includes(code)) return code;
-  }
-  if (m.includes('23505')) return 'CONFLICT';
-  if (m.includes('42501') || m.includes('row-level security')) return 'FORBIDDEN';
-  return 'UNKNOWN';
 }
 
 async function setActiveOrgCookie(id: string) {
@@ -93,7 +81,8 @@ export async function inviteMemberAction(_prev: FormState, form: FormData): Prom
     scope: str(form, 'scope') || 'organization',
     propertyIds: form.getAll('propertyIds').filter((v): v is string => typeof v === 'string'),
   });
-  if (!parsed.success) return { status: 'error', fieldErrors: fieldErrors(parsed.error) };
+  const values = { email: str(form, 'email').slice(0, 320), role: str(form, 'role') };
+  if (!parsed.success) return { status: 'error', fieldErrors: fieldErrors(parsed.error), values };
   const { data, error } = await supabase
     .rpc('create_invitation', {
       p_org: activeOrg.id,
@@ -103,7 +92,7 @@ export async function inviteMemberAction(_prev: FormState, form: FormData): Prom
       p_property_ids: parsed.data.propertyIds,
     })
     .single();
-  if (error) return { status: 'error', formError: dbErrorCode(error) };
+  if (error) return { status: 'error', formError: dbErrorCode(error), values };
   const token = (data as { token: string }).token;
   revalidatePath('/app/settings');
   // The token is returned to the inviting admin exactly once; it is never stored in plain text.

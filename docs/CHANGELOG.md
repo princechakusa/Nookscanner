@@ -2,6 +2,20 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 4.2 properties + apartments CRUD
+
+### Added
+- `packages/shared/src/property.ts`: property/apartment/layout schemas (mirror DB checks), `roomsFromLayout` (walking-order room plan, EN/AR names), `layoutSummary`; 11 tests.
+- Dashboard: `/app/properties`, `/app/properties/[id]`, `/app/apartments`, `/app/apartments/new`, `/app/apartments/[id]` with role-aware controls (RLS remains the boundary; filtered writes report FORBIDDEN; other-property pages 404).
+- `tests/e2e-stack/properties.spec.ts`; shared `expectAccessible` and `newPerson` helpers.
+
+### Fixed
+- R-021: forms kept no input after a server-side validation error (React 19 form reset).
+- R-022: leaked browser contexts in multi-person specs.
+
+### Test results (local)
+- Stack E2E 20/20 (desktop Chromium + mobile WebKit); `npm test` all pass (shared 73); lint, format, typecheck, build pass.
+
 ## 2026-11-20: KI-022 fixed; Stage 4.1 DONE
 
 ### Fixed

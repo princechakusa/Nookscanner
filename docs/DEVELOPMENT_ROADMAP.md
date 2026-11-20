@@ -47,7 +47,7 @@ Status legend: `DONE`, `IN PROGRESS`, `BLOCKED (user)`, `TODO`.
 | Stage | Acceptance criteria | Status |
 |---|---|---|
 | 4.1 Organizations + invitations (DB tables + RPCs done in 2.2; this stage adds UI + invitation email) | create org, invite, accept, roles; isolation tests | DONE 2026-11-20: UI (create org, members + role change/remove, invite with one-time copy link, revoke, `/invite/[token]` accept page); DB isolation tests pass; invitation E2E passes on desktop Chromium and mobile WebKit (KI-022 was a test race, R-020); invitation e-mail delivery waits for SMTP (Blocked on user 1), admins copy the link meanwhile |
-| 4.2 Properties + apartments CRUD (with layout questionnaire) | E2E CRUD; property-scoped member sees only assigned | TODO |
+| 4.2 Properties + apartments CRUD (with layout questionnaire) | E2E CRUD; property-scoped member sees only assigned | DONE 2026-11-20: properties list/create/edit/delete, apartments list/create/edit/delete with layout questionnaire (bedrooms, bathrooms, balconies, hallways, kitchen kind, extras) and planned-room preview; shared schemas mirror DB checks (shared tests 73); `properties.spec.ts` E2E (CRUD, validation keeps input, axe, property-scoped manager sees/creates only in the assigned property, other property 404) passes on desktop Chromium + mobile WebKit; DB RLS tests for scoping already in `rls.test.ts` |
 | 4.3 Rooms (pre-scan list from questionnaire) | rooms created; ordering | TODO |
 | 4.4 QR foundation (`qr_codes` + RPCs done in 2.2; this stage adds UI + QR rendering) | token entropy test; revoke test | TODO (DB part done and tested in 2.2) |
 

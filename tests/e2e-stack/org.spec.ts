@@ -3,7 +3,7 @@
  * email, and refuse acceptance by anyone else. Runs against the local Supabase stack.
  */
 import { expect, test, type Page } from '@playwright/test';
-import { run, signUpAndConfirm } from './helpers.ts';
+import { newPerson, run, signUpAndConfirm } from './helpers.ts';
 
 async function invite(page: Page, email: string, role: string): Promise<string> {
   await page.getByLabel('Email', { exact: true }).fill(email);
@@ -19,7 +19,8 @@ test('owner invites an editor who joins with the invited email only', async ({
   browser,
 }, info) => {
   // Each person uses their own browser, as in reality.
-  const newPerson = async () => (await browser.newContext(info.project.use)).newPage();
+  // Multi-person flow with ~50 browser actions; WebKit on Windows needs ~2 s per action.
+  test.slow();
   const tag = `${run}-${info.project.name.startsWith('mobile') ? 'm' : 'd'}`;
   const ownerEmail = `owner-${tag}@example.test`;
   const inviteeEmail = `invitee-${tag}@example.test`;
@@ -55,14 +56,14 @@ test('owner invites an editor who joins with the invited email only', async ({
   await expect(page.locator('.ns-field__error[role="alert"]')).toContainText('already');
 
   // A different signed-in user cannot use the link.
-  const stranger = await newPerson();
+  const stranger = await newPerson(browser, info);
   await signUpAndConfirm(stranger, strangerEmail);
   await stranger.goto(new URL(link).pathname);
   await stranger.getByRole('button', { name: 'Accept invitation' }).click();
   await expect(stranger.locator('.ns-field__error[role="alert"]')).toContainText('permission');
 
   // The invitee joins.
-  const invitee = await newPerson();
+  const invitee = await newPerson(browser, info);
   await signUpAndConfirm(invitee, inviteeEmail);
   await invitee.goto(new URL(link).pathname);
   await expect(invitee.getByText(`signed in as ${inviteeEmail}`, { exact: false })).toBeVisible();

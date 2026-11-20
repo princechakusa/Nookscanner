@@ -2,16 +2,8 @@
  * Stage 3.3: dashboard shell (sidebar, breadcrumbs, collapse, mobile drawer) and accessibility
  * scans with axe in a real browser (WCAG 2.2 AA rule set).
  */
-import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
-import { run, signUpAndConfirm } from './helpers.ts';
-
-async function expectAccessible(page: Page) {
-  const result = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-    .analyze();
-  expect(result.violations.map((v) => `${v.id} (${v.nodes.length})`)).toEqual([]);
-}
+import { expect, test } from '@playwright/test';
+import { expectAccessible, run, signUpAndConfirm } from './helpers.ts';
 
 test('auth pages pass axe (WCAG 2.2 AA)', async ({ page }) => {
   for (const path of ['/login', '/signup', '/forgot-password']) {

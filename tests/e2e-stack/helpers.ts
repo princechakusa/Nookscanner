@@ -1,5 +1,37 @@
 /** Shared helpers for stack E2E specs (Mailpit-driven auth). */
-import { expect, type Page } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+import {
+  expect,
+  test,
+  type Browser,
+  type BrowserContext,
+  type Page,
+  type TestInfo,
+} from '@playwright/test';
+
+const extraContexts: BrowserContext[] = [];
+
+/**
+ * A second person with their own browser (cookies). Closed after each test: leaked contexts kept
+ * live pages in the shared WebKit process and slowed every later spec (R-022).
+ */
+export async function newPerson(browser: Browser, info: TestInfo): Promise<Page> {
+  const context = await browser.newContext(info.project.use);
+  extraContexts.push(context);
+  return context.newPage();
+}
+
+test.afterEach(async () => {
+  await Promise.all(extraContexts.splice(0).map((c) => c.close()));
+});
+
+/** axe scan with the WCAG 2.2 AA rule set; fails on any violation. */
+export async function expectAccessible(page: Page) {
+  const result = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  expect(result.violations.map((v) => `${v.id} (${v.nodes.length})`)).toEqual([]);
+}
 
 export const MAILPIT = process.env.MAILPIT_URL ?? 'http://127.0.0.1:56524';
 export const run = Math.random().toString(36).slice(2, 8);

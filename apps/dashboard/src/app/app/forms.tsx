@@ -62,12 +62,13 @@ export function InviteForm({
           label="Email"
           autoComplete="off"
           required
+          defaultValue={state.values?.email}
           error={message(state.fieldErrors?.email)}
         />
         <SelectField
           name="role"
           label="Role"
-          defaultValue="editor"
+          defaultValue={state.values?.role || 'editor'}
           options={['admin', 'manager', 'editor', 'viewer'].map((r) => ({
             value: r,
             label: `${ROLE_LABELS[r]} - ${ROLE_HINTS[r]}`,
