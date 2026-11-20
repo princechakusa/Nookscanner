@@ -34,7 +34,10 @@ jobs:
       - run: npm run check:secrets
       # ffmpeg/ffprobe for the Stage 5.2 validation tests (real sample videos per device tier).
       - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg && ffprobe -version | head -1
+      # Runners have no GPU: SplatTransform's SOG encoder then runs on the CPU (same files, slower).
       - run: npm run test:worker
+        env:
+          NOOK_SPLAT_GPU: cpu
       - run: npm audit --audit-level=high
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:e2e
