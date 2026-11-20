@@ -50,7 +50,8 @@ html[lang='ar'] body {
 .g-brandmark {
   inline-size: 26px;
   block-size: 26px;
-  color: var(--nt-color-brand-accent);
+  border-radius: 7px;
+  object-fit: cover;
 }
 .g-top__title {
   display: flex;
@@ -481,4 +482,25 @@ html[lang='ar'] body {
 }
 .g-stage:has(.g-scene) {
   min-block-size: 62svh;
+}
+/* 3D controls stack (DESIGN_SYSTEM 7): 48 px buttons, end side, not mirrored in RTL. */
+.g-scene__controls {
+  position: absolute;
+  right: var(--nt-space-4);
+  bottom: var(--nt-space-4);
+  display: grid;
+  gap: var(--nt-space-3);
+}
+.g-roundbtn {
+  display: grid;
+  place-items: center;
+  inline-size: 48px;
+  block-size: 48px;
+  border-radius: 50%;
+  color: var(--nt-color-viewer-text);
+  cursor: pointer;
+}
+.g-roundbtn:focus-visible {
+  outline: 3px solid var(--nt-color-focus);
+  outline-offset: 2px;
 }

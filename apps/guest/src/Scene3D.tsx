@@ -4,20 +4,23 @@
  * Measured load time, first frame and frame rate are exposed as data attributes for the
  * performance tests (docs/3D_QUALITY_BAR.md section 6).
  */
-import type { Viewer } from '@nookscanner/viewer';
+import type { SceneBounds, Vec3, Viewer } from '@nookscanner/viewer';
 import { useEffect, useRef, useState } from 'react';
 
 export interface Scene3DProps {
   url: string;
-  labels: { loading: string; failed: string };
+  bounds?: SceneBounds | undefined;
+  start?: { position: Vec3; target: Vec3 } | undefined;
+  labels: { loading: string; failed: string; reset: string };
   onFailed?: () => void;
 }
 
-export function Scene3D({ url, labels, onFailed }: Scene3DProps) {
+export function Scene3D({ url, bounds, start, labels, onFailed }: Scene3DProps) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const host = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
   const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading');
+  const viewerRef = useRef<Viewer | null>(null);
 
   useEffect(() => {
     let viewer: Viewer | null = null;
@@ -32,12 +35,15 @@ export function Scene3D({ url, labels, onFailed }: Scene3DProps) {
         viewer = await createViewer({
           canvas: canvas.current,
           url,
+          ...(bounds ? { bounds } : {}),
+          ...(start ? { camera: start } : {}),
           onProgress: (f) => setProgress(f),
         });
         if (cancelled) {
           viewer.dispose();
           return;
         }
+        viewerRef.current = viewer;
         setState('ready');
         window.addEventListener('resize', onResize);
         statsTimer = setInterval(() => {
@@ -61,8 +67,10 @@ export function Scene3D({ url, labels, onFailed }: Scene3DProps) {
       cancelled = true;
       clearInterval(statsTimer);
       window.removeEventListener('resize', onResize);
+      viewerRef.current = null;
       viewer?.dispose();
     };
+    // bounds/start are part of the published scene and change only with the url.
   }, [url, onFailed]);
 
   return (
@@ -82,6 +90,27 @@ export function Scene3D({ url, labels, onFailed }: Scene3DProps) {
             aria-label={labels.loading}
           />
           <span>{Math.round(progress * 100)}%</span>
+        </div>
+      )}
+      {state === 'ready' && (
+        <div className="g-scene__controls">
+          <button
+            type="button"
+            className="g-roundbtn g-glass"
+            aria-label={labels.reset}
+            onClick={() => viewerRef.current?.reset()}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="g-icon">
+              <path
+                d="M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
         </div>
       )}
       {state === 'failed' && (

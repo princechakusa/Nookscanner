@@ -37,9 +37,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # --- COLMAP (SfM incl. the global mapper) with CUDA, headless ---------------------------------
+# ONNX (learned features), dense MVS and OpenGL are off: the pipeline uses SIFT + the global
+# mapper only, and ONNX Runtime's FetchContent build failed with 4.2.1 (2026-11-20 build log).
 RUN git clone --depth 1 --branch ${COLMAP_VERSION} https://github.com/colmap/colmap.git /tmp/colmap \
     && cmake -S /tmp/colmap -B /tmp/colmap/build -GNinja \
          -DCMAKE_BUILD_TYPE=Release -DGUI_ENABLED=OFF -DCUDA_ENABLED=ON \
+         -DONNX_ENABLED=OFF -DMVS_ENABLED=OFF -DOPENGL_ENABLED=OFF \
          -DCMAKE_CUDA_ARCHITECTURES="${CUDA_ARCHS}" \
     && cmake --build /tmp/colmap/build --parallel 4 \
     && cmake --install /tmp/colmap/build \

@@ -28,6 +28,26 @@ test('real interior scene loads and renders in the guest viewer', async ({ page 
     return ext ? String(gl!.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : 'unknown';
   });
 
+  // Controls (7.2): dragging changes the view; Reset view returns to the starting picture.
+  const canvasEl = page.locator('.g-scene__canvas');
+  await page.waitForTimeout(1500);
+  const before = await canvasEl.screenshot();
+  {
+    const b = (await canvasEl.boundingBox())!;
+    await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(b.x + b.width / 2 + 220, b.y + b.height / 2, { steps: 12 });
+    await page.mouse.up();
+  }
+  await page.waitForTimeout(1500);
+  const moved = await canvasEl.screenshot();
+  expect(moved.equals(before)).toBe(false);
+  await page.getByRole('button', { name: 'Reset view' }).click();
+  await page.waitForTimeout(1500);
+  const restored = await canvasEl.screenshot();
+  // Same view again: the PNG sizes are close (exact bytes can differ by sorting noise).
+  expect(Math.abs(restored.length - before.length) / before.length).toBeLessThan(0.05);
+
   // Idle frame rate, then while dragging to look around.
   await page.waitForTimeout(3000);
   const idleFps = Number(await scene.getAttribute('data-fps'));

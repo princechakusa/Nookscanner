@@ -8,6 +8,7 @@
 import { SparkControls, SparkRenderer, SplatMesh } from '@sparkjsdev/spark';
 import * as THREE from 'three';
 import { chooseBudget, readCapabilities, type ViewerBudget, type ViewerTier } from './budget.ts';
+import { constrainPosition, validBounds, type SceneBounds, type Vec3 } from './constraints.ts';
 
 export interface ViewerOptions {
   canvas: HTMLCanvasElement;
@@ -15,7 +16,9 @@ export interface ViewerOptions {
   /** Force a tier (tests, settings); default: chosen from the device. */
   tier?: ViewerTier;
   /** Initial camera pose in scene coordinates (metres). */
-  camera?: { position: [number, number, number]; target: [number, number, number] };
+  camera?: { position: Vec3; target: Vec3 };
+  /** Apartment box from the scene alignment; the camera never leaves it or goes under the floor. */
+  bounds?: SceneBounds;
   onProgress?: (fraction: number) => void;
   onFirstFrame?: (ms: number) => void;
   onError?: (error: Error) => void;
@@ -34,7 +37,9 @@ export interface ViewerStats {
 export interface Viewer {
   readonly stats: ViewerStats;
   /** Moves the camera to look at a point from a position (used by rooms and search later). */
-  lookAt(position: [number, number, number], target: [number, number, number]): void;
+  lookAt(position: Vec3, target: Vec3): void;
+  /** Back to the starting view. */
+  reset(): void;
   resize(): void;
   dispose(): void;
 }
@@ -82,11 +87,16 @@ export async function createViewer(o: ViewerOptions): Promise<Viewer> {
 
   const controls = new SparkControls({ canvas: o.canvas });
 
-  const lookAt = (position: [number, number, number], target: [number, number, number]) => {
-    rig.position.set(...position);
+  const bounds = validBounds(o.bounds) ? o.bounds : undefined;
+  const lookAt = (position: Vec3, target: Vec3) => {
+    rig.position.set(...constrainPosition(position, bounds));
     rig.lookAt(new THREE.Vector3(...target));
   };
-  lookAt(o.camera?.position ?? [0, 0, 0], o.camera?.target ?? [0, 0, -1]);
+  const start = {
+    position: o.camera?.position ?? ([0, 0, 0] as Vec3),
+    target: o.camera?.target ?? ([0, 0, -1] as Vec3),
+  };
+  lookAt(start.position, start.target);
 
   const resize = () => {
     const w = o.canvas.clientWidth || 1;
@@ -114,6 +124,10 @@ export async function createViewer(o: ViewerOptions): Promise<Viewer> {
   renderer.setAnimationLoop(() => {
     if (disposed) return;
     controls.update(rig, camera);
+    if (bounds) {
+      const p = constrainPosition([rig.position.x, rig.position.y, rig.position.z], bounds);
+      rig.position.set(p[0], p[1], p[2]);
+    }
     renderer.render(scene, camera);
     const now = performance.now();
     if (stats.firstFrameMs === null) {
@@ -131,6 +145,7 @@ export async function createViewer(o: ViewerOptions): Promise<Viewer> {
   return {
     stats,
     lookAt,
+    reset: () => lookAt(start.position, start.target),
     resize,
     dispose() {
       disposed = true;

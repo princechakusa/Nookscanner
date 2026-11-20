@@ -60,6 +60,8 @@ export const guestRoomSchema = z.object({
   name: localizedSchema,
 });
 
+const vec3 = z.tuple([z.number().finite(), z.number().finite(), z.number().finite()]);
+
 export const guestExperienceSchema = z.object({
   apartment: z.object({ name: localizedSchema, property: localizedSchema.optional() }),
   rooms: z.array(guestRoomSchema).min(1).max(40),
@@ -76,7 +78,16 @@ export const guestExperienceSchema = z.object({
     email: z.email().optional(),
   }),
   /** Scene assets arrive in Phase 7/9; absent means the 3D view is not published yet. */
-  scene: z.object({ url: httpsUrl, sizeBytes: z.number().int().positive() }).optional(),
+  scene: z
+    .object({
+      url: httpsUrl,
+      sizeBytes: z.number().int().positive(),
+      /** Apartment box after alignment (metres, Y up): camera limits (viewer constraints.ts). */
+      bounds: z.object({ min: vec3, max: vec3 }).optional(),
+      /** Starting view (usually the entrance viewpoint). */
+      start: z.object({ position: vec3, target: vec3 }).optional(),
+    })
+    .optional(),
 });
 
 export type GuestExperience = z.infer<typeof guestExperienceSchema>;

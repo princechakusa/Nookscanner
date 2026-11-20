@@ -22,6 +22,7 @@ export const messages = {
     matches: 'matches: {alias}',
     viewerPending:
       'The 3D apartment is being prepared. You can already browse every appliance below.',
+    resetView: 'Reset view',
     sceneLoading: 'Loading the 3D apartment',
     sceneFailed:
       'The 3D apartment could not be shown on this device. Every appliance is listed below.',
@@ -57,6 +58,7 @@ export const messages = {
     browseAll: 'تصفح كل الأجهزة',
     matches: 'يطابق: {alias}',
     viewerPending: 'يجري تجهيز الشقة ثلاثية الأبعاد. يمكنك تصفح جميع الأجهزة أدناه.',
+    resetView: 'إعادة ضبط العرض',
     sceneLoading: 'يجري تحميل الشقة ثلاثية الأبعاد',
     sceneFailed: 'تعذّر عرض الشقة ثلاثية الأبعاد على هذا الجهاز. جميع الأجهزة مدرجة أدناه.',
     viewerUnsupported:

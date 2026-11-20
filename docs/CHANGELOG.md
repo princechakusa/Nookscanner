@@ -2,6 +2,13 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 7.2 camera controls and limits
+
+- `packages/viewer/src/constraints.ts`: camera stays inside the apartment box (margin 15 cm), eye height 0.4-2.2 m above the floor; viewer clamps every frame and gains `reset()`.
+- Guest: Reset view button (EN/AR), scene payload `bounds` + `start` (schema), `Scene3D` passes them on.
+- Tests: viewer 14 (7 new), guest 16 (2 new: mocked viewer, reset and failure fallback), real-scene browser test extended (drag changes the view, Reset restores it) 2/2.
+- Worker image: COLMAP built without ONNX/MVS/OpenGL after the ONNX Runtime fetch failed in the first local build.
+
 ## 2026-11-20: Stage 6.8 compute targets (in progress)
 
 - `supabase/functions/claim-job` + `handleClaim` (pull mode for an own GPU PC; HMAC-signed; re-queues stalled jobs, claims one, returns a contract-valid request).

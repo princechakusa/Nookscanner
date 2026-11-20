@@ -74,7 +74,9 @@ export function Experience({ experience, locale, onLocaleChange, webgl, demo }: 
         {webgl && experience.scene && (
           <Scene3D
             url={experience.scene.url}
-            labels={{ loading: t.sceneLoading, failed: t.sceneFailed }}
+            bounds={experience.scene.bounds}
+            start={experience.scene.start}
+            labels={{ loading: t.sceneLoading, failed: t.sceneFailed, reset: t.resetView }}
           />
         )}
         {viewerMessage && (
