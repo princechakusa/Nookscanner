@@ -2,6 +2,15 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 5.2 upload validation (worker)
+
+### Added
+- `services/reconstruction/nookscanner_reconstruction/validate.py`: ffprobe-based gates (data-driven `Gates`), manager-readable issues with guidance, part reassembly with size and SHA-256 checks, CLI.
+- `tests/test_validate.py`: 21 tests incl. real sample videos per tier made with ffmpeg; CI installs ffmpeg.
+
+### Test results
+- `npm run test:worker`: 35 passed (11 s). Tier sample reports in `docs/3D_TECHNOLOGY.md` (synthetic formats; real footage pending).
+
 ## 2026-11-20: Stage 5.1 chunked resumable video upload
 
 ### Added

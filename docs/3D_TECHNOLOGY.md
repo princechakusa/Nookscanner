@@ -114,3 +114,16 @@ Sources: https://sparkjs.dev/docs/overview/ , https://sparkjs.dev/docs/splat-mes
 3. Floaters/artifacts -> cleanup step + manager crop tool; quality gate in review.
 4. Vendor/library churn (fast-moving field) -> provider adapter, keep PLY master, renderer abstraction in `packages/viewer`.
 5. Privacy of interior footage -> private storage, short retention, workers use short-lived signed URLs.
+
+## Upload validation (Stage 5.2)
+`services/reconstruction/nookscanner_reconstruction/validate.py` checks every uploaded video with ffprobe before reconstruction: container, codec (H.264/HEVC preferred; AV1, VP9, ProRes, MPEG-4, MJPEG accepted with a note; others refused), display resolution after rotation metadata, frame rate incl. variable frame rate, duration, bits per pixel per codec, HDR (PQ, HLG, Dolby Vision) and orientation. Each issue has a code, severity (block/warn/info), a manager-readable message and re-capture guidance. Thresholds are data (`Gates`); Stage 5.3 selects them per device tier. Parts (ADR-016) are joined with per-part size and SHA-256 checks.
+
+Measured on 2026-11-20 with ffmpeg 8.1.2 on **synthetic** samples that emulate each tier's file format (codec, HDR flags, rotation matrix, VFR, bitrate). They prove the format checks, not image quality: **real walkthroughs from the pilot iPhone, an older iPhone and an Android phone are still required** (Blocked on user 4) to calibrate thresholds. T1/T3 samples are 2 s (4K encode time), hence the duration rejection.
+
+| Sample (synthetic format emulation) | Measured facts | Result | Issues |
+|---|---|---|---|
+| T1 recent iPhone Pro (4K HEVC 10-bit PQ, MOV) | hevc 3840x2160 rot 0, 30.0 fps, 2.0 s, 14647 kbit/s, bpp 0.0589, HDR pq | rejected | VIDEO_TOO_SHORT (block), HDR_VIDEO (info) |
+| T2 older/standard iPhone (1080p H.264, portrait) | h264 1080x1920 rot 90, 30.0 fps, 21.0 s, 8087 kbit/s, bpp 0.13, HDR - | pass | PORTRAIT_VIDEO (warn) |
+| T3 high-end Android (4K HEVC, variable fps) | hevc 3840x2160 rot 0, 24.407 fps VFR, 1.97 s, 10896 kbit/s, bpp 0.0538, HDR - | rejected | VARIABLE_FRAME_RATE (info), VIDEO_TOO_SHORT (block) |
+| T4 mid-range Android / messaging copy (720p H.264, 0.5 Mbit/s) | h264 1280x720 rot 0, 30.0 fps, 21.0 s, 513 kbit/s, bpp 0.0186, HDR - | pass | RESOLUTION_LOW (warn), BITRATE_LOW (warn) |
+| T5 other camera (1080p 25 fps MPEG-4) | mpeg4 1920x1080 rot 0, 25.0 fps, 21.0 s, 15250 kbit/s, bpp 0.2942, HDR - | pass | CODEC_UNUSUAL (info) |

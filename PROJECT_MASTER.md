@@ -132,11 +132,11 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 
 ## 24. Current project status
 
-**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2 complete on the **local** Supabase stack: 2.2 schema, 2.3 storage, 2.4 dashboard auth, 2.5 real-stack DB tests, 2.6 security review (5 findings fixed, no Critical/High open). All 5 migrations are applied to the hosted project (user-approved) and verified (lint clean, advisors accepted, anon smoke 30/30); only hosted Auth dashboard settings remain (Blocked on user 1). Phase 3 DONE. **Phase 4 DONE.** **Phase 5 IN PROGRESS: 5.1 DONE** (chunked resumable video upload, migration 0500 applied locally and hosted). **Next: 5.2** server validation (ffprobe "validate" job in the worker; runs locally, Modal deployment waits for Blocked on user 5).
+**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2 complete on the **local** Supabase stack: 2.2 schema, 2.3 storage, 2.4 dashboard auth, 2.5 real-stack DB tests, 2.6 security review (5 findings fixed, no Critical/High open). All 5 migrations are applied to the hosted project (user-approved) and verified (lint clean, advisors accepted, anon smoke 30/30); only hosted Auth dashboard settings remain (Blocked on user 1). Phase 3 DONE. **Phase 4 DONE.** **Phase 5 IN PROGRESS: 5.1 DONE** (chunked resumable upload, migration 0500 applied locally and hosted), **5.2 DONE for format validation** (worker `validate.py`; real-footage reports wait for Blocked on user 4). **Next: 5.3** device tiers + capture profiles.
 
 **Resume here (new session):**
 1. Start Docker Desktop, then `npx supabase@3.2.0 start` (local stack on ports 565xx).
-2. Phase 5.2: worker `validate` job (download + concatenate parts, ffprobe checks per quality bar 1b/3, manager-readable reasons); build and test locally with sample videos from several device tiers.
+2. Phase 5.3: tier table (minimum capture specs) in `3D_QUALITY_BAR.md`/`3D_TECHNOLOGY.md`; profile chosen from reported capabilities, not model names; unit tests incl. unknown devices; `Gates` per tier for `validate.py`.
 3. Stack E2E: `node scripts/e2e-stack.mjs` (use `at('/path')` from `tests/e2e-stack/helpers.ts` for URL assertions).
 4. Keep following the loop in `docs/AUTONOMOUS_LOOP_PROMPT.md`; pushing to `origin/main` and applying migrations to the hosted project (dry run first) are user-approved. The binding 3D quality bar (`docs/3D_QUALITY_BAR.md`, ADR-014) is wired into Phases 5, 6, 7 and 12.
 
@@ -162,7 +162,7 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 | `supabase db lint --level warning` (local) | no schema errors |
 | `npm run build` | dashboard + guest built; guest initial JS 70.18 kB gzip |
 | `npm run check:secrets` | 20 files, no privileged keys |
-| `npm run test:worker` | 14 passed |
+| `npm run test:worker` | 35 passed (incl. ffmpeg-made tier samples) |
 | GitHub CI (previous push) | green: runs 44578429531, 44579511164 |
 
 Failures found and fixed: R-005..R-023; open issues in [`KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md).
@@ -202,3 +202,4 @@ Decision 2026-11-20 (user): **stay on the Supabase Free plan** (no Pro). Uploads
 | 2026-11-20 (cont.) | Stage 4.3 rooms (create from layout, custom, rename, reorder, delete, top-up); stack E2E 22/22; DB stack 74/74. |
 | 2026-11-20 (cont.) | Stage 4.4 guest QR codes; Phase 4 complete. Found the local WebKit slowness cause (trace recording, R-023); stack E2E 24/24 in 2 min. |
 | 2026-11-20 (cont.) | Stage 5.1 chunked resumable upload (ADR-017); migration 0500 applied to hosted (dry run first; lint clean, smoke 30/30); stack E2E 28/28. |
+| 2026-11-20 (cont.) | Stage 5.2 upload validation in the worker (ffprobe gates, tier sample reports, CI ffmpeg); real-footage reports pending. |
