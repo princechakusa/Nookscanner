@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#25606D"/><stop offset="1" stop-color="#123A43"/></linearGradient>
+    <linearGradient id="light" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF4DC"/><stop offset="1" stop-color="#F0C784"/></linearGradient>
+    <linearGradient id="spill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F0C784" stop-opacity="0.9"/><stop offset="1" stop-color="#F0C784" stop-opacity="0"/></linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#B57A2E"/><stop offset="1" stop-color="#D4954A"/></linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <path d="M420 852h340l96 100H324Z" fill="url(#spill)"/>
+  <rect x="320" y="196" width="432" height="616" rx="14" fill="url(#light)"/>
+  <rect x="320" y="196" width="168" height="616" fill="url(#leaf)"/>
+  <rect x="346" y="236" width="116" height="236" rx="10" fill="none" stroke="#8F5E1F" stroke-width="12" opacity="0.7"/>
+  <rect x="346" y="512" width="116" height="256" rx="10" fill="none" stroke="#8F5E1F" stroke-width="12" opacity="0.7"/>
+  <circle cx="462" cy="500" r="17" fill="#FFF4DC"/>
+  <rect x="296" y="174" width="480" height="660" rx="26" fill="none" stroke="#F7F5F1" stroke-width="40"/>
+  <rect x="244" y="812" width="584" height="40" rx="20" fill="#F7F5F1"/>
+</svg>
