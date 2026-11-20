@@ -19,6 +19,7 @@ const MESSAGES: Record<string, string> = {
   INVALID_COUNT: 'Enter a whole number within the allowed range.',
   PROPERTY_REQUIRED: 'Choose a property.',
   CONFIRM_REQUIRED: 'Tick the box to confirm.',
+  ROOM_NAME_TAKEN: 'This apartment already has a room with this name.',
   UNKNOWN: 'Something went wrong. Try again.',
 };
 

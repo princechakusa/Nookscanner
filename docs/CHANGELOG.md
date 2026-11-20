@@ -2,6 +2,17 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 4.3 rooms
+
+### Added
+- Apartment page "Rooms": create the planned rooms from the layout, add custom rooms (EN/AR name, type), rename, delete, move up/down; "Add N missing rooms from the layout" after layout changes.
+- Shared: `roomSchema`, `ROOM_TYPE_LABELS`, `missingPlannedRooms`, `moveInOrder` (shared tests 76); `ROOM_TYPES` reused from the guest schema.
+- DB test: room reorder upsert allowed for editors, denied for viewers and other organizations.
+- `tests/e2e-stack/rooms.spec.ts`.
+
+### Test results (local)
+- Stack E2E 22/22 (both projects); DB PGlite 69 + 5 stack-only, real stack 74/74; lint, format, typecheck pass.
+
 ## 2026-11-20: Stage 4.2 properties + apartments CRUD
 
 ### Added

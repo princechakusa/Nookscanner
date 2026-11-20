@@ -132,11 +132,11 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 
 ## 24. Current project status
 
-**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2 complete on the **local** Supabase stack: 2.2 schema, 2.3 storage, 2.4 dashboard auth, 2.5 real-stack DB tests, 2.6 security review (5 findings fixed, no Critical/High open). All 5 migrations are applied to the hosted project (user-approved) and verified (lint clean, advisors accepted, anon smoke 30/30); only hosted Auth dashboard settings remain (Blocked on user 1). Phase 3 DONE. **Phase 4 IN PROGRESS: 4.1 and 4.2 DONE** (KI-022 was a test race, R-020; properties + apartments CRUD with layout questionnaire). Next: 4.3 rooms.
+**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2 complete on the **local** Supabase stack: 2.2 schema, 2.3 storage, 2.4 dashboard auth, 2.5 real-stack DB tests, 2.6 security review (5 findings fixed, no Critical/High open). All 5 migrations are applied to the hosted project (user-approved) and verified (lint clean, advisors accepted, anon smoke 30/30); only hosted Auth dashboard settings remain (Blocked on user 1). Phase 3 DONE. **Phase 4 IN PROGRESS: 4.1, 4.2 and 4.3 DONE** (organizations/invitations, properties + apartments with layout questionnaire, rooms with ordering). Next: 4.4 QR UI + rendering.
 
 **Resume here (new session):**
 1. Start Docker Desktop, then `npx supabase@3.2.0 start` (local stack on ports 565xx).
-2. Continue Phase 4: 4.3 rooms (persist `roomsFromLayout` plan, ordering), 4.4 QR UI + rendering.
+2. Continue Phase 4: 4.4 QR UI + rendering (`qr_codes` + RPCs exist since 2.2), then Phase 5.
 3. Stack E2E: `node scripts/e2e-stack.mjs` (use `at('/path')` from `tests/e2e-stack/helpers.ts` for URL assertions).
 4. Keep following the loop in `docs/AUTONOMOUS_LOOP_PROMPT.md`; pushing to `origin/main` and applying migrations to the hosted project (dry run first) are user-approved. The binding 3D quality bar (`docs/3D_QUALITY_BAR.md`, ADR-014) is wired into Phases 5, 6, 7 and 12.
 
@@ -153,10 +153,10 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 | Command | Result |
 |---|---|
 | `npm run lint` / `format:check` / `typecheck` | pass |
-| `npm test` | all workspaces pass (shared 73, design-tokens 19, ui 6, dashboard 24, guest 14, database on PGlite 68 + 5 stack-only skipped) |
-| `npm run test:e2e:stack` (dashboard auth + shell + axe + invitations on the local stack) | 20 passed, 0 skipped (auth, org invitations, properties CRUD + scoping, shell; both projects) |
+| `npm test` | all workspaces pass (shared 76, design-tokens 19, ui 6, dashboard 24, guest 14, database on PGlite 69 + 5 stack-only skipped) |
+| `npm run test:e2e:stack` (dashboard auth + shell + axe + invitations on the local stack) | 22 passed, 0 skipped (auth, org invitations, properties CRUD + scoping, rooms, shell; both projects) |
 | `npm run test:e2e` (guest, Pixel 7 + iPhone 15 emulation, EN/AR, axe) | 12 passed |
-| `npm run test:db:stack` (real local Supabase) | 73 passed, 0 failed (after `db reset`) |
+| `npm run test:db:stack` (real local Supabase) | 74 passed, 0 failed |
 | Hosted project: `db lint --remote`, `db advisors --remote`, read-only catalog query, `npm run test:hosted:smoke` | no errors; 7 WARN = intended RPCs (accepted); 15/15 tables with RLS, 0 anon grants; smoke 30/30 |
 | `supabase db advisors` (security) / `db lint` | 0 security findings / no errors |
 | `supabase db lint --level warning` (local) | no schema errors |
@@ -198,3 +198,4 @@ Decision 2026-11-20 (user): **stay on the Supabase Free plan** (no Pro). Uploads
 | 2026-11-20 (cont.) | Stage 4.1 implemented; invitation E2E blocked by KI-022 (marked fixme). Session stopped at the user's request for a fresh chat; resume steps in section 24. |
 | 2026-11-20 (cont.) | Autonomous loop resumed. KI-022 root cause: loose `/\/app$/` matched the confirm URL, aborting the confirm POST; fixed, fixme removed, 18/18 stack E2E. Stage 4.1 DONE. |
 | 2026-11-20 (cont.) | Stage 4.2 properties + apartments CRUD with layout questionnaire; fixed form input loss (R-021) and leaked test contexts (R-022); stack E2E 20/20. |
+| 2026-11-20 (cont.) | Stage 4.3 rooms (create from layout, custom, rename, reorder, delete, top-up); stack E2E 22/22; DB stack 74/74. |

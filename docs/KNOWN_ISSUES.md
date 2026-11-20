@@ -22,7 +22,7 @@ Updated 2026-11-20. Severity: Critical / High / Medium / Low. Close an item only
 | KI-020 | Low | Performance | Proxy calls the Auth server (`getUser`) on every dashboard request (~1 round trip) | Acceptable for the dashboard; revisit with JWT revocation checks if latency matters | Dev | Accepted |
 | KI-021 | Low | Performance | Guest initial JS grew to 100.7 kB gzip (from 70 kB) because the payload schema brings zod; budget is 150 kB | Switch the guest to `zod/mini` if the 3D loader or Phase 9 pushes it near the budget | Dev | Open (within budget) |
 | KI-023 | Low | Mobile / supply chain | Capture app (`apps/nookscanner`, Expo SDK 58, react-native 0.88.1) installs with 3 moderate `npm audit` advisories in the Expo/React Native toolchain; `npm audit fix --force` would break SDK alignment | Re-check with each Expo SDK patch (`npx expo install --fix`); review before Phase 5 release builds | Dev | Open |
-| KI-024 | Low | Testing | Local stack E2E on mobile WebKit (Windows) is slow and variable: ~2 s per action under load, `properties.spec` 43 s alone vs up to 4.7 min while other heavy work runs; one run lost the `next start` server mid-suite (not reproduced) | Multi-person specs use `test.slow()`; CI (Linux) is the reference; investigate if CI shows it | Dev | Open |
+| KI-024 | Low | Testing | Local stack E2E on mobile WebKit (Windows) is slow and variable: ~2 s per action under load, `properties.spec` 43 s alone vs up to 4.7 min while other heavy work runs; one run lost the `next start` server mid-suite (not reproduced) | Multi-person specs use `test.slow()`; CI (Linux) is the reference and runs the whole workflow in ~4.5 min (run 44683349352) | Dev | Open |
 
 ## Resolved
 

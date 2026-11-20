@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_LAYOUT,
+  ROOM_TYPES,
+  ROOM_TYPE_LABELS,
   apartmentSchema,
   layoutSchema,
   layoutSummary,
+  missingPlannedRooms,
+  moveInOrder,
   parseLayout,
   propertyColumns,
   propertySchema,
+  roomSchema,
   roomsFromLayout,
 } from './property.ts';
 
@@ -167,5 +172,34 @@ describe('layoutSummary', () => {
     expect(layoutSummary({ ...DEFAULT_LAYOUT, bedrooms: 2, bathrooms: 2, balconies: 2 })).toBe(
       '2 bedrooms · 2 bathrooms · 2 balconies',
     );
+  });
+});
+
+describe('rooms', () => {
+  it('roomSchema mirrors the DB checks', () => {
+    expect(roomSchema.parse({ nameEn: ' Guest room ', nameAr: '', roomType: 'bedroom' })).toEqual({
+      nameEn: 'Guest room',
+      nameAr: null,
+      roomType: 'bedroom',
+    });
+    expect(roomSchema.safeParse({ nameEn: 'x'.repeat(81), roomType: 'bedroom' }).success).toBe(
+      false,
+    );
+    expect(roomSchema.safeParse({ nameEn: 'Gym', roomType: 'gym' }).success).toBe(false);
+    expect(ROOM_TYPES.every((t) => ROOM_TYPE_LABELS[t])).toBe(true);
+  });
+
+  it('missingPlannedRooms ignores case and existing custom names', () => {
+    const planned = roomsFromLayout({ ...DEFAULT_LAYOUT, bedrooms: 2 });
+    const missing = missingPlannedRooms(planned, ['entrance', 'Living room', 'Bedroom 1', 'Gym']);
+    expect(missing.map((r) => r.nameEn)).toEqual(['Kitchen', 'Hallway', 'Bedroom 2', 'Bathroom']);
+  });
+
+  it('moveInOrder swaps neighbours and ignores impossible moves', () => {
+    expect(moveInOrder(['a', 'b', 'c'], 'b', 'up')).toEqual(['b', 'a', 'c']);
+    expect(moveInOrder(['a', 'b', 'c'], 'b', 'down')).toEqual(['a', 'c', 'b']);
+    expect(moveInOrder(['a', 'b', 'c'], 'a', 'up')).toEqual(['a', 'b', 'c']);
+    expect(moveInOrder(['a', 'b', 'c'], 'c', 'down')).toEqual(['a', 'b', 'c']);
+    expect(moveInOrder(['a', 'b'], 'zz', 'up')).toEqual(['a', 'b']);
   });
 });

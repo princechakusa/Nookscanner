@@ -3,6 +3,9 @@
  * foundation migration) and the room plan generated from the questionnaire (PR-02, CP-02).
  */
 import { z } from 'zod';
+import { ROOM_TYPES } from './guest.ts';
+
+export { ROOM_TYPES };
 
 /** Empty form fields become `null` so optional columns are cleared, not set to ''. */
 const optionalText = (max: number, pattern?: RegExp, message = 'INVALID_VALUE') =>
@@ -106,19 +109,7 @@ export const apartmentSchema = z.object({
 });
 export type ApartmentInput = z.infer<typeof apartmentSchema>;
 
-export type RoomType =
-  | 'entrance'
-  | 'living'
-  | 'kitchen'
-  | 'dining'
-  | 'bedroom'
-  | 'bathroom'
-  | 'hallway'
-  | 'balcony'
-  | 'laundry'
-  | 'office'
-  | 'storage'
-  | 'other';
+export type RoomType = (typeof ROOM_TYPES)[number];
 
 export interface PlannedRoom {
   roomType: RoomType;
@@ -186,4 +177,53 @@ export function layoutSummary(layout: ApartmentLayout | null): string {
   ];
   if (layout.balconies > 0) parts.push(plural(layout.balconies, 'balcony', 'balconies'));
   return parts.join(' · ');
+}
+
+export const ROOM_TYPE_LABELS: Record<RoomType, string> = {
+  entrance: 'Entrance',
+  living: 'Living room',
+  kitchen: 'Kitchen',
+  dining: 'Dining area',
+  bedroom: 'Bedroom',
+  bathroom: 'Bathroom',
+  hallway: 'Hallway',
+  balcony: 'Balcony',
+  laundry: 'Laundry',
+  office: 'Office',
+  storage: 'Storage',
+  other: 'Other',
+};
+
+/** A room as entered by a manager (mirrors `rooms` checks: name_en 1..80, name_ar <= 80). */
+export const roomSchema = z.object({
+  nameEn: name(80),
+  nameAr: optionalText(80),
+  roomType: z.enum(ROOM_TYPES, { message: 'INVALID_VALUE' }),
+});
+export type RoomInput = z.infer<typeof roomSchema>;
+
+/** Planned rooms not yet created (matched by English name, the DB's unique key per apartment). */
+export function missingPlannedRooms(
+  planned: readonly PlannedRoom[],
+  existingNamesEn: readonly string[],
+): PlannedRoom[] {
+  const have = new Set(existingNamesEn.map((n) => n.trim().toLowerCase()));
+  return planned.filter((r) => !have.has(r.nameEn.toLowerCase()));
+}
+
+/**
+ * New order after moving one room up or down. Returns ids in order; the caller stores
+ * `sort_order = (index + 1) * 10`. Unknown ids or moves past either end change nothing.
+ */
+export function moveInOrder(
+  ids: readonly string[],
+  id: string,
+  direction: 'up' | 'down',
+): string[] {
+  const out = [...ids];
+  const i = out.indexOf(id);
+  const j = direction === 'up' ? i - 1 : i + 1;
+  if (i < 0 || j < 0 || j >= out.length) return out;
+  [out[i], out[j]] = [out[j]!, out[i]!];
+  return out;
 }

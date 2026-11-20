@@ -286,6 +286,47 @@ describe('role boundaries', () => {
     expect(msg).toMatch(/row-level security/);
   });
 
+  it('room reordering (upsert of the whole list) works for editors, not viewers or other orgs (4.3)', async () => {
+    const ids = await asUser(db, u.editorA, async (tx) => {
+      const ins = await tx.query<{ id: string }>(
+        `insert into public.rooms (apartment_id, name_en, room_type, sort_order)
+         values ($1, 'Order A', 'other', 900), ($1, 'Order B', 'other', 910) returning id`,
+        [aptA2],
+      );
+      return ins.rows.map((r) => r.id);
+    });
+    // The dashboard swaps two rooms with one INSERT ... ON CONFLICT (id) DO UPDATE statement.
+    const upsert = `insert into public.rooms (id, apartment_id, organization_id, name_en, room_type, sort_order)
+      values ($1, $3, $4, 'Order A', 'other', 910), ($2, $3, $4, 'Order B', 'other', 900)
+      on conflict (id) do update set sort_order = excluded.sort_order`;
+    await asUser(db, u.editorA, (tx) => tx.query(upsert, [ids[0], ids[1], aptA2, orgA]));
+    const order = await asUser(db, u.viewerA, async (tx) =>
+      (
+        await tx.query<{ name_en: string }>(
+          `select name_en from public.rooms where id = any($1::uuid[]) order by sort_order`,
+          [ids],
+        )
+      ).rows.map((r) => r.name_en),
+    );
+    expect(order).toEqual(['Order B', 'Order A']);
+
+    const viewer = await expectError(
+      asUser(db, u.viewerA, (tx) => tx.query(upsert, [ids[0], ids[1], aptA2, orgA])),
+    );
+    expect(viewer).toMatch(/row-level security/);
+    const deleted = await asUser(
+      db,
+      u.viewerA,
+      async (tx) =>
+        (await tx.query(`delete from public.rooms where id = any($1::uuid[])`, [ids])).affectedRows,
+    );
+    expect(deleted).toBe(0);
+    const other = await expectError(
+      asUser(db, u.ownerB, (tx) => tx.query(upsert, [ids[0], ids[1], aptA2, orgA])),
+    );
+    expect(other).toMatch(/row-level security/);
+  });
+
   it('manager can create apartments but cannot create properties or manage members', async () => {
     await asUser(db, u.managerA, (tx) =>
       tx.query(`insert into public.apartments (property_id, name) values ($1, 'Unit 1202')`, [
