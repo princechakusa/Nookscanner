@@ -205,7 +205,8 @@ body {
   inline-size: 28px;
   block-size: 28px;
   flex: none;
-  color: var(--nt-color-brand-accent-strong);
+  border-radius: 8px;
+  object-fit: cover;
 }
 .ns-orgswitch {
   display: grid;

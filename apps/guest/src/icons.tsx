@@ -45,12 +45,7 @@ export function Icon({ name, className }: { name: string; className?: string }) 
 export const roomIcon = (type: string) => ROOM_ICON[type] ?? 'room';
 export const categoryIcon = (category: string) => (PATHS[category] ? category : 'default');
 
-/** Doorway-arch brand mark (DESIGN_SYSTEM 1). */
+/** Brand mark: the Open Door app icon (store/logo-final), shown small in the top bar. */
 export function BrandMark() {
-  return (
-    <svg className="g-brandmark" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 21V10a7 7 0 0 1 14 0v11" fill="none" stroke="currentColor" strokeWidth="2" />
-      <path d="M9 21v-8a3 3 0 0 1 6 0v8" fill="none" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  );
+  return <img className="g-brandmark" src="/brand-mark.png" alt="" width={26} height={26} />;
 }

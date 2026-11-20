@@ -75,20 +75,7 @@ export function AppShell({
       <aside className={`ns-sidebar${mobileOpen ? ' ns-sidebar--open' : ''}`} id="ns-sidebar">
         <div className="ns-sidebar__top">
           <span className="ns-sidebar__brand">
-            <svg viewBox="0 0 24 24" aria-hidden="true" className="ns-sidebar__mark">
-              <path
-                d="M5 21V10a7 7 0 0 1 14 0v11"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              />
-              <path
-                d="M9 21v-8a3 3 0 0 1 6 0v8"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              />
-            </svg>
+            <img src="/brand-mark.png" alt="" width={28} height={28} className="ns-sidebar__mark" />
             <span className="ns-sidebar__label">{brand.name.toLowerCase()}</span>
           </span>
           <button

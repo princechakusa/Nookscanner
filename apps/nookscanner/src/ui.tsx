@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import appIcon from '../assets/icon.png';
+import Svg, { Circle, Path } from 'react-native-svg';
 
 /** Minimal shared UI for the capture app; colours are the brand tokens (packages/design-tokens). */
 export const colors = {
@@ -114,39 +115,15 @@ export const styles = StyleSheet.create({
 
 // ---------------------------------------------------------------- Icons and small parts
 
-/** Brand mark: a house inside scan corners. */
+/** Brand mark: the Open Door app icon (store/logo-final/photo/night-door.png). */
 export function Logo({ size = 64 }: { size?: number }) {
   return (
-    <View
+    <Image
+      source={appIcon}
       accessibilityRole="image"
       accessibilityLabel="Nookscanner"
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size * 0.28,
-        backgroundColor: colors.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <Svg width={size * 0.6} height={size * 0.6} viewBox="0 0 38 38">
-        <Path
-          d="M9 18 19 10l10 8v11H9z"
-          fill="none"
-          stroke="#fff"
-          strokeWidth={2.6}
-          strokeLinejoin="round"
-        />
-        <Path
-          d="M3 9V4h5M30 4h5v5M35 29v5h-5M8 34H3v-5"
-          fill="none"
-          stroke={colors.accent}
-          strokeWidth={2.6}
-          strokeLinecap="round"
-        />
-        <Rect x={16} y={22} width={6} height={7} rx={1} fill="#fff" />
-      </Svg>
-    </View>
+      style={{ width: size, height: size, borderRadius: size * 0.225 }}
+    />
   );
 }
 
