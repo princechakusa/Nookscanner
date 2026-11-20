@@ -6,6 +6,14 @@ export const run = Math.random().toString(36).slice(2, 8);
 export const PASSWORD = 'Apartment2026';
 export const NEW_PASSWORD = 'Apartment2027x';
 
+/**
+ * Exact dashboard URLs. Emailed links end in `next=/app`, so a loose `/\/app$/` already matches the
+ * confirm page and the test would move on before the confirm POST (which sets the session cookie)
+ * finished, aborting it (KNOWN_ISSUES R-020, formerly KI-022).
+ */
+export const at = (path: string) =>
+  new RegExp(`^http://localhost:3000${path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
+
 export interface MailSummary {
   ID: string;
   Subject: string;
@@ -50,7 +58,7 @@ export async function signOut(page: Page) {
     }).toPass({ timeout: 15_000 });
   }
   await page.getByRole('button', { name: 'Sign out' }).click();
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(at('/login'));
 }
 
 export async function signUpAndConfirm(page: Page, email: string) {
@@ -63,6 +71,6 @@ export async function signUpAndConfirm(page: Page, email: string) {
   const link = await latestLink(email, /Confirm your Nookscanner account/);
   await page.goto(link);
   await page.getByRole('button', { name: 'Confirm email' }).click();
-  await expect(page).toHaveURL(/\/app$/);
+  await expect(page).toHaveURL(at('/app'));
   return link;
 }

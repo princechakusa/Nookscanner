@@ -2,7 +2,16 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
-## 2026-11-20: Stage 4.1 organizations + invitations UI (IN PROGRESS)
+## 2026-11-20: KI-022 fixed; Stage 4.1 DONE
+
+### Fixed
+- KI-022 / R-020: stack E2E asserted `/\/app$/`, which matched the emailed confirm URL (`...&next=/app`) and let the spec abort the confirm POST. Exact-URL helper `at()`; `test.fixme` removed from `org.spec.ts`; per-test timeout 120 s (axe in WebKit).
+
+### Test results (local)
+- `npm run test:e2e:stack`: 18 passed, 0 skipped (desktop-chromium + mobile-webkit).
+- lint, format, typecheck, `npm test`: pass.
+
+## 2026-11-20: Stage 4.1 organizations + invitations UI (implemented)
 
 ### Added
 - Shared `org.ts`: slugify, invitation input schema (no owner invites, scoped roles only) - 7 tests.

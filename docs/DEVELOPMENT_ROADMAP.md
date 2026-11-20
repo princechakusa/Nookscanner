@@ -46,7 +46,7 @@ Status legend: `DONE`, `IN PROGRESS`, `BLOCKED (user)`, `TODO`.
 ## Phase 4: Property management - IN PROGRESS
 | Stage | Acceptance criteria | Status |
 |---|---|---|
-| 4.1 Organizations + invitations (DB tables + RPCs done in 2.2; this stage adds UI + invitation email) | create org, invite, accept, roles; isolation tests | IN PROGRESS: UI implemented (create org, members + role change/remove, invite with one-time copy link, revoke, `/invite/[token]` accept page); DB isolation tests pass; invitation E2E written but failing (KI-022), marked `test.fixme`; email delivery waits for SMTP (blocked on user) |
+| 4.1 Organizations + invitations (DB tables + RPCs done in 2.2; this stage adds UI + invitation email) | create org, invite, accept, roles; isolation tests | DONE 2026-11-20: UI (create org, members + role change/remove, invite with one-time copy link, revoke, `/invite/[token]` accept page); DB isolation tests pass; invitation E2E passes on desktop Chromium and mobile WebKit (KI-022 was a test race, R-020); invitation e-mail delivery waits for SMTP (Blocked on user 1), admins copy the link meanwhile |
 | 4.2 Properties + apartments CRUD (with layout questionnaire) | E2E CRUD; property-scoped member sees only assigned | TODO |
 | 4.3 Rooms (pre-scan list from questionnaire) | rooms created; ordering | TODO |
 | 4.4 QR foundation (`qr_codes` + RPCs done in 2.2; this stage adds UI + QR rendering) | token entropy test; revoke test | TODO (DB part done and tested in 2.2) |

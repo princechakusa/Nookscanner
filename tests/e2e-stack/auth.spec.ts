@@ -7,6 +7,7 @@ import { expect, test } from '@playwright/test';
 import {
   NEW_PASSWORD,
   PASSWORD,
+  at,
   latestLink,
   run,
   signIn,
@@ -42,7 +43,7 @@ test('sign up, confirm by email, sign out, sign in; links are single-use', async
 
   // Signed-in users skip auth pages.
   await page.goto('/login');
-  await expect(page).toHaveURL(/\/app$/);
+  await expect(page).toHaveURL(at('/app'));
 
   await signOut(page);
   await page.goto('/app');
@@ -56,7 +57,7 @@ test('sign up, confirm by email, sign out, sign in; links are single-use', async
   await signIn(page, email, 'WrongPassword1');
   await expect(page.locator('.nt-form-error')).toContainText('Email or password is incorrect.');
   await signIn(page, email, PASSWORD);
-  await expect(page).toHaveURL(/\/app$/);
+  await expect(page).toHaveURL(at('/app'));
 });
 
 test('unknown accounts get the same sign-in error (no enumeration)', async ({ page }) => {
@@ -87,7 +88,7 @@ test('password reset by email', async ({ page }) => {
 
   await page.goto(await latestLink(email, /Reset your Nookscanner password/));
   await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page).toHaveURL(/\/reset-password$/);
+  await expect(page).toHaveURL(at('/reset-password'));
   await page.getByLabel('New password', { exact: true }).fill(NEW_PASSWORD);
   await page.getByLabel('Repeat new password').fill('Mismatch2026x');
   await page.getByRole('button', { name: 'Save password' }).click();
@@ -102,5 +103,5 @@ test('password reset by email', async ({ page }) => {
   await signIn(page, email, PASSWORD);
   await expect(page.locator('.nt-form-error')).toContainText('Email or password is incorrect.');
   await signIn(page, email, NEW_PASSWORD);
-  await expect(page).toHaveURL(/\/app$/);
+  await expect(page).toHaveURL(at('/app'));
 });

@@ -14,13 +14,11 @@ async function invite(page: Page, email: string, role: string): Promise<string> 
   return link.inputValue();
 }
 
-// FIXME(KI-022): fails because the session cookie set by the e-mail confirmation server action
-// is not kept for the second and third person in this spec. Stage 4.1 stays IN PROGRESS until fixed.
-test.fixme('owner invites an editor who joins with the invited email only', async ({
+test('owner invites an editor who joins with the invited email only', async ({
   page,
   browser,
 }, info) => {
-  // Each person uses their own browser (as in reality); same-browser user switching is KI-022.
+  // Each person uses their own browser, as in reality.
   const newPerson = async () => (await browser.newContext(info.project.use)).newPage();
   const tag = `${run}-${info.project.name.startsWith('mobile') ? 'm' : 'd'}`;
   const ownerEmail = `owner-${tag}@example.test`;
@@ -69,7 +67,7 @@ test.fixme('owner invites an editor who joins with the invited email only', asyn
   await invitee.goto(new URL(link).pathname);
   await expect(invitee.getByText(`signed in as ${inviteeEmail}`, { exact: false })).toBeVisible();
   await invitee.getByRole('button', { name: 'Accept invitation' }).click();
-  await expect(page).toHaveURL(/\/app\?joined=1$/);
+  await expect(invitee).toHaveURL(/\/app\?joined=1$/);
   await expect(invitee.getByRole('status')).toContainText('You joined the organization.');
   await invitee.goto('/app/settings');
   await expect(invitee.getByText('your role: Editor')).toBeVisible();

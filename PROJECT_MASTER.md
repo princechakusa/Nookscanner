@@ -132,12 +132,12 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 
 ## 24. Current project status
 
-**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2 complete on the **local** Supabase stack: 2.2 schema, 2.3 storage, 2.4 dashboard auth, 2.5 real-stack DB tests, 2.6 security review (5 findings fixed, no Critical/High open). All 5 migrations are applied to the hosted project (user-approved) and verified (lint clean, advisors accepted, anon smoke 30/30); only hosted Auth dashboard settings remain (Blocked on user 1). Phase 3 DONE. **Phase 4 IN PROGRESS: stage 4.1 (organizations + invitations UI) is implemented but NOT complete.** Its end-to-end test `tests/e2e-stack/org.spec.ts` fails because of KI-022 (session cookie not kept after e-mail confirmation for the 2nd/3rd person in the spec) and is marked `test.fixme` so CI stays truthful.
+**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2 complete on the **local** Supabase stack: 2.2 schema, 2.3 storage, 2.4 dashboard auth, 2.5 real-stack DB tests, 2.6 security review (5 findings fixed, no Critical/High open). All 5 migrations are applied to the hosted project (user-approved) and verified (lint clean, advisors accepted, anon smoke 30/30); only hosted Auth dashboard settings remain (Blocked on user 1). Phase 3 DONE. **Phase 4 IN PROGRESS: stage 4.1 DONE** (KI-022 was a test race, fixed as R-020; invitation E2E passes on both projects). Next: 4.2 properties + apartments CRUD.
 
 **Resume here (new session):**
 1. Start Docker Desktop, then `npx supabase@3.2.0 start` (local stack on ports 565xx).
-2. Debug KI-022 (see KNOWN_ISSUES for what was ruled out): `node scripts/e2e-stack.mjs --project=desktop-chromium tests/e2e-stack/org.spec.ts` after removing `test.fixme`; inspect the confirm server-action response's Set-Cookie headers in the Playwright trace.
-3. When org.spec passes on both projects: mark 4.1 DONE, then 4.2 properties + apartments CRUD (layout questionnaire), 4.3 rooms, 4.4 QR UI + rendering.
+2. Continue Phase 4: 4.2 properties + apartments CRUD (layout questionnaire), 4.3 rooms, 4.4 QR UI + rendering.
+3. Stack E2E: `node scripts/e2e-stack.mjs` (use `at('/path')` from `tests/e2e-stack/helpers.ts` for URL assertions).
 4. Keep following the loop in `docs/AUTONOMOUS_LOOP_PROMPT.md`; pushing to `origin/main` and applying migrations to the hosted project (dry run first) are user-approved. The binding 3D quality bar (`docs/3D_QUALITY_BAR.md`, ADR-014) is wired into Phases 5, 6, 7 and 12.
 
 **Implemented**
@@ -154,7 +154,7 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 |---|---|
 | `npm run lint` / `format:check` / `typecheck` | pass |
 | `npm test` | all workspaces pass (shared 49, design-tokens 19, ui 6, dashboard 24, guest 14, database on PGlite 68 + 5 stack-only skipped; shared now 62) |
-| `npm run test:e2e:stack` (dashboard auth + shell + axe + invitations on the local stack) | 16 passed, 2 skipped (invitation spec `test.fixme`, KI-022) |
+| `npm run test:e2e:stack` (dashboard auth + shell + axe + invitations on the local stack) | 18 passed, 0 skipped (incl. invitation spec on both projects) |
 | `npm run test:e2e` (guest, Pixel 7 + iPhone 15 emulation, EN/AR, axe) | 12 passed |
 | `npm run test:db:stack` (real local Supabase) | 73 passed, 0 failed (after `db reset`) |
 | Hosted project: `db lint --remote`, `db advisors --remote`, read-only catalog query, `npm run test:hosted:smoke` | no errors; 7 WARN = intended RPCs (accepted); 15/15 tables with RLS, 0 anon grants; smoke 30/30 |
@@ -165,7 +165,7 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 | `npm run test:worker` | 14 passed |
 | GitHub CI (previous push) | green: runs 44578429531, 44579511164 |
 
-Failures found and fixed: R-005..R-019; open: KI-022 in [`KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md).
+Failures found and fixed: R-005..R-020; open issues in [`KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md).
 
 **Not tested / not done:** authenticated flows on the hosted project (needs Blocked-on-user 1); auth on the hosted project (templates/site URL not set, KI-017); CAPTCHA/leaked-password protection (KI-019); no 3D work yet, so **no 3D quality evidence exists**.
 
@@ -196,3 +196,4 @@ Decision 2026-11-20 (user): **stay on the Supabase Free plan** (no Pro). Uploads
 | 2026-11-20 (cont.) | Phase 3.1-3.3: tokens/fonts, `packages/ui`, dashboard shell; screen designs for all 7 screens recorded; stack E2E 16/16 with axe. |
 | 2026-11-20 (cont.) | Stage 3.4 guest shell per mockups; Phase 3 complete. |
 | 2026-11-20 (cont.) | Stage 4.1 implemented; invitation E2E blocked by KI-022 (marked fixme). Session stopped at the user's request for a fresh chat; resume steps in section 24. |
+| 2026-11-20 (cont.) | Autonomous loop resumed. KI-022 root cause: loose `/\/app$/` matched the confirm URL, aborting the confirm POST; fixed, fixme removed, 18/18 stack E2E. Stage 4.1 DONE. |

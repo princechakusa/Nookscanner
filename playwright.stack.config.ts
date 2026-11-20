@@ -12,7 +12,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: 0,
   reporter: process.env.CI ? 'github' : 'list',
-  timeout: 60_000,
+  // axe scans in WebKit take up to ~30 s each on a loaded machine.
+  timeout: 120_000,
   use: { baseURL: 'http://localhost:3000', trace: 'retain-on-failure' },
   projects: [
     { name: 'desktop-chromium', use: { ...devices['Desktop Chrome'] } },
