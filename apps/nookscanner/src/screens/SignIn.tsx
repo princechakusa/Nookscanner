@@ -1,8 +1,8 @@
 import { mapAuthError } from '@nookscanner/shared';
 import { useState } from 'react';
-import { Text, TextInput } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 import { supabase } from '../lib/supabase.ts';
-import { Button, ErrorText, Screen, styles } from '../ui.tsx';
+import { Button, ErrorText, Logo, colors, styles } from '../ui.tsx';
 
 const MESSAGES: Record<string, string> = {
   INVALID_CREDENTIALS: 'Email or password is incorrect.',
@@ -26,12 +26,17 @@ export function SignIn() {
   }
 
   return (
-    <Screen title="Nookscanner Capture">
+    <View style={[styles.screen, { paddingTop: 96 }]}>
+      <Logo />
+      <Text accessibilityRole="header" style={[styles.title, { marginTop: 10 }]}>
+        Nookscanner Capture
+      </Text>
       <Text style={styles.muted}>Sign in with your Nookscanner dashboard account.</Text>
+      <Text style={[styles.label, { marginTop: 10 }]}>Email</Text>
       <TextInput
         style={styles.input}
         accessibilityLabel="Email"
-        placeholder="Email"
+        placeholder="you@company.com"
         autoCapitalize="none"
         autoComplete="email"
         keyboardType="email-address"
@@ -39,10 +44,10 @@ export function SignIn() {
         value={email}
         onChangeText={setEmail}
       />
+      <Text style={styles.label}>Password</Text>
       <TextInput
         style={styles.input}
         accessibilityLabel="Password"
-        placeholder="Password"
         secureTextEntry
         autoComplete="password"
         textContentType="password"
@@ -57,6 +62,28 @@ export function SignIn() {
         busy={busy}
         disabled={!email || !password}
       />
-    </Screen>
+      <View
+        style={{
+          marginTop: 'auto',
+          gap: 8,
+          padding: 16,
+          borderRadius: 14,
+          backgroundColor: colors.primarySoft,
+        }}
+      >
+        <Text
+          style={{ fontSize: 13, fontWeight: '700', letterSpacing: 0.6, color: colors.primary }}
+        >
+          HOW IT WORKS
+        </Text>
+        <Text style={styles.text}>
+          {[
+            '1. Pick the apartment',
+            '2. Follow the room-by-room plan',
+            '3. Review and upload',
+          ].join('\n')}
+        </Text>
+      </View>
+    </View>
   );
 }

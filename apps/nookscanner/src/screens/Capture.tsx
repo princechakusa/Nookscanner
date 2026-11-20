@@ -18,11 +18,16 @@ import {
   type Recorder,
 } from 'react-native-vision-camera';
 import { deviceCapabilities, lensOf } from '../lib/camera.ts';
-import { Button, ErrorText, Screen, styles } from '../ui.tsx';
+import { useQualityTips } from '../lib/useQualityTips.ts';
+import { Button, ErrorText, Progress, Screen, colors, styles } from '../ui.tsx';
 import type { CaptureJob } from './Plan.tsx';
+
+export type RoomQuality = ReturnType<ReturnType<typeof useQualityTips>['summary']>;
 
 export interface CaptureResult {
   job: CaptureJob;
+  /** Share of analysed frames per issue, per room sequence (stored in scan_checkpoints.quality). */
+  quality: Record<number, RoomQuality>;
   filePath: string;
   state: CaptureState;
   profile: CaptureProfile;
@@ -78,6 +83,14 @@ export function Capture({
   const camera = useRef<CameraRef>(null);
   const recorder = useRef<Recorder | null>(null);
   const [state, dispatch] = useReducer(captureReducer, job.rooms.length, initialCapture);
+  // Frames are analysed only while recording (pauses and room changes do not count).
+  const quality = useQualityTips(profile?.tier ?? null, state.status === 'recording');
+  const roomQuality = useRef<Record<number, RoomQuality>>({});
+  /** Closes the current room's quality window. */
+  const closeRoomQuality = (sequence: number) => {
+    if (sequence < job.rooms.length) roomQuality.current[sequence] = quality.summary();
+    quality.reset();
+  };
   const [error, setError] = useState('');
   const [locked, setLockedState] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -112,17 +125,22 @@ export function Capture({
       setLocked(await relockForRoom(camera.current?.controller));
       const rec = await videoOutput.createRecorder({});
       recorder.current = rec;
+      quality.reset();
+      roomQuality.current = {};
       await rec.startRecording(
-        (filePath) =>
+        (filePath) => {
+          closeRoomQuality(stateRef.current.current);
           onFinished({
             job,
+            quality: roomQuality.current,
             filePath,
             state: captureReducer(stateRef.current, { type: 'stop', atMs: atMs() }),
             profile,
             lens: device ? lensOf(device) : 'unknown',
             exposureLocked: lockedRef.current,
             durationMs: atMs(),
-          }),
+          });
+        },
         (e) => setError(`Recording stopped: ${e.message}`),
       );
       dispatch({ type: 'start', atMs: 0 });
@@ -146,6 +164,7 @@ export function Capture({
   }
 
   async function nextCheckpoint() {
+    closeRoomQuality(state.current);
     dispatch({ type: 'next', atMs: atMs() });
     if (nextRoom) setLocked(await relockForRoom(camera.current?.controller));
   }
@@ -184,7 +203,7 @@ export function Capture({
         style={StyleSheet.absoluteFill}
         isActive
         device={device}
-        outputs={[videoOutput]}
+        outputs={[videoOutput, quality.output]}
         orientationSource="device"
         constraints={[
           { fps: profile.fps },
@@ -193,7 +212,26 @@ export function Capture({
         ]}
         onError={(e) => setError(e.message)}
       />
+      {state.status === 'recording' || state.status === 'paused' ? (
+        <View style={local.chip} accessibilityLiveRegion="polite">
+          <View
+            style={[
+              local.dot,
+              { backgroundColor: state.status === 'paused' ? colors.accent : '#E5484D' },
+            ]}
+          />
+          <Text style={local.chipText}>{state.status === 'paused' ? 'Paused' : 'Recording'}</Text>
+        </View>
+      ) : null}
+      {quality.tip && state.status === 'recording' ? (
+        <View style={local.tip} accessibilityRole="alert">
+          <Text style={local.tipText}>{quality.tip}</Text>
+        </View>
+      ) : null}
       <View style={local.panel} accessibilityLiveRegion="polite">
+        {state.status !== 'ready' ? (
+          <Progress done={Math.min(state.current + 1, job.rooms.length)} total={job.rooms.length} />
+        ) : null}
         <Text style={local.step}>
           {state.status === 'ready'
             ? `Start in ${room?.nameEn ?? 'the first room'}`
@@ -205,8 +243,12 @@ export function Capture({
           {profile.width}x{profile.height} · {profile.fps} fps · {profile.codec.toUpperCase()} ·
           tier {profile.tier}
           {locked ? ' · exposure locked' : ''}
-          {state.status === 'paused' ? ' · PAUSED' : ''}
         </Text>
+        {state.status === 'ready' ? (
+          <Text style={local.hint}>
+            Hold the phone sideways at chest height. Exposure locks for each room.
+          </Text>
+        ) : null}
         {nextRoom && state.status !== 'ready' ? (
           <Text style={local.hint}>
             Next: walk slowly through the doorway into {nextRoom.nameEn}, keeping the door frame in
@@ -250,12 +292,37 @@ const local = StyleSheet.create({
     left: 12,
     right: 12,
     bottom: 24,
-    backgroundColor: 'rgba(20,33,61,0.85)',
+    backgroundColor: 'rgba(18,22,28,0.78)',
     borderRadius: 16,
     padding: 14,
     gap: 8,
   },
   step: { color: '#fff', fontSize: 18, fontWeight: '700' },
-  hint: { color: '#E6EAF0', fontSize: 14 },
+  hint: { color: '#F4F1EC', fontSize: 14 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: {
+    position: 'absolute',
+    left: 14,
+    top: 74,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: 'rgba(18,22,28,0.72)',
+  },
+  dot: { width: 8, height: 8, borderRadius: 999 },
+  tip: {
+    position: 'absolute',
+    left: 14,
+    right: 14,
+    top: 112,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+    backgroundColor: colors.accentStrong,
+  },
+  tipText: { color: '#fff', fontSize: 15, fontWeight: '600', lineHeight: 20 },
+  chipText: { color: '#F4F1EC', fontSize: 12, fontWeight: '700' },
 });

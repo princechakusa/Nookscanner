@@ -132,11 +132,11 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 
 ## 24. Current project status
 
-**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2 complete on the **local** Supabase stack: 2.2 schema, 2.3 storage, 2.4 dashboard auth, 2.5 real-stack DB tests, 2.6 security review (5 findings fixed, no Critical/High open). All 5 migrations are applied to the hosted project (user-approved) and verified (lint clean, advisors accepted, anon smoke 30/30); only hosted Auth dashboard settings remain (Blocked on user 1). Phase 3 DONE. **Phase 4 DONE.** **Phase 5 IN PROGRESS: 5.1 DONE** (chunked resumable upload, migration 0500 applied locally and hosted), **5.2 DONE for format validation** (worker `validate.py`; real-footage reports wait for Blocked on user 4), **5.3 DONE** (capability-based device tiers + capture profiles as shared data), **5.4 IMPLEMENTED, device runs blocked on user** (Blocked on user 8). **Next: 5.5** on-device quality feedback (pure metrics + thresholds in shared, unit-tested; per-tier calibration needs real footage).
+**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2 complete on the **local** Supabase stack: 2.2 schema, 2.3 storage, 2.4 dashboard auth, 2.5 real-stack DB tests, 2.6 security review (5 findings fixed, no Critical/High open). All 5 migrations are applied to the hosted project (user-approved) and verified (lint clean, advisors accepted, anon smoke 30/30); only hosted Auth dashboard settings remain (Blocked on user 1). Phase 3 DONE. **Phase 4 DONE.** **Phase 5 IN PROGRESS: 5.1 DONE** (chunked resumable upload, migration 0500 applied locally and hosted), **5.2 DONE for format validation** (worker `validate.py`; real-footage reports wait for Blocked on user 4), **5.3 DONE** (capability-based device tiers + capture profiles as shared data), **5.4 IMPLEMENTED, device runs blocked on user** (Blocked on user 8). **5.5 IMPLEMENTED** (live quality tips; calibration needs real footage, Blocked on user 4). App Store screenshots: Artifact https://claude.ai/artifact/TV34jHEDoJWUix5VVEyjHq (7 frames, 1320 x 2868). **Next: 5.6** background resumable upload from the app.
 
 **Resume here (new session):**
 1. Start Docker Desktop, then `npx supabase@3.2.0 start` (local stack on ports 565xx).
-2. Phase 5.5: quality metrics (blur = Laplacian variance, exposure/clipping, motion speed, doorway overlap) as pure functions in `packages/shared` with unit tests on synthetic frames; wire into the capture screen via a frame output later; then 5.6 background upload from the app.
+2. Phase 5.6: upload the accepted recording from the app in 45 MiB TUS parts (reuse `planParts`, `register_media_upload`, `complete_media_upload_part`), surviving backgrounding and app restarts (persist the job; resume with the TUS fingerprint per part). Then Phase 6 (6.1 can be built and run locally with a public dataset; Modal deployment is Blocked on user 5).
 3. Stack E2E: `node scripts/e2e-stack.mjs` (use `at('/path')` from `tests/e2e-stack/helpers.ts` for URL assertions).
 4. Keep following the loop in `docs/AUTONOMOUS_LOOP_PROMPT.md`; pushing to `origin/main` and applying migrations to the hosted project (dry run first) are user-approved. The binding 3D quality bar (`docs/3D_QUALITY_BAR.md`, ADR-014) is wired into Phases 5, 6, 7 and 12.
 
@@ -153,7 +153,7 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 | Command | Result |
 |---|---|
 | `npm run lint` / `format:check` / `typecheck` | pass |
-| `npm test` | all workspaces pass (shared 117, design-tokens 19, ui 6, dashboard 29, guest 14, database on PGlite 71 + 6 stack-only skipped) |
+| `npm test` | all workspaces pass (shared 129, design-tokens 19, ui 6, dashboard 29, guest 14, database on PGlite 71 + 6 stack-only skipped) |
 | `npm run test:e2e:stack` (dashboard auth + shell + axe + invitations on the local stack) | 28 passed, 0 skipped, 3.2 min (auth, invitations, properties + scoping, rooms, QR codes, chunked upload with network drop + resume, shell; both projects) |
 | `npm run test:e2e` (guest, Pixel 7 + iPhone 15 emulation, EN/AR, axe) | 12 passed |
 | `npm run test:db:stack` (real local Supabase) | 77 passed, 0 failed |
@@ -206,3 +206,4 @@ Decision 2026-11-20 (user): **stay on the Supabase Free plan** (no Pro). Uploads
 | 2026-11-20 (cont.) | Stage 5.2 upload validation in the worker (ffprobe gates, tier sample reports, CI ffmpeg); real-footage reports pending. |
 | 2026-11-20 (cont.) | Stage 5.3 capability-based device tiers + capture profiles (shared JSON, TS + Python). |
 | 2026-11-20 (cont.) | Stage 5.4 capture app implemented (typecheck + iOS bundle + CI job); device test script written; device runs blocked on user 8. |
+| 2026-11-20 (cont.) | Paused 11:24-11:52 at the user's request (no EAS/app builds). 7 App Store screenshots designed (Artifact); capture app moved to brand tokens and polished to match; Stage 5.5 live quality tips (shared metrics 11 tests, frame output wiring). |

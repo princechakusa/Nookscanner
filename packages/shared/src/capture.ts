@@ -22,6 +22,9 @@ export type PlanStep =
       roomType: RoomType;
       labelEn: string;
       labelAr: string | null;
+      /** Room-specific guidance only (short, for list cards). */
+      tip: string;
+      /** Full guidance: the tip plus the general walking advice. */
       instruction: string;
     }
   | { kind: 'transition'; fromRoomId: string; toRoomId: string; instruction: string }
@@ -64,6 +67,7 @@ export function checkpointPlan(rooms: readonly PlanRoom[]): PlanStep[] {
       roomType: room.roomType,
       labelEn: room.nameEn.slice(0, 80),
       labelAr: room.nameAr ? room.nameAr.slice(0, 80) : null,
+      tip: ROOM_TIPS[room.roomType] ?? ROOM_BASE,
       instruction: [ROOM_TIPS[room.roomType], ROOM_BASE].filter(Boolean).join(' '),
     });
   });
@@ -213,4 +217,22 @@ export function captureMetadata(input: {
     pauses: input.state.pauses,
     capturedAt: input.capturedAt.toISOString(),
   });
+}
+
+/** Clock time for review lists: 0:31, 6:18, 1:02:05. */
+export function formatClock(ms: number): string {
+  const total = Math.max(0, Math.round(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = String(total % 60).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
+}
+
+/** Spoken-style duration for summaries: "45 s", "6 min 18 s", "12 min". */
+export function formatDuration(ms: number): string {
+  const total = Math.max(0, Math.round(ms / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  if (!m) return `${s} s`;
+  return s ? `${m} min ${s} s` : `${m} min`;
 }

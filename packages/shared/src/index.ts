@@ -31,3 +31,4 @@ export {
 export * from './qr.ts';
 export * from './device-tiers.ts';
 export * from './capture.ts';
+export * from './quality.ts';

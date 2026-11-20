@@ -4,6 +4,8 @@ import {
   captureMetadataSchema,
   captureReducer,
   checkpointPlan,
+  formatClock,
+  formatDuration,
   initialCapture,
   missedRooms,
   type CaptureEvent,
@@ -35,6 +37,13 @@ describe('checkpointPlan', () => {
     expect(plan.at(-1)!.instruction).toContain('Entrance');
     // Room-specific guidance (appliances from two angles in the kitchen).
     expect(roomsOnly[2]!.instruction).toContain('two angles');
+    expect(roomsOnly[2]!.tip).toContain('two angles');
+    expect(roomsOnly[2]!.tip).not.toContain('chest height');
+    expect(
+      checkpointPlan([{ id: 'x', nameEn: 'Gym', nameAr: null, roomType: 'other' }])[0],
+    ).toMatchObject({
+      tip: expect.stringContaining('corner'),
+    });
   });
 
   it('a single room has no transitions or loop; no rooms gives no plan', () => {
@@ -144,5 +153,18 @@ describe('captureMetadata', () => {
     expect(
       captureMetadataSchema.safeParse({ platform: 'ios', location: { lat: 1, lng: 2 } }).success,
     ).toBe(false);
+  });
+});
+
+describe('time formatting', () => {
+  it('formats clock times and durations', () => {
+    expect(formatClock(0)).toBe('0:00');
+    expect(formatClock(31_400)).toBe('0:31');
+    expect(formatClock(378_000)).toBe('6:18');
+    expect(formatClock(3_725_000)).toBe('1:02:05');
+    expect(formatClock(-5)).toBe('0:00');
+    expect(formatDuration(45_000)).toBe('45 s');
+    expect(formatDuration(378_000)).toBe('6 min 18 s');
+    expect(formatDuration(720_000)).toBe('12 min');
   });
 });

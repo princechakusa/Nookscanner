@@ -2,6 +2,19 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 5.5 live capture quality tips; capture app polish; App Store screenshots
+
+### Added
+- `packages/shared/src/quality.ts` (blur, exposure, speed, overlap metrics; `QualityMonitor`), thresholds in `device-tiers.json` (`quality`, per-tier `qualityOverrides`), `qualityThresholds()`; `formatClock`/`formatDuration`; plan steps carry a short `tip`.
+- Capture app: live tip banner from a VisionCamera frame output (`react-native-vision-camera-worklets`, `react-native-worklets`), per-room quality saved to `scan_checkpoints.quality`; recording chip and room progress bar; brand logo and "How it works" on sign-in; unit and room count on apartments (pull to refresh); numbered plan with doorway arrows; review with status icons, m:ss times and amber warnings; `react-native-svg` icons.
+- 7 App Store screenshots (iPhone 6.9", 1320 x 2868) designed from these screens: Artifact "Nookscanner Capture App Store Screenshots".
+
+### Fixed
+- Capture app used off-brand navy/green; it now uses the design tokens (teal #1F5662, amber #C8893B, canvas #F7F5F1, ink #161A20).
+
+### Test results
+- shared 129; capture app typecheck clean, iOS bundle 1068 modules; lint/format clean. Not run on a device (Blocked on user 8).
+
 ## 2026-11-20: Stage 5.4 Nookscanner Capture app (implemented; device runs pending)
 
 ### Added

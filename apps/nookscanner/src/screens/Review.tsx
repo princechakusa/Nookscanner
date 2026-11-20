@@ -1,13 +1,11 @@
-import { captureMetadata, missedRooms } from '@nookscanner/shared';
+import { captureMetadata, formatClock, formatDuration, missedRooms } from '@nookscanner/shared';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import { useState } from 'react';
 import { Platform, ScrollView, Text, View } from 'react-native';
 import { supabase } from '../lib/supabase.ts';
-import { Button, ErrorText, Screen, styles } from '../ui.tsx';
+import { Button, ErrorText, Screen, StatusIcon, styles } from '../ui.tsx';
 import type { CaptureResult } from './Capture.tsx';
-
-const sec = (ms: number) => `${Math.round(ms / 1000)} s`;
 
 /**
  * Review before upload: per-room times, rooms that were skipped or too short, capture metadata.
@@ -55,6 +53,7 @@ export function Review({
         start_ms: mark?.startMs ?? null,
         end_ms: mark?.endMs ?? null,
         status: mark && !missed.has(sequence) ? 'recorded' : 'skipped',
+        quality: result.quality[sequence] ?? {},
       };
     });
     const { error: e1 } = await supabase.from('scan_checkpoints').insert(rows);
@@ -76,35 +75,49 @@ export function Review({
     onDone(false);
   }
 
+  const short = job.rooms.filter((_, i) => missed.has(i)).map((r) => r.nameEn);
+  const pauses = result.state.pauses;
+
   return (
     <Screen title="Review the walkthrough">
       <Text style={styles.muted}>
-        {sec(result.durationMs)} recorded at {result.profile.width}x{result.profile.height},{' '}
-        {result.profile.fps} fps{result.state.pauses ? `, paused ${result.state.pauses} times` : ''}
-        .
+        {formatDuration(result.durationMs)} recorded at {result.profile.width}x
+        {result.profile.height}, {result.profile.fps} fps
+        {pauses ? `, paused ${pauses === 1 ? 'once' : `${pauses} times`}` : ''}.
       </Text>
       <ScrollView contentContainerStyle={{ gap: 8 }}>
         {job.rooms.map((room, sequence) => {
           const mark = result.state.marks.find((m) => m.sequence === sequence);
+          const bad = missed.has(sequence);
           return (
-            <View key={room.id} style={styles.card}>
-              <Text style={styles.text}>{room.nameEn}</Text>
-              <Text style={missed.has(sequence) ? styles.error : styles.muted}>
+            <View
+              key={room.id}
+              style={[
+                styles.card,
+                { flexDirection: 'row', alignItems: 'center', gap: 12 },
+                bad && { backgroundColor: '#FFF6EC', borderColor: '#E9C9A0' },
+              ]}
+            >
+              <StatusIcon ok={!bad} />
+              <Text style={[styles.text, { flex: 1, fontWeight: '600' }]}>{room.nameEn}</Text>
+              <Text style={bad ? [styles.warning, { fontWeight: '600' }] : styles.muted}>
                 {!mark
                   ? 'Not recorded'
-                  : missed.has(sequence)
-                    ? `Only ${sec((mark.endMs ?? mark.startMs) - mark.startMs)}: probably too short`
-                    : `${sec(mark.startMs)} to ${sec(mark.endMs ?? mark.startMs)}`}
+                  : bad
+                    ? `Only ${formatClock((mark.endMs ?? mark.startMs) - mark.startMs)}`
+                    : `${formatClock(mark.startMs)} – ${formatClock(mark.endMs ?? mark.startMs)}`}
               </Text>
             </View>
           );
         })}
       </ScrollView>
-      {missed.size > 0 ? (
-        <ErrorText>
-          {missed.size} room{missed.size === 1 ? ' was' : 's were'} skipped or very short. Rooms
-          that are not covered will be missing from the 3D apartment. Consider recording again.
-        </ErrorText>
+      {short.length > 0 ? (
+        <Text accessibilityRole="alert" style={styles.warning}>
+          {short.length === 1
+            ? `${short[0]} is very short or was skipped and may be missing from the 3D apartment.`
+            : `${short.join(', ')} are very short or were skipped and may be missing from the 3D apartment.`}{' '}
+          Consider recording again.
+        </Text>
       ) : null}
       {error ? <ErrorText>{error}</ErrorText> : null}
       <Button label="Use this recording" onPress={() => void accept()} busy={busy} />

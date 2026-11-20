@@ -1,15 +1,20 @@
 import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
-/** Minimal shared UI for the capture app (brand colours from the design tokens). */
+/** Minimal shared UI for the capture app; colours are the brand tokens (packages/design-tokens). */
 export const colors = {
-  ink: '#14213D',
-  muted: '#5B6475',
+  ink: '#161A20',
+  muted: '#5A6370',
   surface: '#FFFFFF',
-  canvas: '#F5F7FA',
-  primary: '#0B6E4F',
+  canvas: '#F7F5F1',
+  primary: '#1F5662',
+  primarySoft: '#E8F1F2',
+  accent: '#C8893B',
+  accentStrong: '#8F5E1F',
+  warning: '#9A5408',
   danger: '#B42318',
-  border: '#D5DBE3',
+  border: '#E3DFD8',
 };
 
 export function Screen({ title, children }: { title: string; children: ReactNode }) {
@@ -95,6 +100,8 @@ export const styles = StyleSheet.create({
   buttonSecondary: { borderWidth: 1, borderColor: colors.border },
   buttonText: { color: '#fff', fontSize: 17, fontWeight: '600' },
   error: { color: colors.danger, fontSize: 15 },
+  warning: { color: colors.warning, fontSize: 14, lineHeight: 20 },
+  label: { fontSize: 13, fontWeight: '600', color: colors.ink },
   card: {
     backgroundColor: colors.surface,
     borderRadius: 12,
@@ -104,3 +111,129 @@ export const styles = StyleSheet.create({
     gap: 4,
   },
 });
+
+// ---------------------------------------------------------------- Icons and small parts
+
+/** Brand mark: a house inside scan corners. */
+export function Logo({ size = 64 }: { size?: number }) {
+  return (
+    <View
+      accessibilityRole="image"
+      accessibilityLabel="Nookscanner"
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size * 0.28,
+        backgroundColor: colors.primary,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Svg width={size * 0.6} height={size * 0.6} viewBox="0 0 38 38">
+        <Path
+          d="M9 18 19 10l10 8v11H9z"
+          fill="none"
+          stroke="#fff"
+          strokeWidth={2.6}
+          strokeLinejoin="round"
+        />
+        <Path
+          d="M3 9V4h5M30 4h5v5M35 29v5h-5M8 34H3v-5"
+          fill="none"
+          stroke={colors.accent}
+          strokeWidth={2.6}
+          strokeLinecap="round"
+        />
+        <Rect x={16} y={22} width={6} height={7} rx={1} fill="#fff" />
+      </Svg>
+    </View>
+  );
+}
+
+export function HomeIcon({ active }: { active?: boolean }) {
+  return (
+    <View
+      style={{
+        width: 44,
+        height: 44,
+        borderRadius: 10,
+        backgroundColor: active ? colors.primarySoft : colors.canvas,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Svg width={24} height={24} viewBox="0 0 24 24">
+        <Path
+          d="M4 11 12 5l8 6v8H4z"
+          fill="none"
+          stroke={active ? colors.primary : colors.muted}
+          strokeWidth={2}
+          strokeLinejoin="round"
+        />
+      </Svg>
+    </View>
+  );
+}
+
+export function StatusIcon({ ok }: { ok: boolean }) {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 22 22">
+      <Circle cx={11} cy={11} r={10} fill={ok ? '#1E7A4F' : '#9A5408'} />
+      {ok ? (
+        <Path
+          d="M6.5 11.5l3 3 6-6.5"
+          fill="none"
+          stroke="#fff"
+          strokeWidth={2.2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ) : (
+        <Path
+          d="M11 6v6M11 15.5v.5"
+          fill="none"
+          stroke="#fff"
+          strokeWidth={2.2}
+          strokeLinecap="round"
+        />
+      )}
+    </Svg>
+  );
+}
+
+export function ArrowIcon() {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 18 18">
+      <Path
+        d="M4 2v9a3 3 0 0 0 3 3h7M11 11l3 3-3 3"
+        fill="none"
+        stroke={colors.accentStrong}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+/** Room progress: one segment per room, done ones in the accent colour. */
+export function Progress({ done, total }: { done: number; total: number }) {
+  return (
+    <View
+      accessibilityLabel={`Room ${Math.min(done, total)} of ${total}`}
+      style={{ flexDirection: 'row', gap: 4 }}
+    >
+      {Array.from({ length: total }, (_, i) => (
+        <View
+          key={i}
+          style={{
+            flex: 1,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: i < done ? colors.accent : 'rgba(244,241,236,0.28)',
+          }}
+        />
+      ))}
+    </View>
+  );
+}

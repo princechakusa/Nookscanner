@@ -2,7 +2,7 @@ import { checkpointPlan, type PlanRoom, type PlanStep, type RoomType } from '@no
 import { useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { supabase } from '../lib/supabase.ts';
-import { Button, ErrorText, Screen, styles } from '../ui.tsx';
+import { ArrowIcon, Button, ErrorText, Screen, colors, styles } from '../ui.tsx';
 import type { ApartmentItem } from './Apartments.tsx';
 
 export interface CaptureJob {
@@ -84,17 +84,49 @@ export function Plan({
       ) : null}
       <ScrollView contentContainerStyle={{ gap: 8 }}>
         <Text style={styles.muted}>
-          Daylight plus all lights on. Hold the phone sideways at chest height and walk slowly. You
-          can pause at any time.
+          Daylight plus all lights on. Hold the phone sideways at chest height and walk slowly along
+          the walls; capture every corner and the floor. You can pause at any time.
         </Text>
-        {plan.map((step, i) => (
-          <View key={i} style={step.kind === 'room' ? styles.card : { paddingHorizontal: 8 }}>
-            <Text style={step.kind === 'room' ? styles.text : styles.muted}>
-              {step.kind === 'room' ? `${step.sequence + 1}. ${step.labelEn}` : step.instruction}
-            </Text>
-            {step.kind === 'room' ? <Text style={styles.muted}>{step.instruction}</Text> : null}
-          </View>
-        ))}
+        {plan.map((step, i) =>
+          step.kind === 'room' ? (
+            <View key={i} style={[styles.card, { flexDirection: 'row', gap: 12 }]}>
+              <View
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 999,
+                  backgroundColor: colors.primary,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: '700',
+                    color: '#fff',
+                  }}
+                >
+                  {step.sequence + 1}
+                </Text>
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={[styles.text, { fontWeight: '600' }]}>{step.labelEn}</Text>
+                <Text style={styles.muted}>{step.tip}</Text>
+              </View>
+            </View>
+          ) : (
+            <View
+              key={i}
+              style={{ flexDirection: 'row', gap: 10, paddingLeft: 22, paddingRight: 6 }}
+            >
+              <ArrowIcon />
+              <Text style={[styles.muted, { flex: 1, color: colors.accentStrong }]}>
+                {step.instruction}
+              </Text>
+            </View>
+          ),
+        )}
       </ScrollView>
       <Button
         label="Start capture"

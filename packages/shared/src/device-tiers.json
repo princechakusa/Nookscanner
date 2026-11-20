@@ -1,39 +1,77 @@
 {
   "version": 1,
   "note": "Single source of truth for device tiers (docs/3D_QUALITY_BAR.md section 1b, Stage 5.3). Read by packages/shared (capture profiles) and services/reconstruction (validation gates). Tiers are chosen from reported capabilities, never from model names. Initial values; calibrate on real footage (KI-014).",
-  "hardMinimum": { "shortSide": 720, "fps": 20 },
+  "hardMinimum": {
+    "shortSide": 720,
+    "fps": 20
+  },
   "tiers": [
     {
       "id": "T1",
       "name": "Pro phone",
       "examples": "recent iPhone Pro / Pro Max, flagship Android",
-      "requires": { "minShortSide": 2160, "minFps": 30, "hevc": true, "stabilization": true },
-      "capture": { "shortSide": 2160, "fps": 30 },
+      "requires": {
+        "minShortSide": 2160,
+        "minFps": 30,
+        "hevc": true,
+        "stabilization": true
+      },
+      "capture": {
+        "shortSide": 2160,
+        "fps": 30
+      },
       "recommendedShortSide": 2160
     },
     {
       "id": "T2",
       "name": "Standard phone",
       "examples": "standard or older iPhone, upper mid-range Android",
-      "requires": { "minShortSide": 2160, "minFps": 30, "hevc": false, "stabilization": false },
-      "capture": { "shortSide": 2160, "fps": 30 },
+      "requires": {
+        "minShortSide": 2160,
+        "minFps": 30,
+        "hevc": false,
+        "stabilization": false
+      },
+      "capture": {
+        "shortSide": 2160,
+        "fps": 30
+      },
       "recommendedShortSide": 2160
     },
     {
       "id": "T3",
       "name": "Basic phone",
       "examples": "mid-range or older Android, older iPhone without 4K",
-      "requires": { "minShortSide": 1080, "minFps": 30, "hevc": false, "stabilization": false },
-      "capture": { "shortSide": 1080, "fps": 30 },
+      "requires": {
+        "minShortSide": 1080,
+        "minFps": 30,
+        "hevc": false,
+        "stabilization": false
+      },
+      "capture": {
+        "shortSide": 1080,
+        "fps": 30
+      },
       "recommendedShortSide": 1080
     },
     {
       "id": "T4",
       "name": "Minimum",
       "examples": "low-end phones; results will be soft",
-      "requires": { "minShortSide": 720, "minFps": 24, "hevc": false, "stabilization": false },
-      "capture": { "shortSide": 720, "fps": 30 },
-      "recommendedShortSide": 1080
+      "requires": {
+        "minShortSide": 720,
+        "minFps": 24,
+        "hevc": false,
+        "stabilization": false
+      },
+      "capture": {
+        "shortSide": 720,
+        "fps": 30
+      },
+      "recommendedShortSide": 1080,
+      "qualityOverrides": {
+        "minLaplacianVariance": 40
+      }
     },
     {
       "id": "T5",
@@ -42,5 +80,17 @@
       "uploadOnly": true,
       "recommendedShortSide": 1080
     }
-  ]
+  ],
+  "quality": {
+    "note": "On-device feedback thresholds (quality bar section 3), measured on frames downsampled to analysisWidth so they compare across devices. Initial values from synthetic tests; calibrate per tier on real footage (KI-014).",
+    "analysisWidth": 320,
+    "minLaplacianVariance": 60,
+    "minMeanLuma": 45,
+    "maxMeanLuma": 215,
+    "maxClippedFraction": 0.12,
+    "maxMeanAbsDiff": 28,
+    "minDoorwayOverlap": 0.35,
+    "windowFrames": 15,
+    "triggerFraction": 0.6
+  }
 }

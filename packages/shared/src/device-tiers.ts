@@ -7,6 +7,19 @@
 import { z } from 'zod';
 import raw from './device-tiers.json' with { type: 'json' };
 
+const qualitySchema = z.object({
+  analysisWidth: z.number().int().min(64).max(1280),
+  minLaplacianVariance: z.number().positive(),
+  minMeanLuma: z.number().min(0).max(255),
+  maxMeanLuma: z.number().min(0).max(255),
+  maxClippedFraction: z.number().min(0).max(1),
+  maxMeanAbsDiff: z.number().positive(),
+  minDoorwayOverlap: z.number().min(-1).max(1),
+  windowFrames: z.number().int().min(1).max(120),
+  triggerFraction: z.number().gt(0).max(1),
+});
+export type QualityThresholds = z.infer<typeof qualitySchema>;
+
 const tierSchema = z.object({
   id: z.enum(['T1', 'T2', 'T3', 'T4', 'T5']),
   name: z.string().min(1),
@@ -24,6 +37,7 @@ const tierSchema = z.object({
     .optional(),
   uploadOnly: z.boolean().optional(),
   recommendedShortSide: z.number().int().positive(),
+  qualityOverrides: qualitySchema.partial().optional(),
 });
 
 const tableSchema = z.object({
@@ -31,6 +45,7 @@ const tableSchema = z.object({
   note: z.string(),
   hardMinimum: z.object({ shortSide: z.number().int().positive(), fps: z.number().positive() }),
   tiers: z.array(tierSchema).length(5),
+  quality: qualitySchema.extend({ note: z.string() }),
 });
 
 /** Parsed once at import: a malformed table fails loudly in tests and builds. */
@@ -122,4 +137,11 @@ export function captureProfile(caps: DeviceCapabilities): CaptureProfile | null 
 export function uploadTier(captureTier: TierId | null | undefined): DeviceTier {
   const found = DEVICE_TIERS.tiers.find((t) => t.id === captureTier);
   return found ?? DEVICE_TIERS.tiers.find((t) => t.id === 'T5')!;
+}
+
+/** On-device quality thresholds for a tier (defaults plus that tier's overrides). */
+export function qualityThresholds(tier: TierId | null | undefined): QualityThresholds {
+  const { note: _note, ...base } = DEVICE_TIERS.quality;
+  const overrides = DEVICE_TIERS.tiers.find((t) => t.id === tier)?.qualityOverrides ?? {};
+  return { ...base, ...overrides };
 }
