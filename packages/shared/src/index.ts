@@ -30,3 +30,4 @@ export {
 } from './property.ts';
 export * from './qr.ts';
 export * from './device-tiers.ts';
+export * from './capture.ts';

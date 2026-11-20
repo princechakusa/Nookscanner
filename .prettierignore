@@ -9,5 +9,9 @@ package-lock.json
 *.sql
 supabase/.temp
 services/reconstruction
-apps/nookscanner
+apps/nookscanner/node_modules
+apps/nookscanner/.expo
+apps/nookscanner/ios
+apps/nookscanner/android
+apps/nookscanner/package-lock.json
 packages/design-tokens/tokens.css

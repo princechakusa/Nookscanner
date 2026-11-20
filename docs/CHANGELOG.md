@@ -2,6 +2,17 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 5.4 Nookscanner Capture app (implemented; device runs pending)
+
+### Added
+- `apps/nookscanner/src`: sign-in (session in Keychain, chunked), apartments, plan, VisionCamera 5 capture (tier-based profile, SDR, standard stabilisation, per-room exposure/focus/white-balance lock, pause/resume), review (checkpoints + metadata to the database).
+- `packages/shared/src/capture.ts`: `checkpointPlan`, `captureReducer`, `missedRooms`, `captureMetadata` (8 tests).
+- App linked to `packages/shared` (Metro watch folder, app-local zod); `tsconfig.json`, `metro.config.js`; EAS public build env; app code now linted and format-checked; CI job `capture-app` (typecheck + iOS bundle).
+- `docs/CAPTURE_TEST_SCRIPT.md` (manual device test).
+
+### Test results
+- shared 117; capture app `tsc` clean; `expo export --platform ios` bundles 895 modules. Not run on a device yet.
+
 ## 2026-11-20: Stage 5.3 device tiers and capture profiles
 
 ### Added

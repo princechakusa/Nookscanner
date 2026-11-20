@@ -7,10 +7,22 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "ios": { "resourceClass": "default" }
+      "ios": {
+        "resourceClass": "default"
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "staging",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://nfcnckwjrwpofkrzribd.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_9PuSyQCUK9EswvfA68NmUw_03Ng-q8L"
+      }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "staging",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://nfcnckwjrwpofkrzribd.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_9PuSyQCUK9EswvfA68NmUw_03Ng-q8L"
+      }
     },
     "production": {
       "autoIncrement": true

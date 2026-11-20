@@ -1,0 +1,108 @@
+import { checkpointPlan, type PlanRoom, type PlanStep, type RoomType } from '@nookscanner/shared';
+import { useEffect, useState } from 'react';
+import { ScrollView, Text, View } from 'react-native';
+import { supabase } from '../lib/supabase.ts';
+import { Button, ErrorText, Screen, styles } from '../ui.tsx';
+import type { ApartmentItem } from './Apartments.tsx';
+
+export interface CaptureJob {
+  apartment: ApartmentItem;
+  sessionId: string;
+  rooms: PlanRoom[];
+  plan: PlanStep[];
+}
+
+/**
+ * Shows the walkthrough plan built from the apartment's rooms (in the order set in the dashboard)
+ * and creates the scan session with that plan when the manager starts.
+ */
+export function Plan({
+  apartment,
+  onBack,
+  onStart,
+}: {
+  apartment: ApartmentItem;
+  onBack: () => void;
+  onStart: (job: CaptureJob) => void;
+}) {
+  const [rooms, setRooms] = useState<PlanRoom[] | null>(null);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    void (async () => {
+      const { data, error: e } = await supabase
+        .from('rooms')
+        .select('id, name_en, name_ar, room_type')
+        .eq('apartment_id', apartment.id)
+        .order('sort_order')
+        .order('name_en');
+      if (e) return setError('Could not load the rooms. Check your connection.');
+      setRooms(
+        (
+          (data ?? []) as Array<{
+            id: string;
+            name_en: string;
+            name_ar: string | null;
+            room_type: RoomType;
+          }>
+        ).map((r) => ({ id: r.id, nameEn: r.name_en, nameAr: r.name_ar, roomType: r.room_type })),
+      );
+    })();
+  }, [apartment.id]);
+
+  const plan = rooms ? checkpointPlan(rooms) : [];
+
+  async function start() {
+    if (!rooms?.length) return;
+    setBusy(true);
+    setError('');
+    const { data, error: e } = await supabase
+      .from('scan_sessions')
+      .insert({ apartment_id: apartment.id, method: 'guided_capture', checkpoint_plan: plan })
+      .select('id')
+      .single();
+    setBusy(false);
+    if (e || !data) {
+      return setError(
+        e?.code === '42501'
+          ? 'Your role cannot start scans for this apartment. Ask a manager or admin.'
+          : 'Could not start the scan. Try again.',
+      );
+    }
+    onStart({ apartment, sessionId: (data as { id: string }).id, rooms, plan });
+  }
+
+  return (
+    <Screen title={apartment.name}>
+      {error ? <ErrorText>{error}</ErrorText> : null}
+      {rooms && rooms.length === 0 ? (
+        <Text style={styles.text}>
+          This apartment has no rooms yet. In the dashboard, open the apartment and press "Create
+          these rooms".
+        </Text>
+      ) : null}
+      <ScrollView contentContainerStyle={{ gap: 8 }}>
+        <Text style={styles.muted}>
+          Daylight plus all lights on. Hold the phone sideways at chest height and walk slowly. You
+          can pause at any time.
+        </Text>
+        {plan.map((step, i) => (
+          <View key={i} style={step.kind === 'room' ? styles.card : { paddingHorizontal: 8 }}>
+            <Text style={step.kind === 'room' ? styles.text : styles.muted}>
+              {step.kind === 'room' ? `${step.sequence + 1}. ${step.labelEn}` : step.instruction}
+            </Text>
+            {step.kind === 'room' ? <Text style={styles.muted}>{step.instruction}</Text> : null}
+          </View>
+        ))}
+      </ScrollView>
+      <Button
+        label="Start capture"
+        onPress={() => void start()}
+        busy={busy}
+        disabled={!rooms?.length}
+      />
+      <Button label="Back" variant="secondary" onPress={onBack} />
+    </Screen>
+  );
+}
