@@ -21,6 +21,7 @@ Format per decision (Part 5.5): selected, reason, alternatives, advantages, limi
 | ADR-014 | 3D quality bar is binding; device tiers; measured evidence gates 3D stages | Accepted (user requirement) | 2026-11-20 |
 | ADR-015 | Styling: design-token CSS variables + `packages/ui`, no Tailwind | Accepted | 2026-11-20 |
 | ADR-016 | Stay on Supabase Free: chunked uploads under the 50 MB per-file limit | Accepted (user decision) | 2026-11-20 |
+| ADR-017 | Upload client: tus-js-client per part, sequential parts, database-verified part completion | Accepted | 2026-11-20 |
 
 ---
 
@@ -140,3 +141,10 @@ Format per decision (Part 5.5): selected, reason, alternatives, advantages, limi
 - **Consequence:** Free caps every stored object at 50 MB and has no automatic backups. Walkthrough videos (often 0.5-5 GB) are uploaded as ordered parts of at most 45 MB each (`media_uploads` gains part number/count in Phase 5.1), each part a separate TUS upload to its own registered path; the worker downloads and concatenates parts before validation. Backups: scheduled logical dumps (`supabase db dump`) stored outside Supabase (Phase 13), restore drill still required.
 - **Other Free limits to design for:** 1 GB storage, 5 GB egress/month, project pauses after 1 week of inactivity. Large scene assets for guests may need Cloudflare R2 (free egress) earlier than planned.
 - **Supersedes:** the "upgrade to Pro before Phase 5" steps in KI-011, KI-015 and INFRASTRUCTURE.md.
+
+## ADR-017: Upload client and part completion (Stage 5.1)
+- **Decision:** the dashboard uploads each 45 MiB part with `tus-js-client` 4.3.1 (MIT) to Supabase's resumable endpoint (6 MiB chunks, as Storage requires), one part at a time. A part counts only after `complete_media_upload_part` finds the stored object with exactly the registered size; the last part marks the upload (and, when nothing else is pending, the scan session) `uploaded`.
+- **Why:** sequential parts keep memory and battery use low on phones and make resume simple (finished parts are skipped by database state; the current part resumes from its TUS offset via a per-part fingerprint). Database verification means a client cannot claim a part it did not deliver.
+- **Retry rule:** tus-js-client's default refuses to retry while the browser reports itself offline, which is the common phone case; we retry network errors, 5xx, 423 and 429, and when retries run out while offline the part continues on the `online` event.
+- **Alternatives:** Uppy (heavier UI framework for one component); parallel parts (faster on fibre, worse on mobile data, more complex resume); signed upload URLs per part (no resumability within a part).
+- **Security:** Storage accepts only pending part paths registered by the same user with `scan.create`; the bucket caps objects at 45 MiB; parts are readable with `scan.read` only. `complete_media_upload_part` is a SECURITY DEFINER RPC (8th intended advisor WARN) that checks `auth.uid()`, the uploader and the permission itself.

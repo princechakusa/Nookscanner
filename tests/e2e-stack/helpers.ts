@@ -106,3 +106,20 @@ export async function signUpAndConfirm(page: Page, email: string) {
   await expect(page).toHaveURL(at('/app'));
   return link;
 }
+
+/** Signs up a new owner, creates an organization, a property and an apartment; returns its path. */
+export async function apartmentWithOrg(page: Page, tag: string, who: string): Promise<string> {
+  await signUpAndConfirm(page, `${who}-${tag}@example.test`);
+  await page.getByLabel('Organization name').fill(`Org ${who} ${tag}`);
+  await page.getByRole('button', { name: 'Create organization' }).click();
+  await expect(page).toHaveURL(at('/app/settings'));
+  await page.goto('/app/properties');
+  await page.getByLabel('Property name').fill(`Tower ${who} ${tag}`);
+  await page.getByRole('button', { name: 'Create property' }).click();
+  await expect(page).toHaveURL(/\/app\/properties\/[0-9a-f-]{36}$/);
+  await page.getByRole('link', { name: 'Add apartment' }).click();
+  await page.getByLabel('Apartment name').fill(`Flat ${who} ${tag}`);
+  await page.getByRole('button', { name: 'Create apartment' }).click();
+  await expect(page).toHaveURL(/\/app\/apartments\/[0-9a-f-]{36}$/);
+  return new URL(page.url()).pathname;
+}

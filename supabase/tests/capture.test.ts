@@ -56,14 +56,43 @@ async function newSession(user: string, apartment: string): Promise<string> {
 }
 
 async function registerUpload(user: string, session: string, mime = 'video/mp4', size = 1000) {
-  return asUser(db, user, (tx) =>
-    one(
-      tx.query<{ id: string; object_path: string; organization_id: string; status: string }>(
-        `select id, object_path, organization_id, status::text from public.register_media_upload($1, 'walk.mp4', $2, $3)`,
+  return asUser(db, user, async (tx) => {
+    const row = await one(
+      tx.query<{
+        id: string;
+        object_path: string;
+        organization_id: string;
+        status: string;
+        part_count: number;
+      }>(
+        `select id, object_path, organization_id, status::text, part_count from public.register_media_upload($1, 'walk.mp4', $2, $3)`,
         [session, mime, size],
       ),
-    ),
+    );
+    const part = await one(
+      tx.query<{ object_path: string }>(
+        `select object_path from public.media_upload_parts where media_upload_id = $1 and part_number = 1`,
+        [row.id],
+      ),
+    );
+    return { ...row, part_path: part.object_path };
+  });
+}
+
+/** Simulates Storage having stored a part object of the given size (service side). */
+async function storePart(path: string, size: number) {
+  // Real Supabase forbids direct deletes on storage tables, so update in place when present.
+  const meta = JSON.stringify({ size, mimetype: 'video/mp4' });
+  const updated = await db.query(
+    `update storage.objects set metadata = $2 where bucket_id = 'raw-footage' and name = $1`,
+    [path, meta],
   );
+  if (updated.affectedRows === 0) {
+    await db.query(
+      `insert into storage.objects (bucket_id, name, metadata) values ('raw-footage', $1, $2)`,
+      [path, meta],
+    );
+  }
 }
 
 beforeAll(async () => {
@@ -530,6 +559,7 @@ describe('media uploads', () => {
     const session = await newSession(u.managerA, aptA1);
     const up = await registerUpload(u.managerA, session);
     expect(up.object_path).toBe(`org/${orgA}/scans/${session}/${up.id}.mp4`);
+    expect(up.part_path).toBe(`org/${orgA}/scans/${session}/${up.id}/part-00001.mp4`);
     expect(up.status).toBe('pending');
     const s = await one(
       db.query<{ status: string }>(`select status::text from public.scan_sessions where id = $1`, [
@@ -545,11 +575,131 @@ describe('media uploads', () => {
       await expectError(registerUpload(u.managerA, session, 'application/x-msdownload')),
     ).toMatch(/UPLOAD_REJECTED/);
     expect(await expectError(registerUpload(u.managerA, session, 'video/mp4', 0))).toMatch(
-      /check constraint/,
+      /UPLOAD_REJECTED/,
     );
     expect(
       await expectError(registerUpload(u.managerA, session, 'video/mp4', 10737418241)),
-    ).toMatch(/check constraint/);
+    ).toMatch(/UPLOAD_REJECTED/);
+  });
+
+  it('splits uploads into parts of at most 45 MiB with server-built paths (ADR-016)', async () => {
+    const session = await newSession(u.managerA, aptA1);
+    const part = 47185920;
+    const size = 2 * part + 1234;
+    const up = await registerUpload(u.managerA, session, 'video/quicktime', size);
+    expect(up.part_count).toBe(3);
+    const parts = await asUser(
+      db,
+      u.viewerA,
+      async (tx) =>
+        (
+          await tx.query<{
+            part_number: number;
+            object_path: string;
+            size_bytes: number;
+            status: string;
+          }>(
+            `select part_number, object_path, size_bytes, status::text from public.media_upload_parts
+           where media_upload_id = $1 order by part_number`,
+            [up.id],
+          )
+        ).rows,
+    );
+    const prefix = `org/${orgA}/scans/${session}/${up.id}`;
+    expect(parts).toEqual([
+      {
+        part_number: 1,
+        object_path: `${prefix}/part-00001.mov`,
+        size_bytes: part,
+        status: 'pending',
+      },
+      {
+        part_number: 2,
+        object_path: `${prefix}/part-00002.mov`,
+        size_bytes: part,
+        status: 'pending',
+      },
+      {
+        part_number: 3,
+        object_path: `${prefix}/part-00003.mov`,
+        size_bytes: 1234,
+        status: 'pending',
+      },
+    ]);
+    // 10 GiB is 228 parts.
+    const big = await registerUpload(u.managerA, session, 'video/mp4', 10737418240);
+    expect(big.part_count).toBe(228);
+    // Parts are visible to the session's readers only, and never writable directly.
+    const other = await asUser(
+      db,
+      u.ownerB,
+      async (tx) =>
+        (
+          await tx.query(`select 1 from public.media_upload_parts where media_upload_id = $1`, [
+            up.id,
+          ])
+        ).rows.length,
+    );
+    expect(other).toBe(0);
+    const direct = await expectError(
+      asUser(db, u.managerA, (tx) =>
+        tx.query(
+          `update public.media_upload_parts set status = 'uploaded' where media_upload_id = $1`,
+          [up.id],
+        ),
+      ),
+    );
+    expect(direct).toMatch(/permission denied/);
+  });
+
+  it('a part completes only when its object exists with the exact size; last part completes the upload', async () => {
+    const session = await newSession(u.managerA, aptA1);
+    const up = await registerUpload(u.managerA, session, 'video/mp4', 47185920 + 10);
+    const complete = (user: string, n: number) =>
+      asUser(db, user, (tx) =>
+        one(
+          tx.query<{ remaining: number }>(
+            `select public.complete_media_upload_part($1, $2) as remaining`,
+            [up.id, n],
+          ),
+        ),
+      );
+    const part2 = up.part_path.replace('part-00001', 'part-00002');
+    // Missing object, then wrong size.
+    expect(await expectError(complete(u.managerA, 1))).toMatch(/PART_INCOMPLETE/);
+    await storePart(up.part_path, 100);
+    expect(await expectError(complete(u.managerA, 1))).toMatch(/PART_INCOMPLETE/);
+    await storePart(up.part_path, 47185920);
+    // Only the uploader may complete parts; others get NOT_FOUND.
+    for (const user of [u.adminA, u.ownerB, u.viewerA]) {
+      expect(await expectError(complete(user, 1))).toMatch(/NOT_FOUND/);
+    }
+    expect(await expectError(complete(u.managerA, 3))).toMatch(/NOT_FOUND/);
+    expect((await complete(u.managerA, 1)).remaining).toBe(1);
+    expect((await complete(u.managerA, 1)).remaining).toBe(1); // idempotent
+    await storePart(part2, 10);
+    expect((await complete(u.managerA, 2)).remaining).toBe(0);
+    const state = await one(
+      db.query<{ upload: string; session: string }>(
+        `select mu.status::text as upload, s.status::text as session
+         from public.media_uploads mu join public.scan_sessions s on s.id = mu.scan_session_id
+         where mu.id = $1`,
+        [up.id],
+      ),
+    );
+    expect(state).toEqual({ upload: 'uploaded', session: 'uploaded' });
+    // Completed parts can no longer be written (the policy needs a pending part and upload).
+    const allowed = await asUser(
+      db,
+      u.managerA,
+      async (tx) =>
+        (
+          await tx.query<{ ok: boolean }>(`select private.can_upload_raw_footage($1) as ok`, [
+            part2,
+          ])
+        ).rows[0]!.ok,
+    );
+    expect(allowed).toBe(false);
   });
 
   it('other orgs, viewers and editors cannot register uploads; no direct inserts', async () => {
@@ -596,11 +746,11 @@ describe('storage policies (T06, T07)', () => {
     const session = await newSession(u.managerA, aptA1);
     const up = await registerUpload(u.managerA, session);
     // Another member of the same org may not use someone else's upload slot.
-    expect(await expectError(putObject(u.adminA, 'raw-footage', up.object_path))).toMatch(
+    expect(await expectError(putObject(u.adminA, 'raw-footage', up.part_path))).toMatch(
       /row-level security/,
     );
     // Other org denied, unregistered path denied.
-    expect(await expectError(putObject(u.ownerB, 'raw-footage', up.object_path))).toMatch(
+    expect(await expectError(putObject(u.ownerB, 'raw-footage', up.part_path))).toMatch(
       /row-level security/,
     );
     expect(
@@ -608,7 +758,11 @@ describe('storage policies (T06, T07)', () => {
         putObject(u.managerA, 'raw-footage', `org/${orgA}/scans/${session}/rogue.mp4`),
       ),
     ).toMatch(/row-level security/);
-    await putObject(u.managerA, 'raw-footage', up.object_path);
+    // The logical path is not an object any more: only parts are accepted.
+    expect(await expectError(putObject(u.managerA, 'raw-footage', up.object_path))).toMatch(
+      /row-level security/,
+    );
+    await putObject(u.managerA, 'raw-footage', up.part_path);
 
     const readable = async (user: string) =>
       asUser(
@@ -618,7 +772,7 @@ describe('storage policies (T06, T07)', () => {
           (
             await tx.query(
               `select 1 from storage.objects where bucket_id = 'raw-footage' and name = $1`,
-              [up.object_path],
+              [up.part_path],
             )
           ).rows.length,
       );
@@ -636,17 +790,17 @@ describe('storage policies (T06, T07)', () => {
   it('raw footage cannot be deleted or overwritten by members', async () => {
     const session = await newSession(u.managerA, aptA1);
     const up = await registerUpload(u.managerA, session);
-    await putObject(u.managerA, 'raw-footage', up.object_path);
+    await putObject(u.managerA, 'raw-footage', up.part_path);
     // Real Supabase additionally rejects direct SQL deletes on storage tables; the shim relies on
     // RLS alone (0 rows). Either outcome is a denial; the object must survive.
     const attempt = (sql: string) =>
-      asUser(db, u.ownerA, (tx) => tx.query(sql, [up.object_path])).then(
+      asUser(db, u.ownerA, (tx) => tx.query(sql, [up.part_path])).then(
         (r) => r.affectedRows ?? 0,
         () => 0,
       );
     expect(await attempt(`delete from storage.objects where name = $1`)).toBe(0);
     expect(await attempt(`update storage.objects set name = name || 'x' where name = $1`)).toBe(0);
-    const still = await db.query(`select 1 from storage.objects where name = $1`, [up.object_path]);
+    const still = await db.query(`select 1 from storage.objects where name = $1`, [up.part_path]);
     expect(still.rows.length).toBe(1);
   });
 

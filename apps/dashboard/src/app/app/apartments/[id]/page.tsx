@@ -103,6 +103,16 @@ export default async function ApartmentPage({ params }: { params: Promise<{ id: 
         <h1 className="ns-page__title">{row.name}</h1>
         <ApartmentStatus status={row.status} />
       </div>
+      {can('scan.create') && (
+        <p>
+          <Link
+            className="ns-btn ns-btn--secondary ns-btn--md"
+            href={`/app/apartments/${row.id}/upload`}
+          >
+            Upload a walkthrough video
+          </Link>
+        </p>
+      )}
       {row.properties && (
         <p className="ns-muted">
           In <Link href={`/app/properties/${row.properties.id}`}>{row.properties.name}</Link>

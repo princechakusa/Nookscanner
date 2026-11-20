@@ -2,6 +2,17 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 5.1 chunked resumable video upload
+
+### Added
+- Migration `20261120000500_chunked_uploads.sql`: `media_upload_parts` (RLS: read with scan.read; no direct writes), `media_uploads.part_size_bytes/part_count`, `register_media_upload` creates parts with server-built paths, `complete_media_upload_part` (size-verified), storage policies accept pending parts only, raw-footage bucket capped at 45 MiB. Applied to the local stack and the hosted project.
+- Dashboard `/app/apartments/<id>/upload`: file checks (type, size, duration/resolution when the browser can read them), progress, offline notice, resume of unfinished uploads with the same file (ADR-017).
+- Shared: `planParts`, `UPLOAD_PART_BYTES`, `rawFootagePartPath`, `videoMimeFor`.
+- Tests: DB part plan/completion/policy tests (PGlite 71 + 6 stack-only, real stack 77/77 incl. Storage API), shared 90, `upload.spec.ts` (network drop, reload + resume).
+
+### Test results
+- Stack E2E 28/28 (both projects, 3.2 min); hosted: lint clean, advisors 8 intended RPC WARN, smoke 30/30.
+
 ## 2026-11-20: Stage 4.4 guest QR codes (Phase 4 complete)
 
 ### Added

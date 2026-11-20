@@ -106,3 +106,51 @@ export function rawFootagePath(params: {
   const ext = ALLOWED_VIDEO_TYPES[params.mime][0];
   return `org/${params.organizationId}/scans/${params.scanSessionId}/${params.uploadId}${ext}`;
 }
+
+/** Path of one stored part (ADR-016): `<logical path without extension>/part-00001.<ext>`. */
+export function rawFootagePartPath(
+  params: Parameters<typeof rawFootagePath>[0] & { partNumber: number },
+): string {
+  if (!Number.isInteger(params.partNumber) || params.partNumber < 1 || params.partNumber > 1000)
+    throw new Error('Invalid part number');
+  const ext = ALLOWED_VIDEO_TYPES[params.mime][0];
+  const base = rawFootagePath(params).slice(0, -ext.length);
+  return `${base}/part-${String(params.partNumber).padStart(5, '0')}${ext}`;
+}
+
+/**
+ * Part size for raw-footage uploads (ADR-016): every stored object stays under the Supabase Free
+ * 50 MB limit. Mirrors `register_media_upload` in migration 20261120000500.
+ */
+export const UPLOAD_PART_BYTES = 45 * 1024 * 1024;
+
+export interface UploadPart {
+  partNumber: number;
+  start: number;
+  end: number;
+}
+
+/** Byte ranges of each part ([start, end) offsets into the file), in upload order. */
+export function planParts(size: number, partBytes = UPLOAD_PART_BYTES): UploadPart[] {
+  if (!Number.isSafeInteger(size) || size <= 0) return [];
+  const parts: UploadPart[] = [];
+  for (let start = 0, n = 1; start < size; start += partBytes, n += 1) {
+    parts.push({ partNumber: n, start, end: Math.min(start + partBytes, size) });
+  }
+  return parts;
+}
+
+/**
+ * Effective MIME type of a chosen video. Some browsers (Windows, Android) report an empty or
+ * generic type for `.mov`/`.m4v`; then the extension decides. A conflicting specific type is kept
+ * (and later refused as EXTENSION_MISMATCH), never overridden.
+ */
+export function videoMimeFor(name: string, reportedType: string): string {
+  const type = reportedType.trim().toLowerCase();
+  if (type && type !== 'application/octet-stream') return type;
+  const ext = name.slice(name.lastIndexOf('.')).toLowerCase();
+  for (const [mime, exts] of Object.entries(ALLOWED_VIDEO_TYPES)) {
+    if ((exts as readonly string[]).includes(ext)) return mime;
+  }
+  return type;
+}

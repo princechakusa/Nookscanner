@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { UPLOAD_LIMITS, rawFootagePath, validateVideoFile } from './uploads.ts';
+import {
+  UPLOAD_LIMITS,
+  UPLOAD_PART_BYTES,
+  planParts,
+  rawFootagePartPath,
+  rawFootagePath,
+  validateVideoFile,
+  videoMimeFor,
+} from './uploads.ts';
 
 const ok = { name: 'walkthrough.mov', type: 'video/quicktime', size: 1_000_000 };
 const codes = (input: Parameters<typeof validateVideoFile>[0]) =>
@@ -70,5 +78,61 @@ describe('rawFootagePath', () => {
     expect(() =>
       rawFootagePath({ ...ids, organizationId: '../other-org', mime: 'video/mp4' }),
     ).toThrow();
+  });
+});
+
+describe('planParts (ADR-016 chunked uploads)', () => {
+  it('matches the database part plan', () => {
+    const p = UPLOAD_PART_BYTES;
+    expect(p).toBe(47185920);
+    expect(planParts(2 * p + 1234)).toEqual([
+      { partNumber: 1, start: 0, end: p },
+      { partNumber: 2, start: p, end: 2 * p },
+      { partNumber: 3, start: 2 * p, end: 2 * p + 1234 },
+    ]);
+    expect(planParts(p)).toHaveLength(1);
+    expect(planParts(10 * 1024 ** 3)).toHaveLength(228);
+  });
+
+  it('every part is within the 50 MB Free object limit and parts cover the file exactly', () => {
+    const size = 3 * UPLOAD_PART_BYTES - 7;
+    const parts = planParts(size);
+    expect(parts.every((x) => x.end - x.start <= 50 * 1000 * 1000)).toBe(true);
+    expect(parts.reduce((sum, x) => sum + (x.end - x.start), 0)).toBe(size);
+  });
+
+  it('returns no parts for empty or invalid sizes', () => {
+    expect(planParts(0)).toEqual([]);
+    expect(planParts(-1)).toEqual([]);
+    expect(planParts(1.5)).toEqual([]);
+  });
+});
+
+describe('rawFootagePartPath', () => {
+  const ids = {
+    organizationId: '11111111-1111-4111-8111-111111111111',
+    scanSessionId: '22222222-2222-4222-8222-222222222222',
+    uploadId: '33333333-3333-4333-8333-333333333333',
+  };
+  it('matches the server-built part path', () => {
+    expect(rawFootagePartPath({ ...ids, mime: 'video/quicktime', partNumber: 2 })).toBe(
+      `org/${ids.organizationId}/scans/${ids.scanSessionId}/${ids.uploadId}/part-00002.mov`,
+    );
+  });
+  it('rejects invalid part numbers', () => {
+    for (const partNumber of [0, 1001, 1.5])
+      expect(() => rawFootagePartPath({ ...ids, mime: 'video/mp4', partNumber })).toThrow();
+  });
+});
+
+describe('videoMimeFor', () => {
+  it('falls back to the extension when the browser reports no or a generic type', () => {
+    expect(videoMimeFor('walk.MOV', '')).toBe('video/quicktime');
+    expect(videoMimeFor('walk.m4v', 'application/octet-stream')).toBe('video/mp4');
+    expect(videoMimeFor('walk.mp4', 'video/mp4')).toBe('video/mp4');
+  });
+  it('never overrides a specific reported type or invents one', () => {
+    expect(videoMimeFor('walk.mp4', 'application/pdf')).toBe('application/pdf');
+    expect(videoMimeFor('notes.txt', '')).toBe('');
   });
 });

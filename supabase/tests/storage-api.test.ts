@@ -65,9 +65,21 @@ describe.skipIf(!stack)('storage through the Storage API (local Supabase stack)'
   let manager: SupabaseClient;
   let outsider: SupabaseClient;
   let objectPath: string;
+  let uploadId: string;
   let orgId: string;
   let apartmentId: string;
   let sessionId: string;
+
+  const freshSession = async () =>
+    (
+      (await must(
+        manager
+          .from('scan_sessions')
+          .insert({ apartment_id: apartmentId, method: 'video_upload' })
+          .select('id')
+          .single(),
+      )) as { id: string }
+    ).id;
 
   beforeAll(async () => {
     env = readStackEnv();
@@ -111,18 +123,65 @@ describe.skipIf(!stack)('storage through the Storage API (local Supabase stack)'
         })
         .single(),
     );
-    objectPath = (upload as { object_path: string }).object_path;
+    uploadId = (upload as { id: string }).id;
+    const part = await must(
+      manager
+        .from('media_upload_parts')
+        .select('object_path')
+        .eq('media_upload_id', uploadId)
+        .eq('part_number', 1)
+        .single(),
+    );
+    objectPath = (part as { object_path: string }).object_path;
   }, 120_000);
 
-  it('the creator uploads to the registered path and can download it', async () => {
+  it('the creator uploads the part, completes it through the RPC and can download it', async () => {
+    const early = await manager.rpc('complete_media_upload_part', {
+      p_upload: uploadId,
+      p_part: 1,
+    });
+    expect(early.error?.message).toMatch(/PART_INCOMPLETE/);
     const up = await manager.storage
       .from('raw-footage')
       .upload(objectPath, video, { contentType: 'video/mp4' });
     expect(up.error).toBeNull();
+    const done = await manager.rpc('complete_media_upload_part', { p_upload: uploadId, p_part: 1 });
+    expect(done.error).toBeNull();
+    expect(done.data).toBe(0);
+    const status = await must(
+      manager.from('media_uploads').select('status').eq('id', uploadId).single(),
+    );
+    expect((status as { status: string }).status).toBe('uploaded');
     const down = await manager.storage.from('raw-footage').download(objectPath);
     expect(down.error).toBeNull();
     expect(down.data?.size).toBe(video.size);
   });
+
+  it('objects above the 45 MiB part limit are refused by the bucket', async () => {
+    const big = await must(
+      manager
+        .rpc('register_media_upload', {
+          p_scan_session: await freshSession(),
+          p_filename: 'big.mp4',
+          p_mime: 'video/mp4',
+          p_size_bytes: 47185920 + 1,
+        })
+        .single(),
+    );
+    const part = await must(
+      manager
+        .from('media_upload_parts')
+        .select('object_path')
+        .eq('media_upload_id', (big as { id: string }).id)
+        .eq('part_number', 1)
+        .single(),
+    );
+    const tooBig = new Blob([new Uint8Array(47185920 + 1)], { type: 'video/mp4' });
+    const up = await manager.storage
+      .from('raw-footage')
+      .upload((part as { object_path: string }).object_path, tooBig, { contentType: 'video/mp4' });
+    expect(up.error).not.toBeNull();
+  }, 60_000);
 
   it('an unregistered path in the own org is denied', async () => {
     const up = await manager.storage
@@ -167,7 +226,7 @@ describe.skipIf(!stack)('storage through the Storage API (local Supabase stack)'
     const second = await must(
       manager
         .rpc('register_media_upload', {
-          p_scan_session: sessionId,
+          p_scan_session: await freshSession(),
           p_filename: 'walk2.mp4',
           p_mime: 'video/mp4',
           p_size_bytes: 10,
@@ -176,9 +235,13 @@ describe.skipIf(!stack)('storage through the Storage API (local Supabase stack)'
     );
     const up = await manager.storage
       .from('raw-footage')
-      .upload((second as { object_path: string }).object_path, new Blob(['<script>']), {
-        contentType: 'text/html',
-      });
+      .upload(
+        `${(second as { object_path: string }).object_path.replace(/\.mp4$/, '')}/part-00001.mp4`,
+        new Blob(['<script>']),
+        {
+          contentType: 'text/html',
+        },
+      );
     expect(up.error).not.toBeNull();
   });
 });

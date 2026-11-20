@@ -567,6 +567,11 @@ body {
 .ns-qr-revoked {
   margin-block-start: var(--nt-space-4);
 }
+.ns-progress {
+  inline-size: 100%;
+  block-size: 12px;
+  accent-color: var(--nt-color-brand-primary, currentColor);
+}
 .ns-room-list {
   margin: 0;
   padding-inline-start: var(--nt-space-5);

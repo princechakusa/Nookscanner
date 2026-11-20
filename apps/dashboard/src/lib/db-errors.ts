@@ -8,6 +8,9 @@ export function dbErrorCode(error: { message?: string; code?: string } | null): 
     'CONFLICT',
     'NOT_FOUND',
     'UNAUTHENTICATED',
+    'UPLOAD_LIMIT_REACHED',
+    'UPLOAD_REJECTED',
+    'PART_INCOMPLETE',
   ]) {
     if (m.includes(code)) return code;
   }

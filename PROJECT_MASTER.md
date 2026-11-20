@@ -132,11 +132,11 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 
 ## 24. Current project status
 
-**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2 complete on the **local** Supabase stack: 2.2 schema, 2.3 storage, 2.4 dashboard auth, 2.5 real-stack DB tests, 2.6 security review (5 findings fixed, no Critical/High open). All 5 migrations are applied to the hosted project (user-approved) and verified (lint clean, advisors accepted, anon smoke 30/30); only hosted Auth dashboard settings remain (Blocked on user 1). Phase 3 DONE. **Phase 4 DONE** (organizations/invitations, properties + apartments with layout questionnaire, rooms with ordering, guest QR codes with SVG/PNG rendering). **Next: Phase 5.1** upload registration + resumable chunked upload (ADR-016).
+**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2 complete on the **local** Supabase stack: 2.2 schema, 2.3 storage, 2.4 dashboard auth, 2.5 real-stack DB tests, 2.6 security review (5 findings fixed, no Critical/High open). All 5 migrations are applied to the hosted project (user-approved) and verified (lint clean, advisors accepted, anon smoke 30/30); only hosted Auth dashboard settings remain (Blocked on user 1). Phase 3 DONE. **Phase 4 DONE.** **Phase 5 IN PROGRESS: 5.1 DONE** (chunked resumable video upload, migration 0500 applied locally and hosted). **Next: 5.2** server validation (ffprobe "validate" job in the worker; runs locally, Modal deployment waits for Blocked on user 5).
 
 **Resume here (new session):**
 1. Start Docker Desktop, then `npx supabase@3.2.0 start` (local stack on ports 565xx).
-2. Phase 5.1: upload parts of at most 45 MB (Free plan: 50 MB per object, 1 GB total storage; see Blocked on user 7).
+2. Phase 5.2: worker `validate` job (download + concatenate parts, ffprobe checks per quality bar 1b/3, manager-readable reasons); build and test locally with sample videos from several device tiers.
 3. Stack E2E: `node scripts/e2e-stack.mjs` (use `at('/path')` from `tests/e2e-stack/helpers.ts` for URL assertions).
 4. Keep following the loop in `docs/AUTONOMOUS_LOOP_PROMPT.md`; pushing to `origin/main` and applying migrations to the hosted project (dry run first) are user-approved. The binding 3D quality bar (`docs/3D_QUALITY_BAR.md`, ADR-014) is wired into Phases 5, 6, 7 and 12.
 
@@ -144,7 +144,7 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 - Full documentation set (this file + 18 docs incl. the 3D quality bar).
 - Monorepo tooling, env separation (`.env.example` public values; git-ignored `.env.local` in `apps/dashboard` and `apps/guest` containing only the hosted project's public URL and publishable key).
 - Shared packages, design tokens, dashboard and guest skeletons, Nookscanner skeleton (not installed), worker contract package.
-- Migrations: `20261119000100_foundation.sql`, `20261120000100_invitations_qr_capture.sql`, `20261120000200_storage.sql`, `20261120000300_security_hardening.sql`, `20261120000400_private_helpers.sql`. Applied on PGlite, the local Supabase stack (Postgres 17.12) **and the hosted project** (2026-11-20).
+- Migrations: `20261119000100_foundation.sql`, `20261120000100_invitations_qr_capture.sql`, `20261120000200_storage.sql`, `20261120000300_security_hardening.sql`, `20261120000400_private_helpers.sql`, `20261120000500_chunked_uploads.sql` (all 6 applied to the hosted project). Applied on PGlite, the local Supabase stack (Postgres 17.12) **and the hosted project** (2026-11-20).
 - Dual-target DB tests (PGlite + local stack) incl. Storage API tests; CI jobs `verify` and `database-stack` (the latter also runs the auth E2E).
 - Dashboard auth: sign-up, email confirmation, sign-in/out, password reset, `/app` landing; proxy with session refresh, route guard and per-request nonce CSP; email templates in `supabase/templates`.
 - Local Supabase stack config validated with CLI 3.2.0 on ports 565xx.
@@ -153,10 +153,10 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 | Command | Result |
 |---|---|
 | `npm run lint` / `format:check` / `typecheck` | pass |
-| `npm test` | all workspaces pass (shared 83, design-tokens 19, ui 6, dashboard 29, guest 14, database on PGlite 69 + 5 stack-only skipped) |
-| `npm run test:e2e:stack` (dashboard auth + shell + axe + invitations on the local stack) | 24 passed, 0 skipped, 2.0 min (auth, invitations, properties + scoping, rooms, QR codes, shell; both projects) |
+| `npm test` | all workspaces pass (shared 90, design-tokens 19, ui 6, dashboard 29, guest 14, database on PGlite 71 + 6 stack-only skipped) |
+| `npm run test:e2e:stack` (dashboard auth + shell + axe + invitations on the local stack) | 28 passed, 0 skipped, 3.2 min (auth, invitations, properties + scoping, rooms, QR codes, chunked upload with network drop + resume, shell; both projects) |
 | `npm run test:e2e` (guest, Pixel 7 + iPhone 15 emulation, EN/AR, axe) | 12 passed |
-| `npm run test:db:stack` (real local Supabase) | 74 passed, 0 failed |
+| `npm run test:db:stack` (real local Supabase) | 77 passed, 0 failed |
 | Hosted project: `db lint --remote`, `db advisors --remote`, read-only catalog query, `npm run test:hosted:smoke` | no errors; 7 WARN = intended RPCs (accepted); 15/15 tables with RLS, 0 anon grants; smoke 30/30 |
 | `supabase db advisors` (security) / `db lint` | 0 security findings / no errors |
 | `supabase db lint --level warning` (local) | no schema errors |
@@ -201,3 +201,4 @@ Decision 2026-11-20 (user): **stay on the Supabase Free plan** (no Pro). Uploads
 | 2026-11-20 (cont.) | Stage 4.2 properties + apartments CRUD with layout questionnaire; fixed form input loss (R-021) and leaked test contexts (R-022); stack E2E 20/20. |
 | 2026-11-20 (cont.) | Stage 4.3 rooms (create from layout, custom, rename, reorder, delete, top-up); stack E2E 22/22; DB stack 74/74. |
 | 2026-11-20 (cont.) | Stage 4.4 guest QR codes; Phase 4 complete. Found the local WebKit slowness cause (trace recording, R-023); stack E2E 24/24 in 2 min. |
+| 2026-11-20 (cont.) | Stage 5.1 chunked resumable upload (ADR-017); migration 0500 applied to hosted (dry run first; lint clean, smoke 30/30); stack E2E 28/28. |

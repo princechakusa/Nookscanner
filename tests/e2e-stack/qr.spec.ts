@@ -3,26 +3,10 @@
  * (the PNG decodes to the guest link), revoke with confirmation; revoked codes, other
  * organizations and signed-out requests get no image. Runs against the local Supabase stack.
  */
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import jsQR from 'jsqr';
 import { PNG } from 'pngjs';
-import { at, expectAccessible, newPerson, run, signUpAndConfirm } from './helpers.ts';
-
-async function apartmentWithOrg(page: Page, tag: string, who: string): Promise<string> {
-  await signUpAndConfirm(page, `${who}-${tag}@example.test`);
-  await page.getByLabel('Organization name').fill(`QR ${who} ${tag}`);
-  await page.getByRole('button', { name: 'Create organization' }).click();
-  await expect(page).toHaveURL(at('/app/settings'));
-  await page.goto('/app/properties');
-  await page.getByLabel('Property name').fill(`QR Tower ${tag}`);
-  await page.getByRole('button', { name: 'Create property' }).click();
-  await expect(page).toHaveURL(/\/app\/properties\/[0-9a-f-]{36}$/);
-  await page.getByRole('link', { name: 'Add apartment' }).click();
-  await page.getByLabel('Apartment name').fill(`QR Flat ${tag}`);
-  await page.getByRole('button', { name: 'Create apartment' }).click();
-  await expect(page).toHaveURL(/\/app\/apartments\/[0-9a-f-]{36}$/);
-  return new URL(page.url()).pathname;
-}
+import { apartmentWithOrg, expectAccessible, newPerson, run } from './helpers.ts';
 
 test('guest QR codes: create, preview, download, revoke, access control', async ({
   page,
@@ -53,7 +37,7 @@ test('guest QR codes: create, preview, download, revoke, access control', async 
   expect(png.status()).toBe(200);
   expect(png.headers()['content-type']).toBe('image/png');
   expect(png.headers()['content-disposition']).toMatch(
-    /^attachment; filename="nookscanner-qr-qr-flat-.*-front-door-sticker\.png"$/,
+    /^attachment; filename="nookscanner-qr-flat-qrowner-.*-front-door-sticker\.png"$/,
   );
   expect(png.headers()['cache-control']).toContain('no-store');
   const decoded = PNG.sync.read(await png.body());
