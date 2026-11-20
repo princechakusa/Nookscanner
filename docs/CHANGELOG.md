@@ -2,6 +2,14 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 6.3 quality report review (implemented; real-scene evidence pending)
+
+- Migration `20261120000700_scene_review.sql`: review status, artefact checklist, notes, reviewer on `processing_results`; RPC `review_processing_result` (scan.review, only finished jobs, notes required to reject); audited. Applied locally and hosted.
+- `packages/shared/src/scene-quality.ts`: assessment of PSNR/SSIM/LPIPS, camera registration and reprojection error against initial (uncalibrated) targets; artefact checklist; review schema.
+- Dashboard: Scans list and scan detail (submit for 3D processing, live progress with plain-language stages and failure explanations, cancel, quality report, review).
+- Fix during the stage: this session overwrote the Stage 5.5 capture `quality.ts`; restored from git, scene assessment moved to `scene-quality.ts`.
+- Tests: shared 169, dashboard 29, database 89 (+6) on PGlite and 95/95 on the real stack, stack E2E `scans.spec.ts` 2/2 (desktop Chromium, iPhone WebKit, axe). Hosted smoke 36/36.
+
 ## 2026-11-20: Stage 6.2 dispatch, callbacks, queue and retries
 
 ### Added

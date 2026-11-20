@@ -620,3 +620,28 @@ body {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* Scans (Stage 6.3) */
+.ns-job-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--nt-space-4);
+  margin-block: var(--nt-space-3);
+}
+.ns-plain-list {
+  margin: var(--nt-space-3) 0;
+  padding-inline-start: var(--nt-space-6);
+  display: grid;
+  gap: var(--nt-space-2);
+}
+.ns-textarea {
+  min-block-size: 88px;
+  padding-block: var(--nt-space-3);
+  resize: vertical;
+  font: inherit;
+}
+.ns-panel__actions {
+  display: grid;
+  gap: var(--nt-space-3);
+  margin-block-start: var(--nt-space-5);
+}

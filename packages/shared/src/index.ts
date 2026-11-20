@@ -33,3 +33,4 @@ export * from './device-tiers.ts';
 export * from './capture.ts';
 export * from './quality.ts';
 export * from './upload-queue.ts';
+export * from './scene-quality.ts';

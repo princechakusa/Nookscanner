@@ -11,6 +11,9 @@ export function dbErrorCode(error: { message?: string; code?: string } | null): 
     'UPLOAD_LIMIT_REACHED',
     'UPLOAD_REJECTED',
     'PART_INCOMPLETE',
+    'NOT_READY',
+    'NOTES_REQUIRED',
+    'VALIDATION_FAILED',
   ]) {
     if (m.includes(code)) return code;
   }

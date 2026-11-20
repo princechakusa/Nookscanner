@@ -76,6 +76,7 @@ describe('migrations', () => {
       'create_organization',
       'create_qr_code',
       'register_media_upload',
+      'review_processing_result',
       'revoke_invitation',
       'revoke_qr_code',
       'submit_scan_for_processing',

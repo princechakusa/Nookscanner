@@ -137,7 +137,7 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 
 **Resume here (new session):**
 1. Start Docker Desktop, then `npx supabase@3.2.0 start` (local stack on ports 565xx).
-2. Phase 6.2 DONE (dispatch, callbacks, queue, retries; KI-026: hosted function deploy needs the user). Next: 6.3 quality report stored and shown to the manager (dashboard Scans page), 6.7 packaging checks, then Phase 7 viewer on a real, openly licensed 3D scan until the user's apartment is reconstructed (stages needing real footage or the GPU stay open).
+2. Phase 6.2 DONE (KI-026: hosted function deploy needs the user). Phase 6.3 IMPLEMENTED, not DONE (needs a real measured scene; per-room/doorway numbers after 7.3). Next: 6.7 packaging checks, then Phase 7 viewer (7.1 Spark wrapper on a real, openly licensed 3D scan until the user's apartment is reconstructed), 7.2-7.5, then Phases 8-11 and 10.6 account deletion (store requirement, docs/APP_STORE_COMPLIANCE.md). Stages needing real footage or the GPU stay open with everything around them built and tested.
 3. Stack E2E: `node scripts/e2e-stack.mjs` (use `at('/path')` from `tests/e2e-stack/helpers.ts` for URL assertions).
 4. Keep following the loop in `docs/AUTONOMOUS_LOOP_PROMPT.md`; pushing to `origin/main` and applying migrations to the hosted project (dry run first) are user-approved. The binding 3D quality bar (`docs/3D_QUALITY_BAR.md`, ADR-014) is wired into Phases 5, 6, 7 and 12.
 

@@ -20,6 +20,9 @@ const MESSAGES: Record<string, string> = {
   PROPERTY_REQUIRED: 'Choose a property.',
   CONFIRM_REQUIRED: 'Tick the box to confirm.',
   ROOM_NAME_TAKEN: 'This apartment already has a room with this name.',
+  NOT_READY: 'This is not possible yet: wait until the upload or processing has finished.',
+  NOTES_REQUIRED: 'Explain what is wrong so the scan can be recorded again.',
+  VALIDATION_FAILED: 'Some values are not valid. Check the form and try again.',
   UNKNOWN: 'Something went wrong. Try again.',
 };
 
