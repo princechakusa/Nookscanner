@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const here = fileURLToPath(new URL('.', import.meta.url))
   .replace(/\\/g, '/')
   .replace(/\/$/, '');
-const repo = path.posix.resolve(here, '../..');
+const repo = path.resolve(here, '../..').replace(/\\/g, '/');
 const nm = (p: string) => path.posix.join(here, 'node_modules', p);
 const stub = (p: string) => path.posix.join(here, 'stubs', p);
 
