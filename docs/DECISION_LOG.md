@@ -20,6 +20,7 @@ Format per decision (Part 5.5): selected, reason, alternatives, advantages, limi
 | ADR-013 | Same DB test suites on PGlite and on the real local Supabase stack (instead of a pgTAP port) | Accepted | 2026-11-20 |
 | ADR-014 | 3D quality bar is binding; device tiers; measured evidence gates 3D stages | Accepted (user requirement) | 2026-11-20 |
 | ADR-015 | Styling: design-token CSS variables + `packages/ui`, no Tailwind | Accepted | 2026-11-20 |
+| ADR-016 | Stay on Supabase Free: chunked uploads under the 50 MB per-file limit | Accepted (user decision) | 2026-11-20 |
 
 ---
 
@@ -133,3 +134,9 @@ Format per decision (Part 5.5): selected, reason, alternatives, advantages, limi
 - **Alternatives:** Tailwind CSS 4 (fast authoring, but a second token pipeline and plugin config in both bundlers), CSS-in-JS (runtime cost, CSP friction), component libraries such as Radix/shadcn (good accessibility primitives; can be added per component later if needed).
 - **Limitations:** hand-written CSS needs discipline (lint for raw colours is a possible future check); no utility classes.
 - **Supply chain:** new dev dependencies pinned to releases at least two weeks old (axe-core 4.14.0, @axe-core/playwright 4.14.0, @testing-library/user-event 14.6.8).
+
+## ADR-016: Stay on Supabase Free; chunked uploads under 50 MB per object
+- **Decision (user, 2026-11-20):** no Supabase Pro. The project stays on the Free plan.
+- **Consequence:** Free caps every stored object at 50 MB and has no automatic backups. Walkthrough videos (often 0.5-5 GB) are uploaded as ordered parts of at most 45 MB each (`media_uploads` gains part number/count in Phase 5.1), each part a separate TUS upload to its own registered path; the worker downloads and concatenates parts before validation. Backups: scheduled logical dumps (`supabase db dump`) stored outside Supabase (Phase 13), restore drill still required.
+- **Other Free limits to design for:** 1 GB storage, 5 GB egress/month, project pauses after 1 week of inactivity. Large scene assets for guests may need Cloudflare R2 (free egress) earlier than planned.
+- **Supersedes:** the "upgrade to Pro before Phase 5" steps in KI-011, KI-015 and INFRASTRUCTURE.md.
