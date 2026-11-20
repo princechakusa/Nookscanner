@@ -141,7 +141,7 @@ export function uploadTier(captureTier: TierId | null | undefined): DeviceTier {
 
 /** On-device quality thresholds for a tier (defaults plus that tier's overrides). */
 export function qualityThresholds(tier: TierId | null | undefined): QualityThresholds {
-  const { note: _note, ...base } = DEVICE_TIERS.quality;
+  const base: QualityThresholds = qualitySchema.parse(DEVICE_TIERS.quality); // drops `note`
   const overrides = DEVICE_TIERS.tiers.find((t) => t.id === tier)?.qualityOverrides ?? {};
   return { ...base, ...overrides };
 }
