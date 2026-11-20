@@ -16,6 +16,7 @@
     "@fontsource/ibm-plex-sans-arabic": "^5.3.0",
     "@nookscanner/design-tokens": "*",
     "@nookscanner/shared": "*",
+    "@nookscanner/viewer": "*",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

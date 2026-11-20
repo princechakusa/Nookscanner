@@ -50,3 +50,8 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 dist-ci/
+
+# Local-only 3D test scenes (licence: research/unclear; never commit or deploy)
+apps/guest/public/dev-scenes/
+*.splat
+dist-perf/

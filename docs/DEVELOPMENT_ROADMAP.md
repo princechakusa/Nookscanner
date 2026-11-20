@@ -79,7 +79,7 @@ Quality bar sections 4, 5 and 8 apply. A stage that produces a scene is DONE onl
 Quality bar sections 1b and 6 apply: performance is measured per device tier, never on the pilot phone only. Splat budgets and LoD adapt to the guest device's capabilities at runtime.
 | Stage | Acceptance criteria |
 |---|---|
-| 7.1 `packages/viewer` wrapper over Spark (load, LoD, budget) | loads the pilot SOG; measured time to first view, fps, download size and memory recorded on a real iPhone, a mid-range Android, a tablet and desktop, plus throttled 4G |
+| 7.1 `packages/viewer` wrapper over Spark (load, LoD, budget) | loads the pilot SOG; measured time to first view, fps, download size and memory recorded on a real iPhone, a mid-range Android, a tablet and desktop, plus throttled 4G <br>**Status: IMPLEMENTED 2026-11-20, NOT DONE.** `packages/viewer` (Spark 2.4.0 + three 0.187.0, 3 device tiers, LoD, progress, first-frame and fps stats), lazy-loaded in the guest stage with fallback to the appliance list. Measured with a REAL captured interior (research scene, local only, never shipped) on this PC (Intel Iris Xe, ANGLE D3D11): first frame 14.8-17.8 s, 45-60 fps idle/drag; viewer chunk 1.09 MB gzip (KI-027). Missing: the pilot SOG from our pipeline (footage + GPU) and real iPhone / mid-range Android measurements (user devices) |
 | 7.2 Camera controls + constraints | E2E controls; no floor clipping |
 | 7.3 Alignment tools (floor, scale, crop) | measured door width within 3% |
 | 7.4 Rooms + viewpoints + transitions | navigation tests pass; every room reachable from the entrance |

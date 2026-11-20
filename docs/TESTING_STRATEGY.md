@@ -15,7 +15,7 @@ Version 1.0 (2026-11-19). **Rule: record actual results only; never fabricate ev
 | E2E | Playwright (Chromium, WebKit, mobile emulation) | `tests/e2e` | yes | Implemented: 3 guest-shell smoke tests x 2 device projects |
 | E2E on the local stack | Playwright + Mailpit API (reads confirmation/reset emails) against a production build of the dashboard | `tests/e2e-stack` (`npm run test:e2e:stack`) | yes (job `database-stack`) | Implemented: 6 auth-flow tests x 2 projects (desktop Chromium, iPhone 15 WebKit) |
 | 3D tests | Playwright + canvas readiness + hotspot projection unit tests + golden screenshots on reference scene | `packages/viewer`, `tests/e2e` | partly | Phase 7 |
-| Performance | Lighthouse CI (guest), custom FPS/memory probe in viewer, WebPageTest on 4G profiles | `tests/perf` | nightly | Phase 7/11 |
+| Performance | Viewer probe (load, first frame, fps, GPU) on a real scene: `npx playwright test -c playwright.perf.config.ts` (local scene, separate `dist-perf` build, results in `test-results/perf/*.json`); Lighthouse CI and 4G profiles later | `tests/e2e-perf` | manual (scene is local-only) | Implemented 7.1; real devices pending |
 | Load | k6 against staging guest endpoints | `tests/load` | manual | Phase 11 |
 | Security | npm audit, pip-audit, secret scanning (gitleaks), bundle secret grep, OWASP ZAP baseline on staging, authorized penetration test | CI + staging | yes / manual | Phase 1 (audit), 11 |
 | Device compatibility | BrowserStack or physical devices: iPhone (Safari), Android (Chrome), iPad, desktop | manual matrix | no | Phase 11/12 |

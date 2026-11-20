@@ -2,6 +2,14 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 7.1 3D viewer (implemented; real-device and own-pipeline measurements pending)
+
+- `packages/viewer`: Spark 2.4.0 + three.js 0.187.0 behind `createViewer` (load with LoD, progress, first frame, fps, dispose) and a device-capability budget (`budget.ts`, tiers low/mid/high from memory, cores, texture size, pixel ratio, data saver; 7 tests).
+- Guest app: `Scene3D` lazy chunk in the stage when a scene is published and WebGL2 is available; falls back to the appliance list; EN/AR strings; dev-only `VITE_DEV_SCENE_URL` for `/demo`.
+- `tests/e2e-perf` + `playwright.perf.config.ts`: measured a REAL captured interior on this PC (Intel Iris Xe via ANGLE D3D11): first frame 17.8 s (desktop, tier high) / 14.8 s (phone viewport, tier mid), 45-60 fps idle and while dragging, no page errors. Viewer chunk 1.09 MB gzip, guest initial JS 106 kB gzip.
+- ADR-018 (+ budget update): Modal free credit + up to USD 30/month; PC worker later.
+- Fixed R-024 (perf build overwrote `dist`).
+
 ## 2026-11-20: Stage 6.3 quality report review (implemented; real-scene evidence pending)
 
 - Migration `20261120000700_scene_review.sql`: review status, artefact checklist, notes, reviewer on `processing_results`; RPC `review_processing_result` (scan.review, only finished jobs, notes required to reject); audited. Applied locally and hosted.

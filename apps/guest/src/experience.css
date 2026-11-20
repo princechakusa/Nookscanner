@@ -453,3 +453,32 @@ html[lang='ar'] body {
     animation: none;
   }
 }
+
+/* 3D apartment (Scene3D, Phase 7.1) */
+.g-scene {
+  position: absolute;
+  inset: 0;
+}
+.g-scene__canvas {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  touch-action: none; /* the viewer handles drag/pinch */
+}
+.g-scene__loading {
+  position: absolute;
+  inset-inline: var(--nt-space-6);
+  inset-block-end: var(--nt-space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--nt-space-4);
+  padding: var(--nt-space-3) var(--nt-space-5);
+  border-radius: var(--nt-radius-md);
+}
+.g-scene__progress {
+  flex: 1;
+  accent-color: var(--nt-color-brand-accent);
+}
+.g-stage:has(.g-scene) {
+  min-block-size: 62svh;
+}

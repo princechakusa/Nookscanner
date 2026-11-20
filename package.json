@@ -11,6 +11,7 @@
     "packages/shared",
     "packages/design-tokens",
     "packages/ui",
+    "packages/viewer",
     "apps/dashboard",
     "apps/guest",
     "supabase"

@@ -1,0 +1,23 @@
+{
+  "name": "@nookscanner/viewer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nookscanner 3D viewer: Spark (three.js) Gaussian-splat renderer behind a small interface (ADR-006)",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./budget": "./src/budget.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@sparkjsdev/spark": "2.4.0",
+    "three": "0.187.0"
+  },
+  "devDependencies": {
+    "@types/three": "0.187.0",
+    "vitest": "^5.1.1"
+  }
+}

@@ -29,9 +29,15 @@ export function App({ pathname, languages }: AppProps) {
   }, [locale]);
 
   if (isDemo) {
+    // Development/measurement only: attach a locally stored scene to the fictional demo
+    // (VITE_DEV_SCENE_URL, never set in production builds; the file is never committed).
+    const devScene = import.meta.env.VITE_DEV_SCENE_URL as string | undefined;
+    const experience = devScene
+      ? { ...DEMO_EXPERIENCE, scene: { url: devScene, sizeBytes: 1 } }
+      : DEMO_EXPERIENCE;
     return (
       <Experience
-        experience={DEMO_EXPERIENCE}
+        experience={experience}
         locale={locale}
         onLocaleChange={setLocale}
         webgl={webgl}

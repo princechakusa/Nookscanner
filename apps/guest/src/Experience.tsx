@@ -1,8 +1,9 @@
 /**
  * Guest experience shell (DESIGN_SYSTEM 9.1, 9.2, 9.4; mockups docs/design/01, 02, 04).
- * The 3D viewer itself is Phase 7; this shell renders the frame around it (top bar, room chips,
- * search, instruction sheet) and the accessible fallback list, which doubles as the
- * screen-reader view (DESIGN_SYSTEM 8).
+ * The 3D apartment (Scene3D, lazy chunk) fills the stage when a scene is published and the
+ * device supports WebGL2; around it: top bar, room chips, search, instruction sheet and the
+ * accessible appliance list, which doubles as the screen-reader view and the fallback
+ * (DESIGN_SYSTEM 8).
  */
 import {
   pick,
@@ -12,6 +13,7 @@ import {
 } from '@nookscanner/shared';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { BrandMark, Icon, categoryIcon, roomIcon } from './icons.tsx';
+import { Scene3D } from './Scene3D.tsx';
 import { format, localDigits, messages, type Locale } from './i18n.ts';
 
 export interface ExperienceProps {
@@ -69,6 +71,12 @@ export function Experience({ experience, locale, onLocaleChange, webgl, demo }: 
       </header>
 
       <section className="g-stage" aria-label="3D">
+        {webgl && experience.scene && (
+          <Scene3D
+            url={experience.scene.url}
+            labels={{ loading: t.sceneLoading, failed: t.sceneFailed }}
+          />
+        )}
         {viewerMessage && (
           <p className="g-stage__note g-glass" role="status">
             {viewerMessage}
