@@ -84,3 +84,6 @@ verify_jwt = false
 
 [functions.dispatch-processing]
 verify_jwt = false
+
+[functions.claim-job]
+verify_jwt = false

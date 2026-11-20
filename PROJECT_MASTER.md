@@ -23,6 +23,7 @@ Brand research: [`docs/BRAND_IDENTITY.md`](docs/BRAND_IDENTITY.md). Decision: AD
 | Technology stack and research sources | [`docs/TECH_STACK.md`](docs/TECH_STACK.md), [`docs/3D_TECHNOLOGY.md`](docs/3D_TECHNOLOGY.md) |
 | Design references (concept mockups) and screen designs | [`docs/design/`](docs/design/), [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) section 9 |
 | **App Store and Google Play compliance** (rules mapped to the app, gaps, submission log) | [`docs/APP_STORE_COMPLIANCE.md`](docs/APP_STORE_COMPLIANCE.md) |
+| 3D processing setup (Modal + own GPU PC) | [`docs/GPU_WORKER.md`](docs/GPU_WORKER.md) |
 | **3D quality bar (binding)**: device tiers, capture protocol, quality gates, quality report, viewer budgets | [`docs/3D_QUALITY_BAR.md`](docs/3D_QUALITY_BAR.md) (ADR-014) |
 | Decisions (ADRs) | [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md) |
 | Database | [`docs/DATABASE_SCHEMA.md`](docs/DATABASE_SCHEMA.md) |
@@ -137,7 +138,7 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 
 **Resume here (new session):**
 1. Start Docker Desktop, then `npx supabase@3.2.0 start` (local stack on ports 565xx).
-2. Phase 6.2 DONE (KI-026: hosted function deploy needs the user). 6.3 and 7.1 IMPLEMENTED, not DONE (need a real measured scene from our pipeline and real-device numbers). Next: 6.8 compute targets (Modal app on the free credit + USD 30 limit, PC pull worker; ADR-018), 6.7 packaging checks, then 7.2-7.5 (controls, alignment, rooms/viewpoints, per-tier tuning), Phases 8-11 incl. 10.6 account deletion (docs/APP_STORE_COMPLIANCE.md). Viewer measurement: `npx playwright test -c playwright.perf.config.ts` with the local scene in `apps/guest/public/dev-scenes/` (KI-029: local only).
+2. Phase 6.2 DONE (KI-026: hosted function deploy needs the user). 6.3 and 7.1 IMPLEMENTED, not DONE (need a real measured scene from our pipeline and real-device numbers). 6.8 compute targets IN PROGRESS (code + tests done; Docker image build verification and the user's Modal account pending; docs/GPU_WORKER.md). Next: 6.7 packaging checks, then 7.2-7.5 (controls, alignment, rooms/viewpoints, per-tier tuning), Phases 8-11 incl. 10.6 account deletion (docs/APP_STORE_COMPLIANCE.md). Viewer measurement: `npx playwright test -c playwright.perf.config.ts` with the local scene in `apps/guest/public/dev-scenes/` (KI-029: local only).
 3. Stack E2E: `node scripts/e2e-stack.mjs` (use `at('/path')` from `tests/e2e-stack/helpers.ts` for URL assertions).
 4. Keep following the loop in `docs/AUTONOMOUS_LOOP_PROMPT.md`; pushing to `origin/main` and applying migrations to the hosted project (dry run first) are user-approved. The binding 3D quality bar (`docs/3D_QUALITY_BAR.md`, ADR-014) is wired into Phases 5, 6, 7 and 12.
 

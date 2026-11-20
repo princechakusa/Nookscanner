@@ -12,6 +12,7 @@ import {
 } from '@nookscanner/shared';
 import { beforeAll, describe, expect, it } from 'vitest';
 import {
+  handleClaim,
   handleDispatch,
   handleJobCallback,
   runDispatch,
@@ -348,5 +349,50 @@ describe('worker callback', () => {
       status: 'failed',
       error_code: 'POSE_ESTIMATION_FAILED',
     });
+  });
+});
+
+describe('pull-mode claim (own GPU PC, ADR-018)', () => {
+  const claimDeps = () => ({
+    db: sqlPlatformDb(db),
+    storage,
+    secret: SECRET,
+    callbackUrl: 'https://project.test/functions/v1/job-callback',
+  });
+
+  it('rejects unsigned and wrongly signed claims', async () => {
+    const unsigned = new Request('https://x.test/claim-job', { method: 'POST', body: '{}' });
+    expect((await handleClaim(unsigned, claimDeps())).status).toBe(401);
+    const bad = await signed({ workerId: 'pc-1' }, { secret: 'z'.repeat(40) });
+    expect((await handleClaim(bad, claimDeps())).status).toBe(401);
+  });
+
+  it('hands out a due job once, as a contract-valid request', async () => {
+    // Drain anything left queued by earlier tests, then create one job.
+    while (
+      (
+        (await (await handleClaim(await signed({ workerId: 'pc-1' }), claimDeps())).json()) as {
+          job: unknown;
+        }
+      ).job
+    ) {
+      /* drain */
+    }
+    const id = await submittedJob();
+    const first = (await (
+      await handleClaim(await signed({ workerId: 'pc-1' }), claimDeps())
+    ).json()) as {
+      job: JobRequest | null;
+    };
+    expect(first.job?.jobId).toBe(id);
+    expect(jobRequestSchema.safeParse(first.job).success).toBe(true);
+    expect(first.job?.callbackUrl).toBe('https://project.test/functions/v1/job-callback');
+    expect((await jobRow(id)).status).toBe('dispatched');
+    const second = (await (
+      await handleClaim(await signed({ workerId: 'pc-2' }), claimDeps())
+    ).json()) as {
+      job: JobRequest | null;
+    };
+    expect(second.job).toBeNull();
   });
 });

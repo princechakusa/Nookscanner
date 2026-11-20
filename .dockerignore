@@ -1,0 +1,6 @@
+# Build context for services/reconstruction/Dockerfile.gpu: only what the image copies.
+*
+!services/reconstruction/
+!packages/shared/src/fixtures/
+services/reconstruction/**/__pycache__
+services/reconstruction/**/*.pyc

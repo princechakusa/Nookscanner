@@ -195,7 +195,10 @@ export interface DispatchResult {
 }
 
 /** Builds the signed job request for one claimed job (contract v2). */
-export async function buildJobRequest(job: JobRow, deps: DispatchDeps): Promise<JobRequest> {
+export async function buildJobRequest(
+  job: JobRow,
+  deps: Pick<DispatchDeps, 'db' | 'storage' | 'callbackUrl'>,
+): Promise<JobRequest> {
   const inputs = await deps.db.jobInputs(job);
   const request = {
     contractVersion: CONTRACT_VERSION,
@@ -299,4 +302,54 @@ function timingSafeEqual(a: string, b: string): boolean {
   let diff = 0;
   for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return diff === 0;
+}
+
+// ------------------------------------------------------------------------- pull mode (ADR-018)
+
+export interface ClaimDeps {
+  db: PlatformDb;
+  storage: PlatformStorage;
+  secret: string;
+  callbackUrl: string;
+  nowSeconds?: () => number;
+}
+
+/**
+ * POST /claim-job: a worker that cannot be reached from the internet (the user's own GPU PC)
+ * asks for the next job. The request is HMAC-signed like callbacks (body: {"workerId": "..."}).
+ * Returns {"job": JobRequest} or {"job": null}. Claiming moves the job to `dispatched`, so the
+ * stalled-job sweep re-queues it if the PC is switched off mid-job.
+ */
+export async function handleClaim(req: Request, deps: ClaimDeps): Promise<Response> {
+  if (req.method !== 'POST') return json(405, { error: { code: 'METHOD_NOT_ALLOWED' } });
+  if (deps.secret.length < 32) return json(503, { error: { code: 'NOT_CONFIGURED' } });
+  const body = await req.text();
+  if (body.length > 4096) return json(413, { error: { code: 'PAYLOAD_TOO_LARGE' } });
+  const now = deps.nowSeconds ? deps.nowSeconds() : undefined;
+  const verified = await verifyPayload({
+    secret: deps.secret,
+    timestamp: Number(req.headers.get(WORKER_TIMESTAMP_HEADER)),
+    body,
+    signature: req.headers.get(WORKER_SIGNATURE_HEADER) ?? '',
+    ...(now !== undefined ? { nowSeconds: now } : {}),
+  });
+  if (!verified.ok) return json(401, { error: { code: 'UNAUTHORIZED' } });
+
+  await deps.db.requeueStalled();
+  const [job] = await deps.db.claimJobs(1);
+  if (!job) return json(200, { job: null });
+  try {
+    const request = await buildJobRequest(job, deps);
+    return json(200, { job: request });
+  } catch {
+    await deps.db.applyEvent({
+      jobId: job.id,
+      attempt: job.attempt,
+      kind: 'failed',
+      errorCode: 'INVALID_INPUTS',
+      errorMessage: 'The uploaded files are incomplete.',
+      transient: false,
+    });
+    return json(200, { job: null });
+  }
 }

@@ -2,6 +2,16 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 6.8 compute targets (in progress)
+
+- `supabase/functions/claim-job` + `handleClaim` (pull mode for an own GPU PC; HMAC-signed; re-queues stalled jobs, claims one, returns a contract-valid request).
+- `services/reconstruction/nookscanner_reconstruction/poll.py`: PC worker (refuses to run without an NVIDIA GPU, signed claims, runs `run_job`, idles when the queue is empty).
+- `services/reconstruction/Dockerfile.gpu`: one image for Modal and an own PC; `.dockerignore`.
+- `services/reconstruction/modal_app.py`: signed `submit` endpoint, `reconstruct` GPU function (retries left to the platform), compute seconds and cost estimate per job.
+- `docs/GPU_WORKER.md`: Modal setup with spend limit; own-PC setup (no public address, not always on).
+- Tests: functions 9 (2 new), worker 65 (5 new), DB 91 (+6) on PGlite and 97/97 on the real stack; `claim-job` served on the local Edge runtime (unsigned 401, signed 200 `{"job":null}`).
+- Fixed: ESLint/Prettier scanned the `dist-perf` build (ignored now).
+
 ## 2026-11-20: Stage 7.1 3D viewer (implemented; real-device and own-pipeline measurements pending)
 
 - `packages/viewer`: Spark 2.4.0 + three.js 0.187.0 behind `createViewer` (load with LoD, progress, first frame, fps, dispose) and a device-capability budget (`budget.ts`, tiers low/mid/high from memory, cores, texture size, pixel ratio, data saver; 7 tests).

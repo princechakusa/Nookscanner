@@ -15,3 +15,4 @@ apps/nookscanner/ios
 apps/nookscanner/android
 apps/nookscanner/package-lock.json
 packages/design-tokens/tokens.css
+dist-perf/
