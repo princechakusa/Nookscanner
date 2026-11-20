@@ -174,13 +174,14 @@ Failures found and fixed: R-005..R-019; open: KI-022 in [`KNOWN_ISSUES.md`](docs
 ### Blocked on user (exact actions)
 
 Decision 2026-11-20 (user): **stay on the Supabase Free plan** (no Pro). Uploads must therefore work within the Free per-file limit (50 MB): Phase 5 must split large videos into parts of at most 50 MB that the worker reassembles (ADR-016). The user has the accounts and items below and will provide them when asked.
+
+**Apple Developer Program: the user HAS an account (2026-11-20).** When Phase 5.4 needs it, ask the user to run `npx eas-cli login` (and Apple sign-in prompts) themselves in the terminal; never ask for the Apple password in chat.
 1. **Invitation e-mails:** an SMTP / e-mail provider (also needed for item 2); until then admins copy a one-time invite link.
 2. **Hosted Auth settings** (Supabase dashboard, project `nfcnckwjrwpofkrzribd`): set Site URL to the dashboard host (until it is deployed: `http://localhost:3000`) and add `/auth/confirm` to redirect URLs; paste `supabase/templates/confirmation.html` and `recovery.html` into Authentication > Email Templates; configure custom SMTP; enable CAPTCHA and leaked-password protection (KI-017, KI-019). Then hosted sign-up/confirm/reset can be tested end to end.
 3. **Optional:** branch protection on `main` (require CI). Also check whether GitHub Pages should be enabled on this repository: "pages build and deployment" runs on every push.
-4. **Before Nookscanner Capture device builds (5.4):** Apple Developer Program enrollment.
-5. **Real footage (3D quality bar):** pilot apartment walkthrough from the iPhone 16 Pro Max, plus **real footage from other phones**: one Android walkthrough and one older-iPhone walkthrough (roadmap 6.4); more layouts later. Share privately; never commit footage.
-6. **Before Phase 6:** Modal account and API token with a spend limit; optionally Varjo Teleport developer access.
-7. **Brand/legal:** decide on buying nookscanner.com and on an official trademark search.
+4. **Real footage (3D quality bar):** pilot apartment walkthrough from the iPhone 16 Pro Max, plus **real footage from other phones**: one Android walkthrough and one older-iPhone walkthrough (roadmap 6.4); more layouts later. Share privately; never commit footage.
+5. **Before Phase 6:** Modal account and API token with a spend limit; optionally Varjo Teleport developer access.
+6. **Brand/legal:** decide on buying nookscanner.com and on an official trademark search.
 
 ## 25. Session log
 | Date | Session summary |
