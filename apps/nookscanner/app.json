@@ -12,6 +12,9 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Nookscanner uses the camera to record a guided walkthrough of the apartment so it can be turned into a 3D guide for guests.",
         "NSMicrophoneUsageDescription": "Nookscanner records video without sound by default; microphone access is only requested if you enable audio notes."
+      },
+      "config": {
+        "usesNonExemptEncryption": false
       }
     },
     "plugins": ["expo-secure-store"],

@@ -104,6 +104,7 @@ Quality bar sections 1b and 6 apply: performance is measured per device tier, ne
 | 10.3 Notifications | processing notifications delivered |
 | 10.4 Platform admin + support grants | grant expiry + audit tests |
 | 10.5 Monitoring (Sentry, logs) | errors visible in Sentry staging |
+| 10.6 Account and data deletion (store requirement, docs/APP_STORE_COMPLIANCE.md S3/S4) | in-app deletion in Nookscanner Capture and a public web page `/account/delete`; sole owners are told to transfer or delete their organization first; personal data removed within 30 days; audit entry; E2E test passes |
 
 ## Phase 11: Security and QA
 Security audit (ASVS L2), ZAP scans, penetration test (authorized), performance + load tests (k6), accessibility audit (axe + manual), device matrix, backup/restore drill. Acceptance: no open Critical/High; budgets met; restore drill succeeded.
@@ -112,6 +113,8 @@ Security audit (ASVS L2), ZAP scans, penetration test (authorized), performance 
 Scan one apartment, validate visual quality and room connections, place real hotspots, guest testing on iOS/Android, measure load performance, collect feedback, fix. Acceptance: full Part 15 workflow passes with real footage; every publishable scene meets quality-bar section 7 (capture gates passed or override recorded, quality report stored, manager approval, rooms connected and navigable, hotspot positions verified, performance measured on at least one real iPhone and one Android browser); measured evidence for the pilot iPhone, one older iPhone and one Android-recorded video, across more than one apartment layout where available; documented in `PROJECT_MASTER.md`.
 
 ## Phase 13: Production deployment
+Store submission follows [`APP_STORE_COMPLIANCE.md`](APP_STORE_COMPLIANCE.md) (Apple + Google): privacy policy, terms and support pages, reviewer account, privacy labels / Data safety, privacy manifest, current SDK / target API checks, real screenshots, submission log; acceptance includes every applicable item DONE.
+
 Production config, backup verification, infra deploy, monitoring, logging, error reporting, deployment docs, production readiness audit (PROJECT_MASTER section 20). Acceptance: checklist 100%.
 
 ## Phase 14: Scaling and improvements

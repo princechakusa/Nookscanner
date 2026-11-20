@@ -22,6 +22,7 @@ Brand research: [`docs/BRAND_IDENTITY.md`](docs/BRAND_IDENTITY.md). Decision: AD
 | Architecture, repo layout, workflows | [`docs/SYSTEM_ARCHITECTURE.md`](docs/SYSTEM_ARCHITECTURE.md) |
 | Technology stack and research sources | [`docs/TECH_STACK.md`](docs/TECH_STACK.md), [`docs/3D_TECHNOLOGY.md`](docs/3D_TECHNOLOGY.md) |
 | Design references (concept mockups) and screen designs | [`docs/design/`](docs/design/), [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) section 9 |
+| **App Store and Google Play compliance** (rules mapped to the app, gaps, submission log) | [`docs/APP_STORE_COMPLIANCE.md`](docs/APP_STORE_COMPLIANCE.md) |
 | **3D quality bar (binding)**: device tiers, capture protocol, quality gates, quality report, viewer budgets | [`docs/3D_QUALITY_BAR.md`](docs/3D_QUALITY_BAR.md) (ADR-014) |
 | Decisions (ADRs) | [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md) |
 | Database | [`docs/DATABASE_SCHEMA.md`](docs/DATABASE_SCHEMA.md) |
