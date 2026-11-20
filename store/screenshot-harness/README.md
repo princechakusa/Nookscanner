@@ -13,6 +13,7 @@ npm install            # separate from the root workspace
 npm run dev            # serves on :5199; leave running
 npm run shoot          # raw/*.png: drives the app (sign in, plan, record, review, upload)
 npm run compose        # ../app-store-screenshots/nookscanner-1..7.png
+node guest-shoot.cjs   # guest 3D tour + appliance guide (needs: npm run dev -w apps/guest)
 ```
 
 Re-run after any UI change so the store images always match the app.
