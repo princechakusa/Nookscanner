@@ -2,6 +2,15 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 5.3 device tiers and capture profiles
+
+### Added
+- `packages/shared/src/device-tiers.json` (single source of truth) and `device-tiers.ts`: `selectCaptureTier`, `captureProfile`, `uploadTier`; worker `load_device_tiers`/`gates_for_tier` and `validate --tier`.
+- Docs: tier table and profile rationale in `3D_TECHNOLOGY.md`; quality bar section 1b references it.
+
+### Test results
+- shared 109 (19 new), worker 37 (2 new, reading the same JSON).
+
 ## 2026-11-20: Stage 5.2 upload validation (worker)
 
 ### Added

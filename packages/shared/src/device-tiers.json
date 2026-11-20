@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "note": "Single source of truth for device tiers (docs/3D_QUALITY_BAR.md section 1b, Stage 5.3). Read by packages/shared (capture profiles) and services/reconstruction (validation gates). Tiers are chosen from reported capabilities, never from model names. Initial values; calibrate on real footage (KI-014).",
+  "hardMinimum": { "shortSide": 720, "fps": 20 },
+  "tiers": [
+    {
+      "id": "T1",
+      "name": "Pro phone",
+      "examples": "recent iPhone Pro / Pro Max, flagship Android",
+      "requires": { "minShortSide": 2160, "minFps": 30, "hevc": true, "stabilization": true },
+      "capture": { "shortSide": 2160, "fps": 30 },
+      "recommendedShortSide": 2160
+    },
+    {
+      "id": "T2",
+      "name": "Standard phone",
+      "examples": "standard or older iPhone, upper mid-range Android",
+      "requires": { "minShortSide": 2160, "minFps": 30, "hevc": false, "stabilization": false },
+      "capture": { "shortSide": 2160, "fps": 30 },
+      "recommendedShortSide": 2160
+    },
+    {
+      "id": "T3",
+      "name": "Basic phone",
+      "examples": "mid-range or older Android, older iPhone without 4K",
+      "requires": { "minShortSide": 1080, "minFps": 30, "hevc": false, "stabilization": false },
+      "capture": { "shortSide": 1080, "fps": 30 },
+      "recommendedShortSide": 1080
+    },
+    {
+      "id": "T4",
+      "name": "Minimum",
+      "examples": "low-end phones; results will be soft",
+      "requires": { "minShortSide": 720, "minFps": 24, "hevc": false, "stabilization": false },
+      "capture": { "shortSide": 720, "fps": 30 },
+      "recommendedShortSide": 1080
+    },
+    {
+      "id": "T5",
+      "name": "Uploaded video (any camera)",
+      "examples": "existing video from a phone, action camera, gimbal or drone (Method B)",
+      "uploadOnly": true,
+      "recommendedShortSide": 1080
+    }
+  ]
+}

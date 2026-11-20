@@ -17,6 +17,8 @@ from nookscanner_reconstruction.validate import (
     ValidationError,
     assess,
     concat_parts,
+    gates_for_tier,
+    load_device_tiers,
     validate_file,
 )
 
@@ -123,6 +125,25 @@ class AssessTests(unittest.TestCase):
     def test_gates_are_data(self) -> None:
         strict = Gates(min_short_side_recommended=2160)
         self.assertIn("RESOLUTION_LOW", codes(assess(probe_json(width=1920, height=1080), strict)))
+
+
+class TierGateTests(unittest.TestCase):
+    def test_gates_come_from_the_shared_tier_table(self) -> None:
+        table = load_device_tiers()
+        self.assertEqual([t["id"] for t in table["tiers"]], ["T1", "T2", "T3", "T4", "T5"])
+        hard = table["hardMinimum"]
+        for tier in ("T1", "T2", "T3", "T4", "T5", None, "T9"):
+            g = gates_for_tier(tier, table)
+            self.assertEqual((g.min_short_side_block, g.min_fps_block), (hard["shortSide"], hard["fps"]))
+        self.assertEqual(gates_for_tier("T1", table).min_short_side_recommended, 2160)
+        self.assertEqual(gates_for_tier(None, table).min_short_side_recommended, 1080)
+        self.assertEqual(gates_for_tier("T9", table), gates_for_tier("T5", table))
+
+    def test_a_4k_phone_uploading_1080p_is_told_it_can_do_better(self) -> None:
+        fhd = probe_json(codec_name="h264", width=1920, height=1080, bit_rate="20000000")
+        self.assertIn("RESOLUTION_LOW", codes(assess(fhd, gates_for_tier("T1"))))
+        self.assertNotIn("RESOLUTION_LOW", codes(assess(fhd, gates_for_tier("T3"))))
+        self.assertNotIn("RESOLUTION_LOW", codes(assess(fhd, gates_for_tier(None))))
 
 
 class ConcatTests(unittest.TestCase):

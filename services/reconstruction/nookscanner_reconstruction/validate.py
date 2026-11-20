@@ -6,13 +6,14 @@ Pure assessment (`assess`) of ffprobe output against data-driven gates, plus thi
 re-capture guidance (docs/3D_QUALITY_BAR.md sections 1b and 3). Gates are data, never tied to one
 device model; Stage 5.3 selects them per device tier.
 
-CLI: python -m nookscanner_reconstruction.validate <video> [<video> ...]  (prints JSON reports)
+CLI: python -m nookscanner_reconstruction.validate [--tier T1..T5] <video> ...  (prints JSON)
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -48,6 +49,39 @@ class Gates:
 
 
 DEFAULT_GATES = Gates()
+
+# Device tiers are shared with packages/shared (capture profiles). The container image copies the
+# file next to the package; locally it is read from the repository (override: env variable).
+_TIERS_FILE = Path(
+    os.environ.get(
+        "NOOKSCANNER_DEVICE_TIERS",
+        Path(__file__).resolve().parents[3] / "packages" / "shared" / "src" / "device-tiers.json",
+    )
+)
+
+
+def load_device_tiers(path: Path = _TIERS_FILE) -> dict[str, Any]:
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    if data.get("version") != 1 or len(data.get("tiers", [])) != 5:
+        raise ValueError("unsupported device tier table")
+    return data
+
+
+def gates_for_tier(tier_id: str | None, table: dict[str, Any] | None = None) -> Gates:
+    """Validation gates for a capture tier; unknown or missing tiers use T5 (uploaded video).
+
+    Hard minimums are the same for everyone; the "recommended" resolution follows what the tier
+    can record, so a phone that can do 4K is told when it uploaded 1080p.
+    """
+    data = table or load_device_tiers()
+    tiers = {t["id"]: t for t in data["tiers"]}
+    tier = tiers.get(tier_id or "") or tiers["T5"]
+    hard = data["hardMinimum"]
+    return Gates(
+        min_short_side_block=int(hard["shortSide"]),
+        min_fps_block=float(hard["fps"]),
+        min_short_side_recommended=int(tier["recommendedShortSide"]),
+    )
 
 
 @dataclass
@@ -207,8 +241,9 @@ def assess(probe_json: dict[str, Any], gates: Gates = DEFAULT_GATES) -> Report:
             Issue(
                 "RESOLUTION_LOW",
                 WARN,
-                f"The video is {disp_w}x{disp_h}; details will be soft.",
-                "For a sharper result, record in 4K or 1080p.",
+                f"The video is {disp_w}x{disp_h}; {gates.min_short_side_recommended}p or more gives a"
+                " sharper 3D apartment.",
+                "Record in 4K if your phone offers it, otherwise in 1080p.",
             )
         )
 
@@ -357,7 +392,11 @@ def validate_file(path: Path, gates: Gates = DEFAULT_GATES) -> Report:
 
 
 def main(argv: list[str]) -> int:
-    reports = {arg: validate_file(Path(arg)).to_dict() for arg in argv}
+    tier = None
+    if argv[:1] == ["--tier"] and len(argv) >= 2:
+        tier, argv = argv[1], argv[2:]
+    gates = gates_for_tier(tier)
+    reports = {arg: validate_file(Path(arg), gates).to_dict() for arg in argv}
     print(json.dumps(reports, indent=2))
     return 0 if all(r["ok"] for r in reports.values()) else 1
 

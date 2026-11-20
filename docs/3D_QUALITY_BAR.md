@@ -18,6 +18,7 @@ The iPhone 16 Pro Max is only the **pilot** device. Nookscanner is for many prop
 - Apartments differ: small studios, large multi-bedroom, dark rooms, open plan, glass walls. Calibrate gates on varied layouts, not one apartment.
 - Guest side: viewer performance is tested across device tiers (section 6), not on the pilot phone only.
 - Nothing may be hardcoded to one device model, one apartment or one organisation.
+- Tier table (Stage 5.3): T1 Pro phone, T2 Standard phone, T3 Basic phone, T4 Minimum, T5 Uploaded video; defined by reported camera capabilities in `packages/shared/src/device-tiers.json` and documented with the capture profiles in [`3D_TECHNOLOGY.md`](3D_TECHNOLOGY.md#device-tiers-and-capture-profiles-stage-53).
 
 ## 2. Capture protocol (written for the pilot iPhone 16 Pro Max; adapt per device tier per section 1b)
 - Light: daylight plus all room lights on; close blinds if direct sun blows out windows; avoid mixed flicker light. No moving people or pets.

@@ -118,12 +118,25 @@ Sources: https://sparkjs.dev/docs/overview/ , https://sparkjs.dev/docs/splat-mes
 ## Upload validation (Stage 5.2)
 `services/reconstruction/nookscanner_reconstruction/validate.py` checks every uploaded video with ffprobe before reconstruction: container, codec (H.264/HEVC preferred; AV1, VP9, ProRes, MPEG-4, MJPEG accepted with a note; others refused), display resolution after rotation metadata, frame rate incl. variable frame rate, duration, bits per pixel per codec, HDR (PQ, HLG, Dolby Vision) and orientation. Each issue has a code, severity (block/warn/info), a manager-readable message and re-capture guidance. Thresholds are data (`Gates`); Stage 5.3 selects them per device tier. Parts (ADR-016) are joined with per-part size and SHA-256 checks.
 
-Measured on 2026-11-20 with ffmpeg 8.1.2 on **synthetic** samples that emulate each tier's file format (codec, HDR flags, rotation matrix, VFR, bitrate). They prove the format checks, not image quality: **real walkthroughs from the pilot iPhone, an older iPhone and an Android phone are still required** (Blocked on user 4) to calibrate thresholds. T1/T3 samples are 2 s (4K encode time), hence the duration rejection.
+Measured on 2026-11-20 with ffmpeg 8.1.2 on **synthetic** samples that emulate each tier's file format (tier definitions below) (codec, HDR flags, rotation matrix, VFR, bitrate). They prove the format checks, not image quality: **real walkthroughs from the pilot iPhone, an older iPhone and an Android phone are still required** (Blocked on user 4) to calibrate thresholds. T1/T3 samples are 2 s (4K encode time), hence the duration rejection.
 
 | Sample (synthetic format emulation) | Measured facts | Result | Issues |
 |---|---|---|---|
-| T1 recent iPhone Pro (4K HEVC 10-bit PQ, MOV) | hevc 3840x2160 rot 0, 30.0 fps, 2.0 s, 14647 kbit/s, bpp 0.0589, HDR pq | rejected | VIDEO_TOO_SHORT (block), HDR_VIDEO (info) |
-| T2 older/standard iPhone (1080p H.264, portrait) | h264 1080x1920 rot 90, 30.0 fps, 21.0 s, 8087 kbit/s, bpp 0.13, HDR - | pass | PORTRAIT_VIDEO (warn) |
-| T3 high-end Android (4K HEVC, variable fps) | hevc 3840x2160 rot 0, 24.407 fps VFR, 1.97 s, 10896 kbit/s, bpp 0.0538, HDR - | rejected | VARIABLE_FRAME_RATE (info), VIDEO_TOO_SHORT (block) |
-| T4 mid-range Android / messaging copy (720p H.264, 0.5 Mbit/s) | h264 1280x720 rot 0, 30.0 fps, 21.0 s, 513 kbit/s, bpp 0.0186, HDR - | pass | RESOLUTION_LOW (warn), BITRATE_LOW (warn) |
-| T5 other camera (1080p 25 fps MPEG-4) | mpeg4 1920x1080 rot 0, 25.0 fps, 21.0 s, 15250 kbit/s, bpp 0.2942, HDR - | pass | CODEC_UNUSUAL (info) |
+| T1-class: 4K HEVC 10-bit PQ, MOV (like a recent iPhone Pro) | hevc 3840x2160 rot 0, 30.0 fps, 2.0 s, 14647 kbit/s, bpp 0.0589, HDR pq | rejected | VIDEO_TOO_SHORT (block), HDR_VIDEO (info) |
+| T3-class: 1080p H.264, portrait with rotation matrix (like an older iPhone) | h264 1080x1920 rot 90, 30.0 fps, 21.0 s, 8087 kbit/s, bpp 0.13, HDR - | pass | PORTRAIT_VIDEO (warn) |
+| T2-class: 4K HEVC, variable frame rate (like an Android phone) | hevc 3840x2160 rot 0, 24.407 fps VFR, 1.97 s, 10896 kbit/s, bpp 0.0538, HDR - | rejected | VARIABLE_FRAME_RATE (info), VIDEO_TOO_SHORT (block) |
+| T4-class: 720p H.264 at 0.5 Mbit/s (low-end phone or messaging copy) | h264 1280x720 rot 0, 30.0 fps, 21.0 s, 513 kbit/s, bpp 0.0186, HDR - | pass | RESOLUTION_LOW (warn), BITRATE_LOW (warn) |
+| T5: 1080p 25 fps MPEG-4 (existing video from another camera) | mpeg4 1920x1080 rot 0, 25.0 fps, 21.0 s, 15250 kbit/s, bpp 0.2942, HDR - | pass | CODEC_UNUSUAL (info) |
+
+## Device tiers and capture profiles (Stage 5.3)
+Source of truth: [`packages/shared/src/device-tiers.json`](../packages/shared/src/device-tiers.json), read by the capture app (`selectCaptureTier`, `captureProfile` in `packages/shared/src/device-tiers.ts`) and by the worker (`gates_for_tier` in `validate.py`). A tier is chosen from the formats, codecs and stabilisation the back camera **reports**, never from the model name, so new or unknown phones are handled like known ones. A device that reports nothing usable gets no capture profile and is offered video upload (T5) instead. Hard minimum for every tier and upload: short side 720 px, 20 fps.
+
+| Tier | Name | Typical devices (examples only, never used in rules) | Chosen when the back camera offers | Capture profile | Upload gate: recommended short side |
+|---|---|---|---|---|---|
+| T1 | Pro phone | recent iPhone Pro / Pro Max, flagship Android | short side ≥ 2160 px at ≥ 30 fps, HEVC, stabilisation | 2160p landscape, 30 fps, HEVC if supported else H.264, SDR, standard stabilisation if available, AE/AF/WB locked | 2160 px |
+| T2 | Standard phone | standard or older iPhone, upper mid-range Android | short side ≥ 2160 px at ≥ 30 fps | 2160p landscape, 30 fps, HEVC if supported else H.264, SDR, standard stabilisation if available, AE/AF/WB locked | 2160 px |
+| T3 | Basic phone | mid-range or older Android, older iPhone without 4K | short side ≥ 1080 px at ≥ 30 fps | 1080p landscape, 30 fps, HEVC if supported else H.264, SDR, standard stabilisation if available, AE/AF/WB locked | 1080 px |
+| T4 | Minimum | low-end phones; results will be soft | short side ≥ 720 px at ≥ 24 fps | 720p landscape, 30 fps, HEVC if supported else H.264, SDR, standard stabilisation if available, AE/AF/WB locked | 1080 px |
+| T5 | Uploaded video (any camera) | existing video from a phone, action camera, gimbal or drone (Method B) | n/a (existing file, Method B) | n/a | 1080 px |
+
+Why these profile choices: SDR because HDR tone mapping differs per phone and makes rooms inconsistent; standard (not "cinematic"/extended) stabilisation because strong electronic stabilisation crops and warps geometry, which hurts camera-pose estimation; locked exposure, focus and white balance per room for consistent colours (quality bar section 2). All values are initial and must be calibrated on real footage from several devices (KI-014, Blocked on user 4).

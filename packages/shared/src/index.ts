@@ -29,3 +29,4 @@ export {
   type RoomType,
 } from './property.ts';
 export * from './qr.ts';
+export * from './device-tiers.ts';
