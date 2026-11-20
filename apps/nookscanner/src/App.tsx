@@ -1,20 +1,20 @@
 import type { Session } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
-import { Text } from 'react-native';
 import { supabase } from './lib/supabase.ts';
 import { Apartments, type ApartmentItem } from './screens/Apartments.tsx';
 import { Capture, type CaptureResult } from './screens/Capture.tsx';
 import { Plan, type CaptureJob } from './screens/Plan.tsx';
 import { Review } from './screens/Review.tsx';
 import { SignIn } from './screens/SignIn.tsx';
-import { Button, Screen, styles } from './ui.tsx';
+import { Uploads } from './screens/Uploads.tsx';
+import { Screen } from './ui.tsx';
 
 type Route =
   | { name: 'apartments' }
   | { name: 'plan'; apartment: ApartmentItem }
   | { name: 'capture'; job: CaptureJob }
   | { name: 'review'; result: CaptureResult }
-  | { name: 'saved'; apartment: ApartmentItem };
+  | { name: 'uploads' };
 
 /** Nookscanner Capture: sign in -> apartment -> plan -> guided recording -> review (Stage 5.4). */
 export default function App() {
@@ -35,7 +35,12 @@ export default function App() {
 
   switch (route.name) {
     case 'apartments':
-      return <Apartments onSelect={(apartment) => setRoute({ name: 'plan', apartment })} />;
+      return (
+        <Apartments
+          onSelect={(apartment) => setRoute({ name: 'plan', apartment })}
+          onUploads={() => setRoute({ name: 'uploads' })}
+        />
+      );
     case 'plan':
       return (
         <Plan
@@ -60,22 +65,13 @@ export default function App() {
           onDone={(accepted) =>
             setRoute(
               accepted
-                ? { name: 'saved', apartment: route.result.job.apartment }
+                ? { name: 'uploads' }
                 : { name: 'plan', apartment: route.result.job.apartment },
             )
           }
         />
       );
-    case 'saved':
-      return (
-        <Screen title="Capture saved">
-          <Text style={styles.text}>
-            The walkthrough for {route.apartment.name} is saved on this phone. Uploading from the
-            app arrives in the next update; until then, upload the video from Photos in the
-            dashboard.
-          </Text>
-          <Button label="Done" onPress={() => setRoute({ name: 'apartments' })} />
-        </Screen>
-      );
+    case 'uploads':
+      return <Uploads onDone={() => setRoute({ name: 'apartments' })} />;
   }
 }

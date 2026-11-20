@@ -2,6 +2,19 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 5.6 background resumable upload from the capture app
+
+### Added
+- `packages/shared/src/upload-queue.ts`: persisted job model, part ranges checked against the file, reconcile with the database, back-off, storage URL (6 tests).
+- Capture app `src/lib/uploads.ts` (expo-file-system: part files via file handles, native background upload tasks, database-confirmed parts, retry-safe registration) and an Uploads screen (progress, ETA, retry); Review "Use this recording" queues the upload; apartment list shows pending uploads.
+
+### Fixed
+- Review accept is retry-safe (checkpoints upsert on `(scan_session_id, sequence)`).
+- CI lint error from the 5.5 commit (`qualityThresholds`).
+
+### Test results
+- shared 135; repo lint/typecheck/tests pass; capture app typecheck + iOS bundle 1089 modules. Not run on a device.
+
 ## 2026-11-20: Stage 5.5 live capture quality tips; capture app polish; App Store screenshots
 
 ### Added

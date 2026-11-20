@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { supabase } from '../lib/supabase.ts';
+import { loadQueue } from '../lib/uploads.ts';
 import { Button, ErrorText, HomeIcon, Screen, colors, styles } from '../ui.tsx';
 
 export interface ApartmentItem {
@@ -12,8 +13,15 @@ export interface ApartmentItem {
 }
 
 /** Apartments this manager may see (RLS); capture needs scan.create, checked by the database. */
-export function Apartments({ onSelect }: { onSelect: (a: ApartmentItem) => void }) {
+export function Apartments({
+  onSelect,
+  onUploads,
+}: {
+  onSelect: (a: ApartmentItem) => void;
+  onUploads: () => void;
+}) {
   const [items, setItems] = useState<ApartmentItem[] | null>(null);
+  const [pending, setPending] = useState(0);
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -46,6 +54,7 @@ export function Apartments({ onSelect }: { onSelect: (a: ApartmentItem) => void 
 
   useEffect(() => {
     void load();
+    void loadQueue().then((q) => setPending(q.length));
   }, []);
 
   async function refresh() {
@@ -56,6 +65,21 @@ export function Apartments({ onSelect }: { onSelect: (a: ApartmentItem) => void 
 
   return (
     <Screen title="Choose an apartment">
+      {pending > 0 ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={onUploads}
+          style={[
+            styles.card,
+            { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+          ]}
+        >
+          <Text style={[styles.text, { fontWeight: '600', color: colors.primary }]}>
+            {pending === 1 ? '1 walkthrough is uploading' : `${pending} walkthroughs are uploading`}
+          </Text>
+          <Text style={styles.muted}>Tap to see progress.</Text>
+        </Pressable>
+      ) : null}
       {error ? <ErrorText>{error}</ErrorText> : null}
       {items && items.length === 0 ? (
         <Text style={styles.muted}>

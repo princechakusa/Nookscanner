@@ -4,6 +4,7 @@ import * as Device from 'expo-device';
 import { useState } from 'react';
 import { Platform, ScrollView, Text, View } from 'react-native';
 import { supabase } from '../lib/supabase.ts';
+import { enqueueRecording } from '../lib/uploads.ts';
 import { Button, ErrorText, Screen, StatusIcon, styles } from '../ui.tsx';
 import type { CaptureResult } from './Capture.tsx';
 
@@ -56,15 +57,33 @@ export function Review({
         quality: result.quality[sequence] ?? {},
       };
     });
-    const { error: e1 } = await supabase.from('scan_checkpoints').insert(rows);
+    // Upsert: pressing again after a failed upload start must not trip the unique (session, sequence).
+    const { error: e1 } = await supabase
+      .from('scan_checkpoints')
+      .upsert(rows, { onConflict: 'scan_session_id,sequence' });
     const { error: e2 } = e1
       ? { error: e1 }
       : await supabase
           .from('scan_sessions')
           .update({ device_info: metadata, status: 'recording' })
           .eq('id', job.sessionId);
+    if (e2) {
+      setBusy(false);
+      return setError('Could not save the capture. Check your connection and try again.');
+    }
+    try {
+      await enqueueRecording({
+        sessionId: job.sessionId,
+        apartmentName: job.apartment.name,
+        recordingUri: result.filePath,
+      });
+    } catch {
+      setBusy(false);
+      return setError(
+        'Saved, but the upload could not start. Check your connection and try again.',
+      );
+    }
     setBusy(false);
-    if (e2) return setError('Could not save the capture. Check your connection and try again.');
     onDone(true);
   }
 

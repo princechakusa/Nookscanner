@@ -57,3 +57,6 @@ export const supabase = createClient(env.supabaseUrl, env.supabaseAnonKey, {
     detectSessionInUrl: false,
   },
 });
+
+/** Public connection values for native upload tasks (never a privileged key; see parsePublicEnv). */
+export const supabaseConfig = { url: env.supabaseUrl, anonKey: env.supabaseAnonKey } as const;
