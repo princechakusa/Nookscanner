@@ -26,29 +26,46 @@ const SCENES = [
   },
   {
     name: '0-guide',
+    room: 'Living room',
+    photo: 'lounge.jpg',
+    position: '100% 50%',
+    pins: [{ x: 86, y: 36, label: 'TV', icon: 'tv', active: true }],
+    open: 'TV',
+  },
+  {
+    name: '0-search',
+    room: 'Kitchen',
+    photo: 'kitchen.jpg',
+    position: '42% 50%',
+    pins: [{ x: 47, y: 67, label: 'Oven', icon: 'oven', active: true }],
+    search: 'stove',
+  },
+  {
+    name: '0-stove',
     room: 'Kitchen',
     photo: 'kitchen.jpg',
     position: '42% 50%',
     pins: [{ x: 47, y: 67, label: 'Oven', icon: 'oven', active: true }],
     open: 'Oven',
-  },
-  {
-    name: '0-search',
-    room: 'Living room',
-    photo: 'lounge.jpg',
-    position: '100% 50%',
-    pins: [{ x: 62, y: 63, label: 'Wi-Fi router', icon: 'wifi', active: true }],
-    search: 'wifi',
-  },
-  {
-    name: '0-wifi',
-    room: 'Living room',
-    photo: 'lounge.jpg',
-    position: '100% 50%',
-    pins: [{ x: 62, y: 63, label: 'Wi-Fi router', icon: 'wifi', active: true }],
-    open: 'Wi-Fi router',
+    poster: true,
   },
 ];
+
+// The demo oven has two steps and no video; for the store images the dev server's demo module
+// gets a fuller stove guide appended (served to this browser only, the repo file is unchanged).
+const OVEN_PATCH = `
+;(() => {
+  const o = DEMO_EXPERIENCE.appliances.find((a) => a.id === 'oven');
+  if (!o) return;
+  o.video = { url: 'https://example.com/videos/stove', durationSec: 45 };
+  o.steps = [
+    { text: { en: 'Hob: push and turn a knob to the ring you want (1 low, 9 high)', ar: 'الموقد: اضغط وأدر المقبض إلى الحلقة المطلوبة' } },
+    { text: { en: 'Oven: turn the left dial to the heating mode', ar: 'الفرن: أدر القرص الأيسر إلى وضع التسخين' } },
+    { text: { en: 'Turn the right dial to the temperature. The light goes off when it is hot', ar: 'أدر القرص الأيمن إلى درجة الحرارة' } },
+    { text: { en: 'When you finish, turn every dial back to 0', ar: 'عند الانتهاء أعد كل الأقراص إلى 0' } },
+  ];
+})();
+`;
 
 const ICONS = {
   tv: '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/>',
@@ -67,6 +84,10 @@ const ICONS = {
   });
   for (const scene of SCENES) {
     const page = await ctx.newPage();
+    await page.route(/\/src\/demo\.ts/, async (route) => {
+      const res = await route.fetch();
+      await route.fulfill({ response: res, body: (await res.text()) + OVEN_PATCH });
+    });
     await page.goto('http://localhost:5173/demo');
     await page.waitForLoadState('networkidle');
     await page.evaluate(() => document.fonts.ready);
@@ -134,6 +155,24 @@ const ICONS = {
     if (scene.open) {
       await page.locator('.g-row', { hasText: scene.open }).first().click();
       await page.waitForTimeout(600);
+    }
+    if (scene.poster) {
+      // The video link shown as a large thumbnail card (store image only).
+      await page.evaluate((src) => {
+        const v = document.querySelector('.g-video');
+        if (!v) return;
+        const label = v.textContent.trim();
+        v.innerHTML = `<span class="shot-poster"><span class="shot-play"><svg width="30" height="30" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></span><span class="shot-vlabel"><b>How to use the stove</b><small>${label}</small></span><span class="shot-time">0:45</span></span>`;
+        const css = document.createElement('style');
+        css.textContent = `.g-video { display:block !important; padding:0 !important; overflow:hidden; }
+          .shot-poster { position:relative; display:block; aspect-ratio:16/9; background:url(${src}) center/cover; }
+          .shot-poster::after { content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.72)); }
+          .shot-play { position:absolute; left:50%; top:42%; transform:translate(-50%,-50%); width:68px; height:68px; border-radius:50%; display:grid; place-items:center; background:rgba(31,86,98,.92); border:3px solid #fff; z-index:1; box-shadow:0 8px 24px rgba(0,0,0,.35); }
+          .shot-vlabel { position:absolute; left:14px; bottom:12px; z-index:1; color:#fff; display:flex; flex-direction:column; gap:2px; font:600 13px/1.25 Inter,system-ui,sans-serif; }
+          .shot-vlabel b { font-size:16px; font-weight:700; }
+          .shot-time { position:absolute; right:12px; bottom:12px; z-index:1; padding:4px 8px; border-radius:6px; background:rgba(0,0,0,.6); color:#fff; font:700 12px/1 Inter,system-ui,sans-serif; }`;
+        document.head.append(css);
+      }, photo('stove-poster.jpg'));
     }
     await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(OUT, scene.name + (debug ? '-debug' : '') + '.png') });
