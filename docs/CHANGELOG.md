@@ -2,6 +2,20 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-20: Stage 4.4 guest QR codes (Phase 4 complete)
+
+### Added
+- Apartment page "Guest QR codes": create (token from `create_qr_code`), labelled preview, guest link, SVG/PNG download, revoke with confirmation, revoked list.
+- `GET /app/apartments/<id>/qr/<qrId>?format=svg|png`: RLS-checked, 404 for other orgs/revoked/unknown, `Cache-Control: private, no-store`, `nosniff`, sandboxed `default-src 'none'` CSP (proxy applies it to this route).
+- Shared `qr.ts` (guest URL builder: https or local http only; token pattern = DB check; safe file names); dashboard `qr-render.ts` (`qrcode` 1.5.4; dev deps `jsqr`, `pngjs` for decode tests).
+- `NEXT_PUBLIC_GUEST_URL` (documented in `.env.example`; defaults to the local guest dev server only when `APP_ENV=local`).
+
+### Test results (local)
+- shared 83, dashboard 29 (PNG decodes to the exact guest URL); stack E2E 24/24 on both projects in 2.0 min; DB real stack 74/74; build, secrets check pass.
+
+### Fixed
+- R-023: Windows WebKit trace recording slowed the local stack E2E ~10x (trace off for that project on Windows only).
+
 ## 2026-11-20: Stage 4.3 rooms
 
 ### Added

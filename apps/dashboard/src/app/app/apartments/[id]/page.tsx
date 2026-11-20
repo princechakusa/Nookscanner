@@ -1,5 +1,6 @@
 import {
   ROOM_TYPE_LABELS,
+  guestQrUrl,
   missingPlannedRooms,
   parseLayout,
   roomsFromLayout,
@@ -10,7 +11,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { z } from 'zod';
 import { getOrgContext } from '../../../../lib/org-context.ts';
+import { guestBaseUrl } from '../../../../lib/qr-render.ts';
 import { ApartmentStatus } from '../../apartment-status.tsx';
+import { createQrAction, revokeQrAction } from '../../qr-actions.ts';
+import { CopyField, CreateQrForm, RevokeQrForm } from '../../qr-forms.tsx';
 import { deleteApartmentAction, updateApartmentAction } from '../../property-actions.ts';
 import { ApartmentForm, DeleteForm, type ApartmentValues } from '../../property-forms.tsx';
 import {
@@ -72,6 +76,26 @@ export default async function ApartmentPage({ params }: { params: Promise<{ id: 
     rooms.map((r) => r.name_en),
   );
   const canWriteRooms = can('room.write');
+  const canManageQr = can('qr.manage');
+  const guestBase = guestBaseUrl();
+  const { data: qrRows } = canManageQr
+    ? await supabase
+        .from('qr_codes')
+        .select('id, token, label, status, created_at, revoked_at')
+        .eq('apartment_id', row.id)
+        .order('created_at', { ascending: false })
+    : { data: [] };
+  const qrCodes = (qrRows ?? []) as Array<{
+    id: string;
+    token: string;
+    label: string | null;
+    status: string;
+    created_at: string;
+    revoked_at: string | null;
+  }>;
+  const activeQr = qrCodes.filter((q) => q.status === 'active');
+  const revokedQr = qrCodes.filter((q) => q.status !== 'active');
+  const day = (iso: string) => new Date(iso).toISOString().slice(0, 10);
 
   return (
     <div className="ns-page">
@@ -200,6 +224,80 @@ export default async function ApartmentPage({ params }: { params: Promise<{ id: 
           </>
         )}
       </section>
+
+      {canManageQr && (
+        <section className="ns-panel" aria-labelledby="qr-h">
+          <h2 id="qr-h" className="ns-panel__title">
+            Guest QR codes
+          </h2>
+          <p className="ns-muted">
+            Guests scan the code to open this apartment's guide. It shows content only after the
+            apartment is published. Revoke a code if a sticker was removed or copied.
+          </p>
+          {!guestBase && (
+            <p className="ns-field__error" role="alert">
+              The guest app address is not configured (NEXT_PUBLIC_GUEST_URL), so QR codes cannot be
+              shown.
+            </p>
+          )}
+          {guestBase && activeQr.length > 0 && (
+            <ul className="ns-qr-list" aria-label="Active QR codes">
+              {activeQr.map((q) => {
+                const name = q.label ?? `QR code from ${day(q.created_at)}`;
+                const src = `/app/apartments/${row.id}/qr/${q.id}`;
+                return (
+                  <li key={q.id} className="ns-qr">
+                    <img
+                      className="ns-qr__img"
+                      src={`${src}?format=svg`}
+                      alt={`QR code: ${name}`}
+                      width={160}
+                      height={160}
+                    />
+                    <div className="ns-qr__body">
+                      <p className="ns-qr__name">{name}</p>
+                      <p className="ns-muted">Created {day(q.created_at)}</p>
+                      <CopyField
+                        value={guestQrUrl(guestBase, q.token)}
+                        label={`Guest link for ${name}`}
+                      />
+                      <p className="ns-qr__downloads">
+                        <a href={`${src}?format=svg&download=1`} download>
+                          Download SVG
+                        </a>
+                        <a href={`${src}?format=png&download=1`} download>
+                          Download PNG
+                        </a>
+                      </p>
+                      <RevokeQrForm
+                        action={revokeQrAction}
+                        id={q.id}
+                        apartmentId={row.id}
+                        name={name}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {activeQr.length === 0 && <p>No active QR code yet.</p>}
+          <CreateQrForm action={createQrAction} apartmentId={row.id} />
+          {revokedQr.length > 0 && (
+            <details className="ns-qr-revoked">
+              <summary>Revoked QR codes ({revokedQr.length})</summary>
+              <ul>
+                {revokedQr.map((q) => (
+                  <li key={q.id}>
+                    {q.label ?? `QR code from ${day(q.created_at)}`}: revoked{' '}
+                    {q.revoked_at ? day(q.revoked_at) : ''}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </section>
+      )}
 
       <section className="ns-panel" aria-labelledby="details-h">
         <h2 id="details-h" className="ns-panel__title">

@@ -8,7 +8,6 @@ import { at, expectAccessible, run, signUpAndConfirm } from './helpers.ts';
 test('rooms from the layout: create, reorder, rename, add, delete, top up', async ({
   page,
 }, info) => {
-  test.slow();
   const tag = `${run}-${info.project.name.startsWith('mobile') ? 'm' : 'd'}`;
   await signUpAndConfirm(page, `rooms-${tag}@example.test`);
   await page.getByLabel('Organization name').fill(`Rooms ${tag}`);

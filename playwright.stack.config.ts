@@ -12,12 +12,19 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: 0,
   reporter: process.env.CI ? 'github' : 'list',
-  // axe scans in WebKit take up to ~30 s each on a loaded machine.
-  timeout: 120_000,
+  timeout: 60_000,
   use: { baseURL: 'http://localhost:3000', trace: 'retain-on-failure' },
   projects: [
     { name: 'desktop-chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile-webkit', use: { ...devices['iPhone 15'] } },
+    {
+      name: 'mobile-webkit',
+      use: {
+        ...devices['iPhone 15'],
+        // Trace recording pegs the WebKit process on Windows and slowed later specs ~10x
+        // (KNOWN_ISSUES R-023); CI (Linux) keeps traces.
+        trace: process.platform === 'win32' ? 'off' : 'retain-on-failure',
+      },
+    },
   ],
   webServer: {
     command: 'npm run build -w @nookscanner/dashboard && npm run start -w @nookscanner/dashboard',

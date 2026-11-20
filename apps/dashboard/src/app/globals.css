@@ -519,6 +519,54 @@ body {
   display: inline-flex;
   align-items: center;
 }
+.ns-qr-list {
+  display: grid;
+  gap: var(--nt-space-4);
+  margin: var(--nt-space-4) 0;
+  padding: 0;
+  list-style: none;
+}
+.ns-qr {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nt-space-4);
+  align-items: flex-start;
+  border: 1px solid var(--nt-color-neutral-border);
+  border-radius: var(--nt-radius-md);
+  padding: var(--nt-space-4);
+}
+.ns-qr__img {
+  inline-size: 160px;
+  block-size: 160px;
+  background: #ffffff;
+  flex: none;
+}
+.ns-qr__body {
+  display: grid;
+  gap: var(--nt-space-2);
+  flex: 1 1 16rem;
+  min-inline-size: 0;
+}
+.ns-qr__name {
+  margin: 0;
+  font-weight: 600;
+}
+.ns-qr__body .ns-muted {
+  margin: 0;
+}
+.ns-qr__downloads {
+  display: flex;
+  gap: var(--nt-space-4);
+  margin: 0;
+}
+.ns-qr__downloads a {
+  min-block-size: 32px;
+  display: inline-flex;
+  align-items: center;
+}
+.ns-qr-revoked {
+  margin-block-start: var(--nt-space-4);
+}
 .ns-room-list {
   margin: 0;
   padding-inline-start: var(--nt-space-5);

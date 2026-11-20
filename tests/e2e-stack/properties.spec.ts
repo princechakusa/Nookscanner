@@ -33,8 +33,6 @@ test('properties and apartments CRUD; property-scoped manager sees only assigned
   page,
   browser,
 }, info) => {
-  // Multi-person flow with ~50 browser actions; WebKit on Windows needs ~2 s per action.
-  test.slow();
   const tag = `${run}-${info.project.name.startsWith('mobile') ? 'm' : 'd'}`;
   const towerA = `Tower A ${tag}`;
   const towerB = `Tower B ${tag}`;

@@ -132,11 +132,11 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 
 ## 24. Current project status
 
-**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2 complete on the **local** Supabase stack: 2.2 schema, 2.3 storage, 2.4 dashboard auth, 2.5 real-stack DB tests, 2.6 security review (5 findings fixed, no Critical/High open). All 5 migrations are applied to the hosted project (user-approved) and verified (lint clean, advisors accepted, anon smoke 30/30); only hosted Auth dashboard settings remain (Blocked on user 1). Phase 3 DONE. **Phase 4 IN PROGRESS: 4.1, 4.2 and 4.3 DONE** (organizations/invitations, properties + apartments with layout questionnaire, rooms with ordering). Next: 4.4 QR UI + rendering.
+**Where development stopped (2026-11-20):** Phases 0 and 1 complete (CI green on GitHub). Phase 2 complete on the **local** Supabase stack: 2.2 schema, 2.3 storage, 2.4 dashboard auth, 2.5 real-stack DB tests, 2.6 security review (5 findings fixed, no Critical/High open). All 5 migrations are applied to the hosted project (user-approved) and verified (lint clean, advisors accepted, anon smoke 30/30); only hosted Auth dashboard settings remain (Blocked on user 1). Phase 3 DONE. **Phase 4 DONE** (organizations/invitations, properties + apartments with layout questionnaire, rooms with ordering, guest QR codes with SVG/PNG rendering). **Next: Phase 5.1** upload registration + resumable chunked upload (ADR-016).
 
 **Resume here (new session):**
 1. Start Docker Desktop, then `npx supabase@3.2.0 start` (local stack on ports 565xx).
-2. Continue Phase 4: 4.4 QR UI + rendering (`qr_codes` + RPCs exist since 2.2), then Phase 5.
+2. Phase 5.1: upload parts of at most 45 MB (Free plan: 50 MB per object, 1 GB total storage; see Blocked on user 7).
 3. Stack E2E: `node scripts/e2e-stack.mjs` (use `at('/path')` from `tests/e2e-stack/helpers.ts` for URL assertions).
 4. Keep following the loop in `docs/AUTONOMOUS_LOOP_PROMPT.md`; pushing to `origin/main` and applying migrations to the hosted project (dry run first) are user-approved. The binding 3D quality bar (`docs/3D_QUALITY_BAR.md`, ADR-014) is wired into Phases 5, 6, 7 and 12.
 
@@ -153,8 +153,8 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 | Command | Result |
 |---|---|
 | `npm run lint` / `format:check` / `typecheck` | pass |
-| `npm test` | all workspaces pass (shared 76, design-tokens 19, ui 6, dashboard 24, guest 14, database on PGlite 69 + 5 stack-only skipped) |
-| `npm run test:e2e:stack` (dashboard auth + shell + axe + invitations on the local stack) | 22 passed, 0 skipped (auth, org invitations, properties CRUD + scoping, rooms, shell; both projects) |
+| `npm test` | all workspaces pass (shared 83, design-tokens 19, ui 6, dashboard 29, guest 14, database on PGlite 69 + 5 stack-only skipped) |
+| `npm run test:e2e:stack` (dashboard auth + shell + axe + invitations on the local stack) | 24 passed, 0 skipped, 2.0 min (auth, invitations, properties + scoping, rooms, QR codes, shell; both projects) |
 | `npm run test:e2e` (guest, Pixel 7 + iPhone 15 emulation, EN/AR, axe) | 12 passed |
 | `npm run test:db:stack` (real local Supabase) | 74 passed, 0 failed |
 | Hosted project: `db lint --remote`, `db advisors --remote`, read-only catalog query, `npm run test:hosted:smoke` | no errors; 7 WARN = intended RPCs (accepted); 15/15 tables with RLS, 0 anon grants; smoke 30/30 |
@@ -165,7 +165,7 @@ Assisted appliance detection, Android Nookscanner, ARKit/LiDAR pose priors, offl
 | `npm run test:worker` | 14 passed |
 | GitHub CI (previous push) | green: runs 44578429531, 44579511164 |
 
-Failures found and fixed: R-005..R-022; open issues in [`KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md).
+Failures found and fixed: R-005..R-023; open issues in [`KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md).
 
 **Not tested / not done:** authenticated flows on the hosted project (needs Blocked-on-user 1); auth on the hosted project (templates/site URL not set, KI-017); CAPTCHA/leaked-password protection (KI-019); no 3D work yet, so **no 3D quality evidence exists**.
 
@@ -184,6 +184,7 @@ Decision 2026-11-20 (user): **stay on the Supabase Free plan** (no Pro). Uploads
 4. **Real footage (3D quality bar):** pilot apartment walkthrough from the iPhone 16 Pro Max, plus **real footage from other phones**: one Android walkthrough and one older-iPhone walkthrough (roadmap 6.4); more layouts later. Share privately; never commit footage.
 5. **Before Phase 6:** Modal account and API token with a spend limit; optionally Varjo Teleport developer access.
 6. **Brand/legal:** decide on buying nookscanner.com and on an official trademark search.
+7. **Video storage beyond the Free plan's 1 GB total (decide before real pilot uploads, not blocking 5.1 locally):** one walkthrough is 0.5-5 GB, so hosted raw footage cannot live in Supabase Storage. Options, both without buying anything: (a) Cloudflare R2 free tier (10 GB storage, free egress; Cloudflare asks for a payment method on file to enable R2) - create the bucket yourself and set its keys with `npx supabase secrets set R2_ACCESS_KEY_ID=... R2_SECRET_ACCESS_KEY=...` (never paste them in chat); or (b) keep Supabase only and accept that each upload is deleted as soon as the worker has copied it (needs Modal, item 5), with uploads limited to under ~900 MB.
 
 ## 25. Session log
 | Date | Session summary |
@@ -199,3 +200,4 @@ Decision 2026-11-20 (user): **stay on the Supabase Free plan** (no Pro). Uploads
 | 2026-11-20 (cont.) | Autonomous loop resumed. KI-022 root cause: loose `/\/app$/` matched the confirm URL, aborting the confirm POST; fixed, fixme removed, 18/18 stack E2E. Stage 4.1 DONE. |
 | 2026-11-20 (cont.) | Stage 4.2 properties + apartments CRUD with layout questionnaire; fixed form input loss (R-021) and leaked test contexts (R-022); stack E2E 20/20. |
 | 2026-11-20 (cont.) | Stage 4.3 rooms (create from layout, custom, rename, reorder, delete, top-up); stack E2E 22/22; DB stack 74/74. |
+| 2026-11-20 (cont.) | Stage 4.4 guest QR codes; Phase 4 complete. Found the local WebKit slowness cause (trace recording, R-023); stack E2E 24/24 in 2 min. |

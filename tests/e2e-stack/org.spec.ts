@@ -19,8 +19,6 @@ test('owner invites an editor who joins with the invited email only', async ({
   browser,
 }, info) => {
   // Each person uses their own browser, as in reality.
-  // Multi-person flow with ~50 browser actions; WebKit on Windows needs ~2 s per action.
-  test.slow();
   const tag = `${run}-${info.project.name.startsWith('mobile') ? 'm' : 'd'}`;
   const ownerEmail = `owner-${tag}@example.test`;
   const inviteeEmail = `invitee-${tag}@example.test`;

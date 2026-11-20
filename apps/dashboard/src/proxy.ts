@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { getPublicEnv } from './lib/env.ts';
 import { contentSecurityPolicy, createNonce } from './lib/security-headers.ts';
-import { isAuthPage, isProtectedPath } from './lib/routes.ts';
+import { IMAGE_CSP, isAuthPage, isImageRoute, isProtectedPath } from './lib/routes.ts';
 
 /**
  * Runs before every page request (Next.js 16 "proxy", formerly middleware):
@@ -59,7 +59,8 @@ export async function proxy(request: NextRequest) {
     response = redirect;
   }
 
-  response.headers.set('Content-Security-Policy', csp);
+  // Generated images get a stricter, no-script policy (an SVG opened directly runs nothing).
+  response.headers.set('Content-Security-Policy', isImageRoute(pathname) ? IMAGE_CSP : csp);
   // Authenticated pages must never be cached by shared caches.
   response.headers.set('Cache-Control', 'private, no-store');
   return response;
