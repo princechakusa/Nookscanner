@@ -15,7 +15,20 @@ export default defineConfig({
   timeout: 60_000,
   use: { baseURL: 'http://localhost:3000', trace: 'retain-on-failure' },
   projects: [
-    { name: 'desktop-chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'desktop-chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        // Real GPU on Windows dev machines so the 3D alignment spec can render (align.spec.ts).
+        ...(process.platform === 'win32'
+          ? {
+              launchOptions: {
+                args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'],
+              },
+            }
+          : {}),
+      },
+    },
     {
       name: 'mobile-webkit',
       use: {

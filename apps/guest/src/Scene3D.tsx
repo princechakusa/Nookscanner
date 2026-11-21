@@ -4,23 +4,41 @@
  * Measured load time, first frame and frame rate are exposed as data attributes for the
  * performance tests (docs/3D_QUALITY_BAR.md section 6).
  */
-import type { SceneBounds, Vec3, Viewer } from '@nookscanner/viewer';
+import type { Doorway, Mat4, RoomView, SceneBounds, Vec3, Viewer } from '@nookscanner/viewer';
 import { useEffect, useRef, useState } from 'react';
 
 export interface Scene3DProps {
   url: string;
   bounds?: SceneBounds | undefined;
   start?: { position: Vec3; target: Vec3 } | undefined;
+  alignment?: number[] | undefined;
+  /** Per-room viewpoints and doorways (Stage 7.4): choosing a room flies there. */
+  viewpoints?: RoomView[] | undefined;
+  doorways?: Doorway[] | undefined;
+  /** The room chosen with the room chips. */
+  roomId?: string | null | undefined;
   labels: { loading: string; failed: string; reset: string };
   onFailed?: () => void;
 }
 
-export function Scene3D({ url, bounds, start, labels, onFailed }: Scene3DProps) {
+export function Scene3D({
+  url,
+  bounds,
+  start,
+  alignment,
+  viewpoints,
+  doorways,
+  roomId,
+  labels,
+  onFailed,
+}: Scene3DProps) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const host = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
   const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading');
   const viewerRef = useRef<Viewer | null>(null);
+  // The room the camera is in (route start for the next transition).
+  const atRoom = useRef<string | null>(roomId ?? null);
 
   useEffect(() => {
     let viewer: Viewer | null = null;
@@ -32,11 +50,14 @@ export function Scene3D({ url, bounds, start, labels, onFailed }: Scene3DProps) 
       try {
         const { createViewer } = await import('@nookscanner/viewer');
         if (cancelled || !canvas.current) return;
+        // Start at the published start view, else the chosen room's viewpoint.
+        const first = start ?? viewpoints?.find((v) => v.roomId === atRoom.current);
         viewer = await createViewer({
           canvas: canvas.current,
           url,
+          ...(alignment?.length === 16 ? { alignment: alignment as Mat4 } : {}),
           ...(bounds ? { bounds } : {}),
-          ...(start ? { camera: start } : {}),
+          ...(first ? { camera: { position: first.position, target: first.target } } : {}),
           onProgress: (f) => setProgress(f),
         });
         if (cancelled) {
@@ -72,6 +93,29 @@ export function Scene3D({ url, bounds, start, labels, onFailed }: Scene3DProps) 
     };
     // bounds/start are part of the published scene and change only with the url.
   }, [url, onFailed]);
+
+  // Room chips: fly from the current room through the doorways on the route (navigation.ts).
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    const to = viewpoints?.find((v) => v.roomId === roomId);
+    if (state !== 'ready' || !viewer || !to || !roomId || atRoom.current === roomId) return;
+    let cancelled = false;
+    (async () => {
+      const nav = await import('@nookscanner/viewer');
+      if (cancelled) return;
+      const route = atRoom.current
+        ? (nav.roomRoute(atRoom.current, roomId, doorways ?? []) ?? [])
+        : [];
+      atRoom.current = roomId;
+      const reducedMotion =
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      void viewer.flyTo(nav.flightPath(viewer.getView(), to, route), { reducedMotion });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [roomId, state, viewpoints, doorways]);
 
   return (
     <div className="g-scene" ref={host} data-state={state}>

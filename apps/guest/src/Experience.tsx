@@ -76,6 +76,10 @@ export function Experience({ experience, locale, onLocaleChange, webgl, demo }: 
             url={experience.scene.url}
             bounds={experience.scene.bounds}
             start={experience.scene.start}
+            alignment={experience.scene.alignment}
+            viewpoints={experience.scene.viewpoints}
+            doorways={experience.scene.doorways}
+            roomId={roomId}
             labels={{ loading: t.sceneLoading, failed: t.sceneFailed, reset: t.resetView }}
           />
         )}

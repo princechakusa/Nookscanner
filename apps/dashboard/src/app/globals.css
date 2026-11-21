@@ -646,3 +646,54 @@ body {
   gap: var(--nt-space-3);
   margin-block-start: var(--nt-space-5);
 }
+
+/* Alignment tool (Stage 7.3) */
+.ns-align {
+  display: grid;
+  gap: var(--nt-space-4);
+}
+.ns-align__step {
+  margin: 0;
+  font-weight: 600;
+}
+.ns-align__stage {
+  position: relative;
+  block-size: min(60vh, 560px);
+  border-radius: var(--nt-radius-md);
+  overflow: hidden;
+  background: var(--nt-color-viewer-background);
+}
+.ns-align__canvas {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+.ns-align__overlay {
+  position: absolute;
+  inset: auto var(--nt-space-5) var(--nt-space-5);
+  margin: 0;
+  padding: var(--nt-space-3) var(--nt-space-4);
+  border-radius: var(--nt-radius-md);
+  background: var(--nt-color-viewer-panel);
+  color: var(--nt-color-viewer-text);
+}
+.ns-align__controls {
+  display: grid;
+  gap: var(--nt-space-3);
+}
+.ns-nav-rooms {
+  display: grid;
+  gap: var(--nt-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ns-nav-rooms__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nt-space-2);
+}

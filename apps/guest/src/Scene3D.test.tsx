@@ -4,7 +4,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 const reset = vi.fn();
 const dispose = vi.fn();
 const createViewer = vi.fn();
-vi.mock('@nookscanner/viewer', () => ({ createViewer: (o: unknown) => createViewer(o) }));
+vi.mock('@nookscanner/viewer', async () => {
+  // Real navigation math (navigation.ts), mocked renderer.
+  const real = await import('@nookscanner/viewer/navigation');
+  return { ...real, createViewer: (o: unknown) => createViewer(o) };
+});
 
 import { Scene3D } from './Scene3D.tsx';
 
@@ -57,5 +61,44 @@ describe('Scene3D', () => {
     expect(await screen.findByText('Could not show 3D')).toBeTruthy();
     expect(onFailed).toHaveBeenCalled();
     expect(screen.queryByRole('button', { name: 'Reset view' })).toBeNull();
+  });
+
+  it('applies the alignment and flies through the doorway when another room is chosen (7.4)', async () => {
+    const flyTo = vi.fn().mockResolvedValue(undefined);
+    createViewer.mockResolvedValue({
+      stats: { tier: 'mid', loadMs: 1, firstFrameMs: 2, fps: 60 },
+      reset,
+      resize: vi.fn(),
+      lookAt: vi.fn(),
+      getView: () => ({ position: [0, 1.6, 0], target: [0, 1.6, -1] }),
+      flyTo,
+      dispose,
+    });
+    const viewpoints = [
+      { roomId: 'ent', position: [0, 1.6, 0], target: [0, 1.6, -1] },
+      { roomId: 'liv', position: [4, 1.6, -3], target: [5, 1.6, -3] },
+    ] as never;
+    const doorways = [{ a: 'ent', b: 'liv', position: [0, 0, -3] }] as never;
+    const alignment = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+    const props = { url: 'https://cdn.test/s.sog', labels, alignment, viewpoints, doorways };
+    const { rerender } = render(<Scene3D {...props} roomId="ent" />);
+    await screen.findByRole('button', { name: 'Reset view' });
+    // Starts at the chosen room's viewpoint when no start view is published.
+    expect(createViewer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        alignment,
+        camera: { position: [0, 1.6, 0], target: [0, 1.6, -1] },
+      }),
+    );
+    expect(flyTo).not.toHaveBeenCalled();
+    rerender(<Scene3D {...props} roomId="liv" />);
+    await vi.waitFor(() => expect(flyTo).toHaveBeenCalledTimes(1));
+    const [path, options] = flyTo.mock.calls[0]!;
+    expect(path.map((w: { position: number[] }) => w.position)).toEqual([
+      [0, 1.6, 0],
+      [0, 1.6, -3], // the doorway, at eye height
+      [4, 1.6, -3],
+    ]);
+    expect(options).toEqual({ reducedMotion: false });
   });
 });

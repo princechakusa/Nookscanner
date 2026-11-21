@@ -19,8 +19,10 @@ export function contentSecurityPolicy({
   nonce?: string;
 }): string {
   const supabase = supabaseUrl ? ` ${supabaseUrl} ${supabaseUrl.replace(/^http/, 'ws')}` : '';
+  // 'wasm-unsafe-eval' lets the 3D viewer (Spark) compile its WebAssembly module; it does not
+  // allow eval() of JavaScript strings.
   const scripts = nonce
-    ? `'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}`
+    ? `'self' 'nonce-${nonce}' 'strict-dynamic' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ''}`
     : `'self'${isDev ? " 'unsafe-inline' 'unsafe-eval'" : ''}`;
   const directives: Record<string, string> = {
     'default-src': "'self'",

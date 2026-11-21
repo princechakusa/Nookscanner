@@ -13,6 +13,7 @@ export function dbErrorCode(error: { message?: string; code?: string } | null): 
     'PART_INCOMPLETE',
     'NOT_READY',
     'NOTES_REQUIRED',
+    'NOT_ALIGNED',
     'VALIDATION_FAILED',
   ]) {
     if (m.includes(code)) return code;

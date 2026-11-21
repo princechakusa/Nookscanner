@@ -86,6 +86,24 @@ export const guestExperienceSchema = z.object({
       bounds: z.object({ min: vec3, max: vec3 }).optional(),
       /** Starting view (usually the entrance viewpoint). */
       start: z.object({ position: vec3, target: vec3 }).optional(),
+      /** Scene -> metres matrix (16 numbers, column-major) from the alignment tool (7.3). */
+      alignment: z.array(z.number().finite()).length(16).optional(),
+      /** Per room: where the camera stands and looks (aligned metres, Stage 7.4). */
+      viewpoints: z
+        .array(z.object({ roomId: z.string().min(1).max(64), position: vec3, target: vec3 }))
+        .max(40)
+        .optional(),
+      /** Doorways connecting rooms (route for room-to-room transitions). */
+      doorways: z
+        .array(
+          z.object({
+            a: z.string().min(1).max(64),
+            b: z.string().min(1).max(64),
+            position: vec3,
+          }),
+        )
+        .max(80)
+        .optional(),
     })
     .optional(),
 });

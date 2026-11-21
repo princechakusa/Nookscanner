@@ -19,9 +19,10 @@ describe('dashboard security headers', () => {
 
   it('production CSP with a nonce allows no inline or eval scripts (KI-008)', () => {
     const csp = contentSecurityPolicy({ isDev: false, nonce: 'abc123==' });
-    expect(csp).toContain("script-src 'self' 'nonce-abc123==' 'strict-dynamic'");
+    expect(csp).toContain("script-src 'self' 'nonce-abc123==' 'strict-dynamic' 'wasm-unsafe-eval'");
     expect(csp).not.toMatch(/script-src[^;]*unsafe-inline/);
-    expect(csp).not.toContain('unsafe-eval');
+    // JavaScript eval stays forbidden; only WebAssembly compilation is allowed.
+    expect(csp).not.toContain("'unsafe-eval'");
     expect(csp).toContain("frame-ancestors 'none'");
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain("form-action 'self'");

@@ -2,6 +2,22 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-21: Stage 7.4 rooms, viewpoints and transitions
+
+- `packages/viewer/src/navigation.ts`: entrance room, shortest room route through doorways, room-continuity check (every room has a viewpoint and is reachable from the entrance), flight path through doorways at eye height, eased sampling, 600-1200 ms duration (cut with reduced motion). Viewer gains `flyTo` (drag cancels) and an `alignment` option.
+- Migration `20261121000900_scene_navigation.sql`: `scene_room_views`, `scene_doorways`, RPC `save_scene_navigation` (ADR-020).
+- Dashboard: "Rooms and doorways" panel on the alignment page (set viewpoint here, go to room, add/remove doorway by tapping, live continuity check, save).
+- Guest: scene payload carries `alignment`, `viewpoints`, `doorways`; room chips fly the camera to the room.
+- Fixed: saving re-rendered the page with a new signed URL and reloaded the whole 3D scene, losing the manager's unsaved rooms (viewer now keyed on the scene version id); doorway taps below the fitted floor were refused (stored on the floor); viewpoints at crouching height (now standing eye height 1.5 m).
+- Tests: viewer 31 (11 new), guest 17 (1 new: room chip flies through the doorway), DB 3 new (PGlite + real stack 104/104), real-scene E2E: align, two viewpoints, doorway, continuity check, save (desktop Chromium, real GPU).
+
+## 2026-11-21: Stage 7.3 alignment tools (floor, scale, crop)
+
+- `packages/viewer/src/alignment.ts`: floor plane from three taps, metric scale from one measured distance, crop box to bounds; unit test measures a second door within 3%.
+- Migration `20261121000800_scene_versions.sql`: `scene_versions`; approval of a reconstruction creates a draft version; RPC `save_scene_alignment` (ADR-019).
+- Dashboard: "Align the 3D apartment" page (three steps, refusals with reasons, start view, save); CSP gains `'wasm-unsafe-eval'` for the viewer's WebAssembly (no JS eval).
+- Tests: viewer alignment 6, DB 4 (PGlite + real stack), real-scene E2E on desktop Chromium.
+
 ## 2026-11-20: Stage 7.2 camera controls and limits
 
 - `packages/viewer/src/constraints.ts`: camera stays inside the apartment box (margin 15 cm), eye height 0.4-2.2 m above the floor; viewer clamps every frame and gains `reset()`.

@@ -180,8 +180,11 @@ PK `(property_id, user_id)`; `organization_id`, `property_id FK properties on de
 ### 4.14 `processing_results` (D)
 `id`, `organization_id`, `processing_job_id unique`, `metrics jsonb` (gaussian count, PSNR/SSIM on held-out frames, registered frame ratio, training time), `review_status review_status`, `reviewed_by`, `reviewed_at`, `review_notes`, `continuity_checklist jsonb`.
 
-### 4.15 `scene_versions` (D)
-`id`, `organization_id`, `apartment_id`, `processing_result_id`, `version int` (unique per apartment), `status scene_status`, `alignment jsonb` (4x4 transform, scale, up axis), `crop_box jsonb`, `bounds jsonb`, `published_at`.
+### 4.15 `scene_versions` (D, migration `20261121000800`, Stage 7.3)
+`id`, `organization_id`, `apartment_id`, `processing_job_id unique`, `version int` (unique per apartment), `status scene_status` (`draft`, `approved`, `published`, `superseded`, `rejected`), `scene_path` (first-load file in `scene-drafts`, from the job report), `alignment jsonb` (`{matrix: 16 numbers column-major, scale > 0}`), `bounds jsonb` (`{min, max}` aligned metres, 1-100 m wide, at least 1 m in every axis), `start_view jsonb` (`{position, target}`), `aligned_by`, `aligned_at`, `published_at`. Created by `review_processing_result` on approval (next version number per apartment). RLS: select with `scan.read` on the apartment; no direct writes; `save_scene_alignment(scene, alignment, bounds, start)` (SECURITY DEFINER, `scan.review`, draft/approved only, validated in SQL) sets status `approved`. Audited.
+
+### 4.15a `scene_room_views` and `scene_doorways` (migration `20261121000900`, Stage 7.4, ADR-020)
+`scene_room_views`: `scene_version_id`, `room_id`, `position double precision[3]`, `target double precision[3]`, unique per scene and room. `scene_doorways`: `scene_version_id`, `room_a < room_b`, `position double precision[3]` (floor point), unique per pair. Aligned metres. RLS: select with `scan.read` on the scene's apartment; written only by `save_scene_navigation(scene, views, doorways)` (SECURITY DEFINER, `scan.review`, replaces the set atomically, requires an aligned scene, rooms of the same apartment, points inside the outline + 0.5 m). Audited. `rooms.viewpoints` / `rooms.connections` are not used (geometry changes with every reconstruction).
 
 ### 4.16 `scene_assets` (D)
 `id`, `organization_id`, `scene_version_id`, `kind asset_kind`, `bucket`, `object_path unique`, `size_bytes`, `sha256`, `lod_level int null`, `content_type`. Public URL derived only for published copies.

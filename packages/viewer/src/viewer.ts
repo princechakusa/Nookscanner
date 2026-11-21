@@ -8,13 +8,22 @@
 import { SparkControls, SparkRenderer, SplatMesh } from '@sparkjsdev/spark';
 import * as THREE from 'three';
 import { chooseBudget, readCapabilities, type ViewerBudget, type ViewerTier } from './budget.ts';
+import type { Mat4 } from './alignment.ts';
+import { flightDuration, samplePath, type Waypoint } from './navigation.ts';
 import { constrainPosition, validBounds, type SceneBounds, type Vec3 } from './constraints.ts';
 
 export interface ViewerOptions {
   canvas: HTMLCanvasElement;
   url: string;
+  /**
+   * Level of detail (default true). Editors that pick points turn it off: Spark raycasts only
+   * against the LoD subset currently drawn, which can be empty while it streams.
+   */
+  lod?: boolean;
   /** Force a tier (tests, settings); default: chosen from the device. */
   tier?: ViewerTier;
+  /** Alignment matrix of the scene version (alignment.ts); bounds and poses are then metres. */
+  alignment?: Mat4 | undefined;
   /** Initial camera pose in scene coordinates (metres). */
   camera?: { position: Vec3; target: Vec3 };
   /** Apartment box from the scene alignment; the camera never leaves it or goes under the floor. */
@@ -40,6 +49,23 @@ export interface Viewer {
   lookAt(position: Vec3, target: Vec3): void;
   /** Back to the starting view. */
   reset(): void;
+  /**
+   * Flies the camera along waypoints (navigation.ts flightPath), 600-1200 ms, or cuts when
+   * `reducedMotion`. Resolves when the camera arrives; a new flight or a drag replaces it.
+   */
+  flyTo(path: Waypoint[], options?: { reducedMotion?: boolean }): Promise<void>;
+  /**
+   * Point on the scene under a screen position (client pixels), in SCENE coordinates (before
+   * alignment), or null when nothing is hit. Used by the alignment and hotspot tools; slow on
+   * millions of splats, so call it on taps, never every frame (ADR-006).
+   */
+  pick(clientX: number, clientY: number): Vec3 | null;
+  /** Applies (or clears) the alignment matrix from the scene version (alignment.ts). */
+  setAlignment(matrix: Mat4 | null): void;
+  /** The screen's "up" direction expressed in scene coordinates (orients the floor plane). */
+  sceneUp(): Vec3;
+  /** Current camera position and a point 1 m ahead, in world (aligned) coordinates. */
+  getView(): { position: Vec3; target: Vec3 };
   resize(): void;
   dispose(): void;
 }
@@ -60,7 +86,7 @@ export async function createViewer(o: ViewerOptions): Promise<Viewer> {
 
   const spark = new SparkRenderer({
     renderer,
-    enableLod: true,
+    enableLod: o.lod !== false,
     lodSplatCount: budget.lodSplatCount,
   });
   scene.add(spark);
@@ -76,7 +102,8 @@ export async function createViewer(o: ViewerOptions): Promise<Viewer> {
 
   const mesh = new SplatMesh({
     url: o.url,
-    lod: true,
+    lod: o.lod !== false,
+    raycastable: true,
     onProgress: (e: ProgressEvent) => {
       if (e.lengthComputable && e.total > 0) o.onProgress?.(Math.min(1, e.loaded / e.total));
     },
@@ -84,6 +111,20 @@ export async function createViewer(o: ViewerOptions): Promise<Viewer> {
   // Most splat captures are Y-down (OpenCV); flip to three.js Y-up.
   mesh.quaternion.set(1, 0, 0, 0);
   scene.add(mesh);
+  const applyAlignment = (matrix: Mat4 | null) => {
+    mesh.matrixAutoUpdate = matrix === null;
+    if (matrix) {
+      // Alignment replaces the default Y-down flip: it maps raw scene space to the world.
+      mesh.matrix.fromArray(matrix);
+      mesh.matrixWorldNeedsUpdate = true;
+    } else {
+      mesh.quaternion.set(1, 0, 0, 0);
+      mesh.position.set(0, 0, 0);
+      mesh.scale.set(1, 1, 1);
+      mesh.updateMatrix();
+    }
+  };
+  if (o.alignment) applyAlignment(o.alignment);
 
   const controls = new SparkControls({ canvas: o.canvas });
 
@@ -97,6 +138,16 @@ export async function createViewer(o: ViewerOptions): Promise<Viewer> {
     target: o.camera?.target ?? ([0, 0, -1] as Vec3),
   };
   lookAt(start.position, start.target);
+
+  let flight: { path: Waypoint[]; started: number; duration: number; done: () => void } | null =
+    null;
+  const endFlight = () => {
+    const f = flight;
+    flight = null;
+    f?.done();
+  };
+  // Looking around by hand cancels a flight in progress.
+  o.canvas.addEventListener('pointerdown', endFlight);
 
   const resize = () => {
     const w = o.canvas.clientWidth || 1;
@@ -123,7 +174,14 @@ export async function createViewer(o: ViewerOptions): Promise<Viewer> {
   let disposed = false;
   renderer.setAnimationLoop(() => {
     if (disposed) return;
-    controls.update(rig, camera);
+    if (flight) {
+      const t = flight.duration === 0 ? 1 : (performance.now() - flight.started) / flight.duration;
+      const pose = samplePath(flight.path, Math.min(1, t));
+      lookAt(pose.position, pose.target);
+      if (t >= 1) endFlight();
+    } else {
+      controls.update(rig, camera);
+    }
     if (bounds) {
       const p = constrainPosition([rig.position.x, rig.position.y, rig.position.z], bounds);
       rig.position.set(p[0], p[1], p[2]);
@@ -145,10 +203,59 @@ export async function createViewer(o: ViewerOptions): Promise<Viewer> {
   return {
     stats,
     lookAt,
-    reset: () => lookAt(start.position, start.target),
+    reset: () => {
+      endFlight();
+      lookAt(start.position, start.target);
+    },
+    flyTo(path, options) {
+      endFlight();
+      if (path.length === 0) return Promise.resolve();
+      return new Promise<void>((resolve) => {
+        flight = {
+          path,
+          started: performance.now(),
+          duration: flightDuration(path, options?.reducedMotion),
+          done: resolve,
+        };
+      });
+    },
+    pick(clientX, clientY) {
+      const rect = o.canvas.getBoundingClientRect();
+      const ndc = new THREE.Vector2(
+        ((clientX - rect.left) / rect.width) * 2 - 1,
+        -((clientY - rect.top) / rect.height) * 2 + 1,
+      );
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(ndc, camera);
+      const hits = raycaster.intersectObject(mesh, false);
+      const hit = hits[0];
+      if (!hit) return null;
+      // Hit point in the mesh's local (scene) space, independent of the current alignment.
+      const local = mesh.worldToLocal(hit.point.clone());
+      return [local.x, local.y, local.z];
+    },
+    sceneUp() {
+      const origin = mesh.worldToLocal(new THREE.Vector3(0, 0, 0));
+      const up = mesh
+        .worldToLocal(new THREE.Vector3(0, 1, 0))
+        .sub(origin)
+        .normalize();
+      return [up.x, up.y, up.z];
+    },
+    getView() {
+      const p = new THREE.Vector3();
+      camera.getWorldPosition(p);
+      const dir = new THREE.Vector3();
+      camera.getWorldDirection(dir);
+      const t = p.clone().add(dir);
+      return { position: [p.x, p.y, p.z], target: [t.x, t.y, t.z] };
+    },
+    setAlignment: applyAlignment,
     resize,
     dispose() {
       disposed = true;
+      endFlight();
+      o.canvas.removeEventListener('pointerdown', endFlight);
       renderer.setAnimationLoop(null);
       mesh.dispose();
       spark.dispose();

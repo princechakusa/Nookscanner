@@ -6,7 +6,9 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./budget": "./src/budget.ts"
+    "./budget": "./src/budget.ts",
+    "./navigation": "./src/navigation.ts",
+    "./constraints": "./src/constraints.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",

@@ -79,6 +79,8 @@ describe('migrations', () => {
       'review_processing_result',
       'revoke_invitation',
       'revoke_qr_code',
+      'save_scene_alignment',
+      'save_scene_navigation',
       'submit_scan_for_processing',
     ]);
   });

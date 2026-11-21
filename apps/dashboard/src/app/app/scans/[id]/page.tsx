@@ -108,6 +108,15 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
       .maybeSingle();
     result = (data as ResultRow | null) ?? null;
   }
+  let sceneId: string | null = null;
+  if (result?.review_status === 'approved' && job) {
+    const { data } = await supabase
+      .from('scene_versions')
+      .select('id')
+      .eq('processing_job_id', job.id)
+      .maybeSingle();
+    sceneId = (data as { id: string } | null)?.id ?? null;
+  }
   const assessment = result ? assessReport(result.report) : null;
   const active = !!job && ['queued', 'dispatched', 'running'].includes(job.status);
   const scanStatus = SCAN_STATUS[session.status] ?? {
@@ -280,6 +289,16 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
                 </ul>
               )}
               {result.review_notes && <p className="ns-muted">{result.review_notes}</p>}
+              {sceneId && (
+                <p>
+                  <Link
+                    href={`/app/scenes/${sceneId}`}
+                    className="ns-btn ns-btn--primary ns-btn--md"
+                  >
+                    Align the 3D apartment
+                  </Link>
+                </p>
+              )}
             </div>
           )}
         </section>

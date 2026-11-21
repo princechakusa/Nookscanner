@@ -4,7 +4,12 @@ import { securityHeaders } from './src/lib/security-headers.ts';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  transpilePackages: ['@nookscanner/shared', '@nookscanner/design-tokens', '@nookscanner/ui'],
+  transpilePackages: [
+    '@nookscanner/shared',
+    '@nookscanner/design-tokens',
+    '@nookscanner/ui',
+    '@nookscanner/viewer',
+  ],
   async headers() {
     return [
       {
