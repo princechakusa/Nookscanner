@@ -2,7 +2,8 @@ import type { Session } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabase.ts';
 import { Apartments, type ApartmentItem } from './screens/Apartments.tsx';
-import { Capture, type CaptureResult } from './screens/Capture.tsx';
+import type { CaptureResult } from './screens/Capture.tsx';
+import { CaptureScreen } from './screens/CaptureScreen.ts';
 import { Plan, type CaptureJob } from './screens/Plan.tsx';
 import { Review } from './screens/Review.tsx';
 import { SignIn } from './screens/SignIn.tsx';
@@ -51,7 +52,7 @@ export default function App() {
       );
     case 'capture':
       return (
-        <Capture
+        <CaptureScreen
           job={route.job}
           onCancel={() => setRoute({ name: 'plan', apartment: route.job.apartment })}
           onFinished={(result) => setRoute({ name: 'review', result })}

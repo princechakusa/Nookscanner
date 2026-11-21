@@ -2,6 +2,15 @@
 
 Run this on the **pilot iPhone 16 Pro Max** and on **at least one other iPhone tier** (an older or non-Pro iPhone). Record the results in the table at the end and share them (text only; never commit footage).
 
+## 0. Quick test with Expo Go (no build, 2026-11-21)
+
+Expo Go (App Store) cannot load VisionCamera, so inside Expo Go the app switches to a test recording screen on `expo-camera` (`src/screens/CaptureGo.tsx`). Tests: sign-in, apartment list, room plan, recording with room checkpoints, review, upload. Not in Expo Go: live quality tips, per-room exposure lock, capability-based formats (records 4K30, HEVC if available), uploads while the app is in the background. Stage 5.4/5.5/5.6 acceptance still needs the development build (section 1).
+
+1. Install **Expo Go** from the App Store. Phone and PC on the same Wi-Fi.
+2. Account (once): `npm run dev -w apps/dashboard`, open http://localhost:3000 on the PC, sign up, open the confirmation e-mail **on the PC**, sign in, create an organization, a property and an apartment with its rooms (section 2).
+3. `cd apps/nookscanner` then `npm run start:go`; scan the QR code with the iPhone camera (opens Expo Go). The app reads the hosted project's public URL and key from the git-ignored `apps/nookscanner/.env.local`.
+4. Sign in with the same e-mail and password; run steps 3-9 of section 3 (pause/resume shows only on iOS 18+ in Expo Go). Keep the app open while uploading.
+
 ## 1. Build and install (once per device, about 20 minutes)
 Prerequisites: your Expo account is signed in through your `EXPO_TOKEN` environment variable, and the iOS credentials are set up (both done on 2026-11-20).
 1. Register each test iPhone for internal builds (opens a link/QR to install a profile on the phone):

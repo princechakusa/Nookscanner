@@ -27,6 +27,7 @@ Updated 2026-11-20. Severity: Critical / High / Medium / Low. Close an item only
 | KI-027 | Medium | Performance | The lazy 3D viewer chunk (Spark incl. its WebAssembly sorter + three.js) is 1.09 MB gzip (3.2 MB raw); about 2-3 s extra on 4G before the scene download starts | Phase 7.5: check Spark's minified build and code splitting, preload the chunk while the shell renders, measure on real 4G devices | Dev | Open |
 | KI-028 | Medium | Performance | First frame takes 14-18 s on this PC for a 36 MB research `.splat` scene, mostly LoD built in the browser | Our pipeline ships SOG with precomputed LoD and a first LoD <= 10 MB (6.7); measure that file in 7.1/7.5 before tuning further | Dev | Open |
 | KI-029 | Low | Testing / licence | The real interior used for viewer measurement (`room-7k.splat`, dylanebert/3dgs on Hugging Face) has no licence and was trained with research-only code | Local only: git-ignored `apps/guest/public/dev-scenes/`, separate `dist-perf` build; never committed, deployed, shown to guests or used in store/marketing material. Replace with the user's own apartment as soon as it is processed | Dev | Open (by design) |
+| KI-030 | Low | Mobile / testing | Expo Go test mode (`CaptureGo.tsx`) records without live quality tips, exposure locks or capability-based format selection, and uploads only while the app is open | For quick UI/flow tests only; Stage 5.4-5.6 acceptance uses the development build (CAPTURE_TEST_SCRIPT section 1) | Dev | Open (by design) |
 
 ## Resolved
 
