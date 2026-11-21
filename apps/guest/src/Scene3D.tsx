@@ -17,8 +17,12 @@ export interface Scene3DProps {
   doorways?: Doorway[] | undefined;
   /** The room chosen with the room chips. */
   roomId?: string | null | undefined;
-  labels: { loading: string; failed: string; reset: string };
+  labels: { loading: string; failed: string; reset: string; showList: string };
   onFailed?: () => void;
+  /** 3D too slow on this device (governor) or the guest chose the list while loading. */
+  onTooSlow?: () => void;
+  /** NFR-PERF-03: full detail within 20 s; after that the guest is offered the list. */
+  slowLoadMs?: number;
 }
 
 export function Scene3D({
@@ -31,12 +35,17 @@ export function Scene3D({
   roomId,
   labels,
   onFailed,
+  onTooSlow,
+  slowLoadMs = 20_000,
 }: Scene3DProps) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const host = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
   const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading');
   const viewerRef = useRef<Viewer | null>(null);
+  const [slowLoad, setSlowLoad] = useState(false);
+  const tooSlow = useRef(onTooSlow);
+  tooSlow.current = onTooSlow;
   // The room the camera is in (route start for the next transition).
   const atRoom = useRef<string | null>(roomId ?? null);
 
@@ -59,6 +68,7 @@ export function Scene3D({
           ...(bounds ? { bounds } : {}),
           ...(first ? { camera: { position: first.position, target: first.target } } : {}),
           onProgress: (f) => setProgress(f),
+          onTooSlow: () => tooSlow.current?.(),
         });
         if (cancelled) {
           viewer.dispose();
@@ -75,6 +85,7 @@ export function Scene3D({
           el.dataset.loadMs = String(s.loadMs ?? '');
           el.dataset.firstFrameMs = String(s.firstFrameMs ?? '');
           el.dataset.fps = String(s.fps ?? '');
+          el.dataset.qualityLevel = String(s.qualityLevel ?? 0);
         }, 1000);
       } catch {
         if (!cancelled) {
@@ -93,6 +104,12 @@ export function Scene3D({
     };
     // bounds/start are part of the published scene and change only with the url.
   }, [url, onFailed]);
+
+  useEffect(() => {
+    if (state !== 'loading') return;
+    const timer = setTimeout(() => setSlowLoad(true), slowLoadMs);
+    return () => clearTimeout(timer);
+  }, [state, slowLoadMs]);
 
   // Room chips: fly from the current room through the doorways on the route (navigation.ts).
   useEffect(() => {
@@ -134,6 +151,11 @@ export function Scene3D({
             aria-label={labels.loading}
           />
           <span>{Math.round(progress * 100)}%</span>
+          {slowLoad && onTooSlow && (
+            <button type="button" className="g-linkbtn" onClick={onTooSlow}>
+              {labels.showList}
+            </button>
+          )}
         </div>
       )}
       {state === 'ready' && (

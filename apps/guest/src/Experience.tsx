@@ -11,7 +11,7 @@ import {
   type GuestAppliance,
   type GuestExperience,
 } from '@nookscanner/shared';
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { BrandMark, Icon, categoryIcon, roomIcon } from './icons.tsx';
 import { Scene3D } from './Scene3D.tsx';
 import { format, localDigits, messages, type Locale } from './i18n.ts';
@@ -41,7 +41,22 @@ export function Experience({ experience, locale, onLocaleChange, webgl, demo }: 
     return r ? pick(r.name, locale) : '';
   };
 
-  const viewerMessage = !webgl ? t.viewerUnsupported : experience.scene ? null : t.viewerPending;
+  // List mode replaces the 3D view when it fails or is too slow on this device (fallback).
+  const [listReason, setListReason] = useState<'failed' | 'slow' | null>(null);
+  const onSceneFailed = useCallback(() => setListReason('failed'), []);
+  const onSceneSlow = useCallback(() => setListReason('slow'), []);
+  const show3d = webgl && !!experience.scene && listReason === null;
+  // Every room at once when there is no 3D at all; otherwise the room chips filter the list.
+  const listAll = !webgl || listReason !== null;
+  const viewerMessage = !webgl
+    ? t.viewerUnsupported
+    : !experience.scene
+      ? t.viewerPending
+      : listReason === 'slow'
+        ? t.sceneTooSlow
+        : listReason === 'failed'
+          ? t.sceneFailed
+          : null;
 
   return (
     <div className="g-exp">
@@ -71,7 +86,7 @@ export function Experience({ experience, locale, onLocaleChange, webgl, demo }: 
       </header>
 
       <section className="g-stage" aria-label="3D">
-        {webgl && experience.scene && (
+        {show3d && experience.scene && (
           <Scene3D
             url={experience.scene.url}
             bounds={experience.scene.bounds}
@@ -80,7 +95,14 @@ export function Experience({ experience, locale, onLocaleChange, webgl, demo }: 
             viewpoints={experience.scene.viewpoints}
             doorways={experience.scene.doorways}
             roomId={roomId}
-            labels={{ loading: t.sceneLoading, failed: t.sceneFailed, reset: t.resetView }}
+            labels={{
+              loading: t.sceneLoading,
+              failed: t.sceneFailed,
+              reset: t.resetView,
+              showList: t.showList,
+            }}
+            onFailed={onSceneFailed}
+            onTooSlow={onSceneSlow}
           />
         )}
         {viewerMessage && (
@@ -158,14 +180,14 @@ export function Experience({ experience, locale, onLocaleChange, webgl, demo }: 
 
       <section className="g-browse" aria-labelledby={`${searchId}-browse`}>
         <h2 id={`${searchId}-browse`} className="g-browse__title">
-          {roomId ? format(t.appliancesIn, { room: roomName(roomId) }) : t.allRooms}
+          {!listAll && roomId ? format(t.appliancesIn, { room: roomName(roomId) }) : t.allRooms}
         </h2>
-        {(webgl ? experience.rooms.filter((r) => r.id === roomId) : experience.rooms).map((r) => {
+        {(listAll ? experience.rooms : experience.rooms.filter((r) => r.id === roomId)).map((r) => {
           const items = experience.appliances.filter((a) => a.roomId === r.id);
           if (items.length === 0) return null;
           return (
             <div key={r.id} className="g-room">
-              {!webgl && <h3 className="g-room__title">{pick(r.name, locale)}</h3>}
+              {listAll && <h3 className="g-room__title">{pick(r.name, locale)}</h3>}
               <ul className="g-list">
                 {items.map((a) => (
                   <li key={a.id}>

@@ -74,6 +74,8 @@ test('real interior scene loads and renders in the guest viewer', async ({ page 
     firstFrameMs: Number(await scene.getAttribute('data-first-frame-ms')),
     idleFps,
     dragFps,
+    // Governor level after the run (0 = starting budget held; 7.5).
+    qualityLevel: Number(await scene.getAttribute('data-quality-level')),
     pageErrors: errors,
   };
   mkdirSync('test-results/perf', { recursive: true });
@@ -86,4 +88,30 @@ test('real interior scene loads and renders in the guest viewer', async ({ page 
   // frame, so check the composited screenshot: a flat image compresses to a few kB.
   const shot = await page.locator('.g-scene__canvas').screenshot();
   expect(shot.length).toBeGreaterThan(100_000);
+});
+
+test('a device that cannot hold 30 fps steps quality down (governor, 7.5)', async ({
+  page,
+}, info) => {
+  test.skip(!info.project.name.includes('chromium'), 'CPU throttling needs Chromium DevTools');
+  test.setTimeout(300_000);
+  await page.goto('/demo');
+  const scene = page.locator('.g-scene');
+  await expect(scene).toHaveAttribute('data-state', 'ready', { timeout: 180_000 });
+  // Emulate a much slower phone: 20x CPU slowdown (the sort and frame loop run on the CPU).
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 20 });
+  const fallback = page.getByText('The 3D view is too slow on this device.');
+  await expect
+    .poll(
+      async () =>
+        Number((await scene.getAttribute('data-quality-level').catch(() => '0')) ?? 0) > 0 ||
+        (await fallback.isVisible()),
+      { timeout: 120_000, intervals: [2_000] },
+    )
+    .toBe(true);
+  const fps = await scene.getAttribute('data-fps').catch(() => null);
+  const level = await scene.getAttribute('data-quality-level').catch(() => null);
+  console.warn(`throttled: fps=${fps} qualityLevel=${level} fallback=${await fallback.isVisible()}`);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
 });

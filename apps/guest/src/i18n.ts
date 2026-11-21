@@ -23,6 +23,8 @@ export const messages = {
     viewerPending:
       'The 3D apartment is being prepared. You can already browse every appliance below.',
     resetView: 'Reset view',
+    sceneTooSlow: 'The 3D view is too slow on this device. All appliances are listed below.',
+    showList: 'Show the list instead',
     sceneLoading: 'Loading the 3D apartment',
     sceneFailed:
       'The 3D apartment could not be shown on this device. Every appliance is listed below.',
@@ -59,6 +61,8 @@ export const messages = {
     matches: 'يطابق: {alias}',
     viewerPending: 'يجري تجهيز الشقة ثلاثية الأبعاد. يمكنك تصفح جميع الأجهزة أدناه.',
     resetView: 'إعادة ضبط العرض',
+    sceneTooSlow: 'العرض ثلاثي الأبعاد بطيء جدًا على هذا الجهاز. جميع الأجهزة مدرجة أدناه.',
+    showList: 'اعرض القائمة بدلًا من ذلك',
     sceneLoading: 'يجري تحميل الشقة ثلاثية الأبعاد',
     sceneFailed: 'تعذّر عرض الشقة ثلاثية الأبعاد على هذا الجهاز. جميع الأجهزة مدرجة أدناه.',
     viewerUnsupported:

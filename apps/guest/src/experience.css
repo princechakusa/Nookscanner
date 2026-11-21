@@ -504,3 +504,16 @@ html[lang='ar'] body {
   outline: 3px solid var(--nt-color-focus);
   outline-offset: 2px;
 }
+
+/* Stage 7.5: offered while the 3D view loads slower than the 20 s target. */
+.g-linkbtn {
+  min-block-size: 44px;
+  padding-inline: var(--nt-space-3);
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}

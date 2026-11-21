@@ -2,6 +2,16 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-21: Stage 7.5 performance tuning (implemented; device matrix pending)
+
+- `packages/viewer/src/governor.ts`: adaptive quality from measured fps (resolution first, then splat count; step-down only; "too slow" signal); viewer applies it at runtime (`renderer.setPixelRatio`, `spark.lodSplatCount`) and exposes `qualityLevel`.
+- Guest: list mode when the 3D view fails, is too slow, or loads longer than 20 s ("Show the list instead", EN/AR); all rooms listed in list mode.
+- Tests: viewer 38 (7 new), guest 19 (2 new), guest E2E 12/12, real-scene perf 2/2 + throttled governor check 2/2 (fps 18-26 at 20x CPU slowdown, governor level 1). Initial guest JS 107.8 kB gzip (budget 150 kB).
+
+## 2026-11-21: Expo Go test mode for the capture app
+
+- Inside Expo Go the app records with expo-camera (`CaptureGo.tsx`); the VisionCamera screen loads only in real builds (KI-030). `npm run start:go`; CAPTURE_TEST_SCRIPT section 0.
+
 ## 2026-11-21: Stage 7.4 rooms, viewpoints and transitions
 
 - `packages/viewer/src/navigation.ts`: entrance room, shortest room route through doorways, room-continuity check (every room has a viewpoint and is reachable from the entrance), flight path through doorways at eye height, eased sampling, 600-1200 ms duration (cut with reduced motion). Viewer gains `flyTo` (drag cancels) and an `alignment` option.

@@ -9,6 +9,7 @@ import { SparkControls, SparkRenderer, SplatMesh } from '@sparkjsdev/spark';
 import * as THREE from 'three';
 import { chooseBudget, readCapabilities, type ViewerBudget, type ViewerTier } from './budget.ts';
 import type { Mat4 } from './alignment.ts';
+import { QualityGovernor, qualitySteps, type QualityStep } from './governor.ts';
 import { flightDuration, samplePath, type Waypoint } from './navigation.ts';
 import { constrainPosition, validBounds, type SceneBounds, type Vec3 } from './constraints.ts';
 
@@ -31,6 +32,12 @@ export interface ViewerOptions {
   onProgress?: (fraction: number) => void;
   onFirstFrame?: (ms: number) => void;
   onError?: (error: Error) => void;
+  /** Adaptive quality (governor.ts, default true): lowers resolution/splats below 30 fps. */
+  adaptive?: boolean;
+  /** Called when the governor lowers quality. */
+  onQualityChange?: (level: number, step: QualityStep) => void;
+  /** Even the lowest quality is far too slow: offer the list instead (fallback). */
+  onTooSlow?: () => void;
 }
 
 export interface ViewerStats {
@@ -41,6 +48,8 @@ export interface ViewerStats {
   /** Frames per second averaged over the last second (null until measured). */
   fps: number | null;
   splats: number | null;
+  /** Governor level (0 = the device's starting budget). */
+  qualityLevel: number;
 }
 
 export interface Viewer {
@@ -98,6 +107,7 @@ export async function createViewer(o: ViewerOptions): Promise<Viewer> {
     firstFrameMs: null,
     fps: null,
     splats: null,
+    qualityLevel: 0,
   };
 
   const mesh = new SplatMesh({
@@ -169,6 +179,12 @@ export async function createViewer(o: ViewerOptions): Promise<Viewer> {
   stats.loadMs = Math.round(performance.now() - started);
   o.onProgress?.(1);
 
+  const governor =
+    o.adaptive === false
+      ? null
+      : new QualityGovernor(
+          qualitySteps({ pixelRatio: budget.pixelRatio, lodSplatCount: budget.lodSplatCount }),
+        );
   let frames = 0;
   let windowStart = performance.now();
   let disposed = false;
@@ -197,6 +213,19 @@ export async function createViewer(o: ViewerOptions): Promise<Viewer> {
       stats.fps = Math.round((frames * 1000) / (now - windowStart));
       frames = 0;
       windowStart = now;
+      // Hidden tabs are throttled by the browser: not a measurement of the device.
+      if (governor && typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        const d = governor.sample(stats.fps);
+        if (d.kind === 'step') {
+          renderer.setPixelRatio(d.step.pixelRatio);
+          spark.lodSplatCount = d.step.lodSplatCount;
+          resize();
+          stats.qualityLevel = d.level;
+          o.onQualityChange?.(d.level, d.step);
+        } else if (d.kind === 'too-slow') {
+          o.onTooSlow?.();
+        }
+      }
     }
   });
 

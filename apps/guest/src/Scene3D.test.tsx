@@ -16,6 +16,7 @@ const labels = {
   loading: 'Loading the 3D apartment',
   failed: 'Could not show 3D',
   reset: 'Reset view',
+  showList: 'Show the list instead',
 };
 afterEach(() => {
   cleanup();
@@ -100,5 +101,35 @@ describe('Scene3D', () => {
       [4, 1.6, -3],
     ]);
     expect(options).toEqual({ reducedMotion: false });
+  });
+
+  it('passes the governor "too slow" signal on (7.5)', async () => {
+    let tooSlow: (() => void) | undefined;
+    createViewer.mockImplementation(async (o: { onTooSlow?: () => void }) => {
+      tooSlow = o.onTooSlow;
+      return { stats: {}, reset, resize: vi.fn(), lookAt: vi.fn(), dispose };
+    });
+    const onTooSlow = vi.fn();
+    render(<Scene3D url="https://cdn.test/s.sog" labels={labels} onTooSlow={onTooSlow} />);
+    await screen.findByRole('button', { name: 'Reset view' });
+    act(() => tooSlow?.());
+    expect(onTooSlow).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers the list when loading takes longer than the 20 s target (NFR-PERF-03)', async () => {
+    vi.useFakeTimers();
+    try {
+      createViewer.mockReturnValue(new Promise(() => {})); // never finishes loading
+      const onTooSlow = vi.fn();
+      render(<Scene3D url="https://cdn.test/s.sog" labels={labels} onTooSlow={onTooSlow} />);
+      expect(screen.queryByRole('button', { name: 'Show the list instead' })).toBeNull();
+      await act(async () => {
+        vi.advanceTimersByTime(20_000);
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Show the list instead' }));
+      expect(onTooSlow).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
