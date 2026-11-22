@@ -2,6 +2,11 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-22: Stage 9.4 instructions with photos and videos for guests
+
+- `loadMedia` (guest-instruction) and a gallery in the instruction sheet (EN/AR captions, lazy images, inline video).
+- Tests: guest 26, guest-link E2E 6/6 incl. a Storage photo under the CSP.
+
 ## 2026-11-22: Stage 9.3 guest search (EN/AR)
 
 - `searchAppliances`: word-based matching across names, aliases and room names; Arabic article and digit normalisation.

@@ -565,3 +565,31 @@ html[lang='ar'] body {
     box-shadow: 0 0 0 5px #fff;
   }
 }
+
+/* Stage 9.4: photos and videos in the instruction sheet. */
+.g-media {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(70%, 1fr);
+  gap: var(--nt-space-3);
+  margin: 0 0 var(--nt-space-4);
+  padding: 0;
+  overflow-x: auto;
+  list-style: none;
+  scroll-snap-type: x mandatory;
+}
+.g-media__item {
+  display: grid;
+  gap: var(--nt-space-2);
+  scroll-snap-align: start;
+}
+.g-media__img {
+  inline-size: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--nt-radius-md);
+  background: rgb(255 255 255 / 0.06);
+}
+.g-media__caption {
+  font-size: 0.875rem;
+}

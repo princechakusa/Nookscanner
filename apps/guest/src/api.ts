@@ -4,6 +4,7 @@
  * Nothing is cached: the response carries short-lived signed URLs.
  */
 import { guestExperienceSchema, type GuestExperience } from '@nookscanner/shared';
+import { z } from 'zod';
 
 export type LoadResult =
   | { kind: 'ok'; experience: GuestExperience }
@@ -47,5 +48,51 @@ export async function loadExperience(
     return parsed.success ? { kind: 'ok', experience: parsed.data } : { kind: 'error' };
   } catch {
     return { kind: 'error' };
+  }
+}
+
+const mediaSchema = z.object({
+  media: z
+    .array(
+      z.object({
+        kind: z.enum(['image', 'video']),
+        url: z
+          .string()
+          .url()
+          .refine((u) => u.startsWith('https://') || u.startsWith('http://127.0.0.1'), {
+            message: 'https only',
+          }),
+        caption: z
+          .object({ en: z.string().max(200), ar: z.string().max(200).optional() })
+          .optional(),
+      }),
+    )
+    .max(20),
+});
+export type GuestMedia = z.infer<typeof mediaSchema>['media'][number];
+
+/** Photos/videos of one appliance (guest-instruction, Stage 9.1/9.4); [] when none or on error. */
+export async function loadMedia(
+  token: string,
+  applianceId: string,
+  fetcher: typeof fetch = fetch,
+  base = apiBase(),
+): Promise<GuestMedia[]> {
+  if (!base) return [];
+  try {
+    const res = await fetcher(
+      `${base}/guest-instruction?t=${encodeURIComponent(token)}&a=${encodeURIComponent(applianceId)}`,
+      {
+        method: 'GET',
+        credentials: 'omit',
+        cache: 'no-store',
+        headers: { accept: 'application/json' },
+      },
+    );
+    if (!res.ok) return [];
+    const parsed = mediaSchema.safeParse(await res.json());
+    return parsed.success ? parsed.data.media : [];
+  } catch {
+    return [];
   }
 }

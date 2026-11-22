@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { brand } from '@nookscanner/design-tokens';
-import { loadExperience, type LoadResult } from './api.ts';
+import { loadExperience, loadMedia, type GuestMedia, type LoadResult } from './api.ts';
 import { DEMO_EXPERIENCE } from './demo.ts';
 import { Experience } from './Experience.tsx';
 import { detectLocale, directionOf, messages, type Locale } from './i18n.ts';
@@ -12,6 +12,8 @@ export interface AppProps {
   languages: readonly string[];
   /** Injectable for tests (defaults to the guest-experience Edge Function). */
   load?: (token: string) => Promise<LoadResult>;
+  /** Injectable for tests (defaults to the guest-instruction Edge Function). */
+  media?: (token: string, applianceId: string) => Promise<GuestMedia[]>;
 }
 
 /**
@@ -19,7 +21,7 @@ export interface AppProps {
  * `/demo` (fictional demo apartment for design review and tests), anything else asks the guest
  * to scan the QR code.
  */
-export function App({ pathname, languages, load = loadExperience }: AppProps) {
+export function App({ pathname, languages, load = loadExperience, media = loadMedia }: AppProps) {
   // The guest's language choice is remembered on this phone (convenience only; storage may be
   // unavailable in private browsing, then the browser language is used).
   const [locale, setLocaleState] = useState<Locale>(() => {
@@ -50,6 +52,10 @@ export function App({ pathname, languages, load = loadExperience }: AppProps) {
     void load(token).then(setResult);
   }, [token, load]);
   useEffect(fetchGuide, [fetchGuide]);
+  const mediaFor = useCallback(
+    (applianceId: string) => (token ? media(token, applianceId) : Promise.resolve([])),
+    [token, media],
+  );
 
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -87,13 +93,14 @@ export function App({ pathname, languages, load = loadExperience }: AppProps) {
     );
   }
 
-  if (result?.kind === 'ok') {
+  if (result?.kind === 'ok' && token) {
     return (
       <Experience
         experience={result.experience}
         locale={locale}
         onLocaleChange={setLocale}
         webgl={webgl}
+        loadMedia={mediaFor}
       />
     );
   }

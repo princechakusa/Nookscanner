@@ -107,3 +107,43 @@ test('an inactive link and rate limiting are explained, in English and Arabic', 
   await page.getByRole('button', { name: 'حاول مرة أخرى' }).click();
   await expect(page.getByRole('heading', { level: 1, name: /مارينا 12B/ })).toBeVisible();
 });
+
+test('the instruction sheet shows photos from Storage under the CSP; support opens WhatsApp (9.4)', async ({
+  page,
+}) => {
+  // 1x1 PNG served as if from the project's Storage (signed URL), which the CSP allows.
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+    'base64',
+  );
+  const photo =
+    'https://nfcnckwjrwpofkrzribd.supabase.co/storage/v1/object/sign/instruction-media/x.png?token=t';
+  await page.route('**/guest-experience?**', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(PAYLOAD) }),
+  );
+  await page.route('**/guest-instruction?**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        applianceId: 'ac',
+        media: [{ kind: 'image', url: photo, caption: { en: 'The remote', ar: 'جهاز التحكم' } }],
+      }),
+    }),
+  );
+  await page.route(photo, (route) =>
+    route.fulfill({ status: 200, contentType: 'image/png', body: png }),
+  );
+  await page.goto(`/a/${TOKEN}`);
+  await page
+    .getByRole('button', { name: /Living room AC/ })
+    .first()
+    .click();
+  const sheet = page.locator('dialog[open]');
+  const img = sheet.getByRole('img', { name: 'The remote' });
+  await expect(img).toBeVisible();
+  await expect.poll(() => img.evaluate((el) => (el as HTMLImageElement).naturalWidth)).toBe(1);
+  const support = sheet.getByRole('link', { name: /Contact/ });
+  await expect(support).toHaveAttribute('href', 'https://wa.me/971501234567');
+  await axe(page);
+});

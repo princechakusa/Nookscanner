@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { loadExperience } from './api.ts';
+import { loadExperience, loadMedia } from './api.ts';
 import { DEMO_EXPERIENCE } from './demo.ts';
 
 const res = (status: number, body: unknown, headers: Record<string, string> = {}) =>
@@ -39,5 +39,22 @@ describe('loadExperience (9.2)', () => {
     expect(
       (await loadExperience(t, vi.fn().mockRejectedValue(new TypeError('offline')), base)).kind,
     ).toBe('error');
+  });
+});
+
+describe('loadMedia (9.4)', () => {
+  const base = 'https://fn.example/functions/v1';
+  it('returns validated media; anything wrong yields an empty list', async () => {
+    const good = {
+      applianceId: 'ac',
+      media: [{ kind: 'image', url: 'https://s.example/a.jpg', caption: { en: 'Remote' } }],
+    };
+    const ok = vi.fn().mockResolvedValue(res(200, good));
+    expect(await loadMedia('T'.repeat(30), 'ac', ok, base)).toEqual(good.media);
+    expect(ok.mock.calls[0]![0]).toBe(`${base}/guest-instruction?t=${'T'.repeat(30)}&a=ac`);
+    const js = { media: [{ kind: 'image', url: 'javascript:alert(1)' }] };
+    expect(await loadMedia('t', 'ac', vi.fn().mockResolvedValue(res(200, js)), base)).toEqual([]);
+    expect(await loadMedia('t', 'ac', vi.fn().mockResolvedValue(res(404, '{}')), base)).toEqual([]);
+    expect(await loadMedia('t', 'ac', vi.fn().mockRejectedValue(new Error('x')), base)).toEqual([]);
   });
 });

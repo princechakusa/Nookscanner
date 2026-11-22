@@ -14,6 +14,7 @@ import {
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { BrandMark, Icon, categoryIcon, roomIcon } from './icons.tsx';
 import { Markdown } from '@nookscanner/ui/markdown';
+import type { GuestMedia } from './api.ts';
 import { Scene3D } from './Scene3D.tsx';
 import { format, localDigits, messages, type Locale } from './i18n.ts';
 
@@ -23,9 +24,18 @@ export interface ExperienceProps {
   onLocaleChange: (l: Locale) => void;
   webgl: boolean;
   demo?: boolean;
+  /** Photos/videos of an appliance (guest-instruction, 9.4); absent in the demo. */
+  loadMedia?: (applianceId: string) => Promise<GuestMedia[]>;
 }
 
-export function Experience({ experience, locale, onLocaleChange, webgl, demo }: ExperienceProps) {
+export function Experience({
+  experience,
+  locale,
+  onLocaleChange,
+  webgl,
+  demo,
+  loadMedia,
+}: ExperienceProps) {
   const t = messages[locale];
   const [roomId, setRoomId] = useState<string | null>(experience.rooms[0]?.id ?? null);
   const [query, setQuery] = useState('');
@@ -232,6 +242,7 @@ export function Experience({ experience, locale, onLocaleChange, webgl, demo }: 
         roomName={open ? roomName(open.roomId) : ''}
         experience={experience}
         locale={locale}
+        loadMedia={loadMedia}
         onClose={() => setOpenId(null)}
       />
     </div>
@@ -275,17 +286,32 @@ function InstructionSheet({
   roomName,
   experience,
   locale,
+  loadMedia,
   onClose,
 }: {
   appliance: GuestAppliance | null;
   roomName: string;
   experience: GuestExperience;
   locale: Locale;
+  loadMedia?: ((applianceId: string) => Promise<GuestMedia[]>) | undefined;
   onClose: () => void;
 }) {
   const t = messages[locale];
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  const [media, setMedia] = useState<{ id: string; items: GuestMedia[] } | null>(null);
+  const applianceId = appliance?.id ?? null;
+  useEffect(() => {
+    if (!applianceId || !loadMedia) return;
+    let cancelled = false;
+    void loadMedia(applianceId).then((items) => {
+      if (!cancelled) setMedia({ id: applianceId, items });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [applianceId, loadMedia]);
+  const items = media && media.id === applianceId ? media.items : [];
 
   useEffect(() => {
     const d = ref.current;
@@ -359,6 +385,36 @@ function InstructionSheet({
               </span>
               {format(t.watchVideo, { s: appliance.video.durationSec })}
             </a>
+          )}
+
+          {items.length > 0 && (
+            <ul className="g-media" aria-label={t.mediaLabel}>
+              {items.map((m, i) => {
+                const caption = m.caption ? pick(m.caption, locale) : '';
+                return (
+                  <li key={i} className="g-media__item">
+                    {m.kind === 'image' ? (
+                      <img
+                        src={m.url}
+                        alt={caption || t.photoAlt}
+                        loading="lazy"
+                        className="g-media__img"
+                      />
+                    ) : (
+                      <video
+                        src={m.url}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        className="g-media__img"
+                        aria-label={caption || t.videoAlt}
+                      />
+                    )}
+                    {caption && <span className="g-media__caption">{caption}</span>}
+                  </li>
+                );
+              })}
+            </ul>
           )}
 
           {appliance.steps.length > 0 && (

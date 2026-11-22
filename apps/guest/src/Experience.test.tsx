@@ -116,4 +116,25 @@ describe('guest experience shell', () => {
     expect(dialog.querySelector('a[href^="javascript"]')).toBeNull();
     expect(dialog.textContent).toContain('<img src=x onerror="window.__pwned=1">');
   });
+
+  it('shows the appliance photos and videos when the sheet opens (9.4)', async () => {
+    const loadMedia = vi.fn().mockResolvedValue([
+      {
+        kind: 'image',
+        url: 'https://s.example/remote.jpg',
+        caption: { en: 'The remote', ar: 'جهاز التحكم' },
+      },
+      { kind: 'video', url: 'https://s.example/how.mp4' },
+    ]);
+    setup({ loadMedia });
+    fireEvent.click(screen.getByRole('button', { name: /Living room AC/ }));
+    const list = await screen.findByRole('list', { name: 'Photos and videos' });
+    expect(within(list).getByRole('img', { name: 'The remote' }).getAttribute('src')).toBe(
+      'https://s.example/remote.jpg',
+    );
+    expect(list.querySelector('video')?.getAttribute('aria-label')).toBe('How-to video');
+    expect(loadMedia).toHaveBeenCalledWith(
+      DEMO_EXPERIENCE.appliances.find((a) => a.name.en === 'Living room AC')!.id,
+    );
+  });
 });
