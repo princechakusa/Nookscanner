@@ -248,6 +248,10 @@ test('manager aligns a real 3D scene, sets room viewpoints and a doorway, pins a
   const drawn = (await markerAt())!;
   expect(Math.hypot(drawn.x - tapped!.x, drawn.y - tapped!.y)).toBeLessThan(4);
   await expect(hs).toContainText('Living room AC · Living room · pinned');
+  // 8.4: a manager confirms the pin; the status changes.
+  await hs.getByRole('button', { name: 'Verify pin of Living room AC' }).click();
+  await expect(hs.getByText('Living room AC pin verified.')).toBeVisible();
+  await expect(hs).toContainText('Living room AC · Living room · pinned, verified');
 
   // Survives a reload; then remove the pin.
   await page.reload();

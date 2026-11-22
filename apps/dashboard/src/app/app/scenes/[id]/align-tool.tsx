@@ -49,6 +49,7 @@ export function AlignTool({
   appliances = [],
   initialHotspots = [],
   canPlaceHotspots = false,
+  canVerifyHotspots = false,
 }: {
   sceneId: string;
   sceneUrl: string;
@@ -61,6 +62,7 @@ export function AlignTool({
   initialHotspots?: HotspotRow[];
   /** hotspot.write (editors too), separate from aligning (scan.review). */
   canPlaceHotspots?: boolean;
+  canVerifyHotspots?: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const viewer = useRef<Viewer | null>(null);
@@ -375,6 +377,7 @@ export function AlignTool({
           appliances={appliances}
           hotspots={hotspots}
           onChange={setHotspots}
+          canVerify={canVerifyHotspots}
           viewer={() => viewer.current}
           onPickRequest={(cb) => {
             pickHandler.current = cb;

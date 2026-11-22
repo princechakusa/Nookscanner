@@ -51,7 +51,7 @@ function png(): Buffer {
   ]);
 }
 
-test('instructions: EN/AR versions, safe formatting, photo upload and delete', async ({
+test('instructions: EN/AR versions, safe formatting, media, verification', async ({
   page,
 }, info) => {
   const tag = `${run}-${info.project.name.startsWith('mobile') ? 'm' : 'd'}`;
@@ -141,4 +141,21 @@ test('instructions: EN/AR versions, safe formatting, photo upload and delete', a
 
   await page.getByRole('button', { name: 'Delete The remote' }).click();
   await expect(page.getByRole('list', { name: 'Instruction media' })).toHaveCount(0);
+
+  // Stage 8.4: verify the English version; the apartment shows the status; a new edit is
+  // unverified again and can be verified again.
+  await page.getByRole('button', { name: 'Verify English version 2' }).click();
+  await expect(preview).toContainText('Version 2 of 2 · verified');
+  await expect(page.getByRole('button', { name: /Verify English/ })).toHaveCount(0);
+  const instructionsUrl = page.url();
+  await page.getByRole('link', { name: `Ins Flat ${tag}` }).click();
+  await expect(page.getByTestId('status-Living room AC')).toHaveText(
+    'English verified · Arabic not verified · Pin missing',
+  );
+  await page.goto(instructionsUrl);
+  await page.getByText('Edit English instructions').click();
+  await en.getByLabel('Title (English)').fill('Turn on cooling (25 °C)');
+  await en.getByRole('button', { name: 'Save English instructions' }).click();
+  await expect(preview).toContainText('Version 3 of 3 · not verified yet');
+  await expect(page.getByRole('button', { name: 'Verify English version 3' })).toBeVisible();
 });

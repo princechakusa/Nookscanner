@@ -109,3 +109,14 @@ export async function deleteHotspotAction(input: unknown): Promise<SaveAlignment
   revalidatePath(`/app/scenes/${parsed.data.sceneId}`);
   return { ok: true };
 }
+
+/** Stage 8.4: a manager confirms a hotspot sits on the right object (verify_hotspot). */
+export async function verifyHotspotAction(input: unknown): Promise<SaveAlignmentResult> {
+  const parsed = z.object({ sceneId: z.uuid(), id: z.uuid() }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: 'VALIDATION_FAILED' };
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc('verify_hotspot', { p_hotspot: parsed.data.id });
+  if (error) return { ok: false, error: dbErrorCode(error) };
+  revalidatePath(`/app/scenes/${parsed.data.sceneId}`);
+  return { ok: true };
+}

@@ -131,6 +131,7 @@ export default async function ScenePage({ params }: { params: Promise<{ id: stri
           appliances={appliances}
           initialHotspots={hotspots}
           canPlaceHotspots={can('hotspot.write')}
+          canVerifyHotspots={can('instruction.verify')}
           saved={
             scene.alignment && scene.bounds
               ? { alignment: scene.alignment, bounds: scene.bounds, start: scene.start_view }

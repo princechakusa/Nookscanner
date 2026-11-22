@@ -2,6 +2,12 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-22: Stage 8.4 verification workflow
+
+- Migration `20261122001300_verification.sql`: `verify_instruction_version`, `verify_hotspot` (instruction.verify), hotspot trigger rebuilt from its latest body with a verification branch.
+- Dashboard: "Verify English/Arabic version N", "Verify pin of …", per-appliance status line on the apartment page.
+- Tests: DB 4 new (real stack 129/129), instructions and align E2E extended.
+
 ## 2026-11-22: Stage 8.3 instructions, versions and media (EN/AR)
 
 - Migration `20261122001200_instructions.sql`: `instructions`, append-only `instruction_versions`, `instruction_media`, storage delete policy for `instruction-media`.

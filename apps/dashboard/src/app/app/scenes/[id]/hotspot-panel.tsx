@@ -9,7 +9,11 @@
 import type { Vec3, Viewer } from '@nookscanner/viewer';
 import { Button } from '@nookscanner/ui';
 import { useState } from 'react';
-import { deleteHotspotAction, placeHotspotAction } from '../../scene-actions.ts';
+import {
+  deleteHotspotAction,
+  placeHotspotAction,
+  verifyHotspotAction,
+} from '../../scene-actions.ts';
 
 export interface HotspotRow {
   id: string;
@@ -30,6 +34,7 @@ export function HotspotPanel({
   onChange,
   viewer,
   onPickRequest,
+  canVerify = false,
 }: {
   sceneId: string;
   appliances: ApplianceRow[];
@@ -37,6 +42,8 @@ export function HotspotPanel({
   onChange: (next: HotspotRow[]) => void;
   viewer: () => Viewer | null;
   onPickRequest: (callback: ((point: Vec3) => void) | null) => void;
+  /** instruction.verify: confirm the pin sits on the right object (8.4). */
+  canVerify?: boolean;
 }) {
   const [placing, setPlacing] = useState<string | null>(null);
   const [message, setMessage] = useState<{ kind: 'error' | 'ok'; text: string } | null>(null);
@@ -91,6 +98,16 @@ export function HotspotPanel({
     setMessage({ kind: 'ok', text: `${appliance.name} unpinned.` });
   };
 
+  const verify = async (appliance: ApplianceRow, hotspot: HotspotRow) => {
+    const result = await verifyHotspotAction({ sceneId, id: hotspot.id });
+    if (!result.ok) {
+      setMessage({ kind: 'error', text: 'Could not verify the pin.' });
+      return;
+    }
+    onChange(hotspots.map((h) => (h.id === hotspot.id ? { ...h, verified: true } : h)));
+    setMessage({ kind: 'ok', text: `${appliance.name} pin verified.` });
+  };
+
   return (
     <section className="ns-panel ns-align" aria-labelledby="hotspots-title">
       <h2 id="hotspots-title" className="ns-panel__title">
@@ -140,6 +157,11 @@ export function HotspotPanel({
                         >
                           {h ? `Move ${a.name}` : `Place ${a.name} in 3D`}
                         </Button>
+                        {h && canVerify && !h.verified && (
+                          <Button size="sm" onClick={() => void verify(a, h)}>
+                            Verify pin of {a.name}
+                          </Button>
+                        )}
                         {h && (
                           <Button variant="ghost" size="sm" onClick={() => void remove(a, h)}>
                             Remove pin of {a.name}

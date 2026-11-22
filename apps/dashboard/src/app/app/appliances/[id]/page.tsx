@@ -4,12 +4,17 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { z } from 'zod';
 import { getOrgContext } from '../../../../lib/org-context.ts';
-import { deleteInstructionMediaAction, saveInstructionAction } from '../../instruction-actions.ts';
+import {
+  deleteInstructionMediaAction,
+  saveInstructionAction,
+  verifyInstructionAction,
+} from '../../instruction-actions.ts';
 import { InstructionForm, MediaUploader, type InstructionDraft } from '../../instruction-forms.tsx';
 
 export const metadata: Metadata = { title: 'Appliance instructions' };
 
 interface VersionRow {
+  id: string;
   locale: 'en' | 'ar';
   version: number;
   title: string;
@@ -65,7 +70,7 @@ export default async function ApplianceInstructionsPage({
         supabase
           .from('instruction_versions')
           .select(
-            'locale, version, title, steps, troubleshooting, body_md, verification_status, created_at',
+            'id, locale, version, title, steps, troubleshooting, body_md, verification_status, created_at',
           )
           .eq('instruction_id', instructionId)
           .order('version', { ascending: false }),
@@ -98,6 +103,7 @@ export default async function ApplianceInstructionsPage({
     for (const u of urls ?? []) if (u.path && u.signedUrl) signed.set(u.path, u.signedUrl);
   }
   const canWrite = can('instruction.write');
+  const canVerify = can('instruction.verify');
 
   return (
     <div className="ns-page">
@@ -156,6 +162,15 @@ export default async function ApplianceInstructionsPage({
                   </dl>
                 )}
                 {current.body_md && <Markdown source={current.body_md} />}
+                {canVerify && current.verification_status !== 'verified' && (
+                  <form action={verifyInstructionAction}>
+                    <input type="hidden" name="versionId" value={current.id} />
+                    <input type="hidden" name="applianceId" value={appliance.id} />
+                    <button type="submit" className="ns-btn ns-btn--primary ns-btn--sm">
+                      Verify {label} version {current.version}
+                    </button>
+                  </form>
+                )}
               </div>
             ) : (
               <p className="ns-muted">No {label} instructions yet.</p>

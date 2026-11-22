@@ -96,6 +96,56 @@ export default async function ApartmentPage({ params }: { params: Promise<{ id: 
     label: c.name_en,
   }));
   const categoryName = new Map(categories.map((c) => [c.value, c.label]));
+  // Verification status per appliance (8.4): latest version per language, pin in the newest scene.
+  const [{ data: insRows }, { data: sceneRow }] = await Promise.all([
+    supabase
+      .from('instructions')
+      .select('id, appliance_id, instruction_versions(locale, version, verification_status)')
+      .eq('apartment_id', row.id),
+    supabase
+      .from('scene_versions')
+      .select('id')
+      .eq('apartment_id', row.id)
+      .order('version', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  const { data: pinRows } = sceneRow
+    ? await supabase
+        .from('hotspots')
+        .select('appliance_id, verification_status')
+        .eq('scene_version_id', (sceneRow as { id: string }).id)
+    : { data: [] };
+  type Status = 'verified' | 'unverified' | 'missing';
+  const textStatus = new Map<string, Record<'en' | 'ar', Status>>();
+  for (const i of (insRows ?? []) as unknown as {
+    appliance_id: string;
+    instruction_versions: { locale: 'en' | 'ar'; version: number; verification_status: string }[];
+  }[]) {
+    const latest = (locale: 'en' | 'ar'): Status => {
+      const v = i.instruction_versions
+        .filter((x) => x.locale === locale)
+        .sort((a, b) => b.version - a.version)[0];
+      return v ? (v.verification_status === 'verified' ? 'verified' : 'unverified') : 'missing';
+    };
+    textStatus.set(i.appliance_id, { en: latest('en'), ar: latest('ar') });
+  }
+  const pinStatus = new Map<string, Status>(
+    ((pinRows ?? []) as { appliance_id: string; verification_status: string }[]).map((p) => [
+      p.appliance_id,
+      p.verification_status === 'verified' ? 'verified' : 'unverified',
+    ]),
+  );
+  const STATUS_TEXT: Record<Status, string> = {
+    verified: 'verified',
+    unverified: 'not verified',
+    missing: 'missing',
+  };
+  const statusLine = (id: string) => {
+    const t = textStatus.get(id) ?? { en: 'missing', ar: 'missing' };
+    const pin = pinStatus.get(id) ?? 'missing';
+    return `English ${STATUS_TEXT[t.en]} · Arabic ${STATUS_TEXT[t.ar]} · Pin ${STATUS_TEXT[pin]}`;
+  };
   const roomOptions = rooms.map((r) => ({ value: r.id, label: r.name_en }));
   const appliances = (
     (applianceRows ?? []) as {
@@ -340,6 +390,9 @@ export default async function ApartmentPage({ params }: { params: Promise<{ id: 
                                 </span>
                               )}
                             </div>
+                            <p className="ns-muted" data-testid={`status-${a.nameEn}`}>
+                              {statusLine(a.id)}
+                            </p>
                             {canWriteAppliances && (
                               <details className="ns-rooms__edit">
                                 <summary>Edit {a.nameEn}</summary>

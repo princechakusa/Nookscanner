@@ -134,3 +134,13 @@ export async function deleteInstructionMediaAction(form: FormData): Promise<void
   if (path) await supabase.storage.from('instruction-media').remove([path.object_path]);
   revalidatePath(`/app/appliances/${applianceId.data}`);
 }
+
+/** Stage 8.4: a manager verifies the latest version of one language (verify_instruction_version). */
+export async function verifyInstructionAction(form: FormData): Promise<void> {
+  const version = uuid.safeParse(form.get('versionId'));
+  const applianceId = uuid.safeParse(form.get('applianceId'));
+  if (!version.success || !applianceId.success) return;
+  const supabase = await createSupabaseServerClient();
+  await supabase.rpc('verify_instruction_version', { p_version: version.data });
+  revalidatePath(`/app/appliances/${applianceId.data}`);
+}
