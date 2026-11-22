@@ -2,6 +2,14 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-22: Stage 8.1 appliance categories, model library and appliances
+
+- Migration `20261121001000_appliances.sql`: `appliance_categories` (22 seeded, EN/AR names and aliases, e.g. "ac" for air conditioners), `appliance_models` (global + organization library, https manuals), `appliances` (room of the same apartment, model global or own, tenant trigger).
+- Dashboard: "Appliances" on the apartment page (grouped by room; add/edit/move/delete) and an organization-wide list on Appliances & instructions.
+- Fixed before release: the migration first copied an old `enforce_parent_org` body and dropped the scan/QR branches (caught by the real-stack suite; rebuilt from the latest definition).
+- Worker image: gsplat cloned with submodules (GLM); device-tier table copied into the image with `NOOKSCANNER_DEVICE_TIERS` (the installed worker could not find it); tests find SplatTransform on PATH.
+- Tests: DB real stack 114/114, PGlite 108 (+6 stack-only), shared 171, appliances E2E 2/2.
+
 ## 2026-11-21: Stage 7.5 performance tuning (implemented; device matrix pending)
 
 - `packages/viewer/src/governor.ts`: adaptive quality from measured fps (resolution first, then splat count; step-down only; "too slow" signal); viewer applies it at runtime (`renderer.setPixelRatio`, `spark.lodSplatCount`) and exposes `qualityLevel`.

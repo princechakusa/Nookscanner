@@ -189,13 +189,13 @@ PK `(property_id, user_id)`; `organization_id`, `property_id FK properties on de
 ### 4.16 `scene_assets` (D)
 `id`, `organization_id`, `scene_version_id`, `kind asset_kind`, `bucket`, `object_path unique`, `size_bytes`, `sha256`, `lod_level int null`, `content_type`. Public URL derived only for published copies.
 
-### 4.17 `appliance_categories` (D)
+### 4.17 `appliance_categories` (D, migration `20261121001000`, Stage 8.1: 22 seeded categories, `sort_order`; users read only)
 `id`, `key text unique` (e.g. `air_conditioner`), `name_en`, `name_ar`, `aliases_en text[]`, `aliases_ar text[]`, `icon text`. Global (platform-admin managed); readable by authenticated.
 
-### 4.18 `appliance_models` (D)
+### 4.18 `appliance_models` (D, Stage 8.1: org rows written by org-scoped `appliance.write`; global rows by the platform only; `manual_url` https only)
 `id`, `organization_id uuid null` (null = global library), `category_id`, `brand text`, `model_number text`, `display_name`, `manual_url text` (validated https), unique `(coalesce(organization_id, '0000...'), lower(brand), lower(model_number))`. RLS: global rows readable by all authenticated; org rows by members; global writes platform admin only.
 
-### 4.19 `appliances` (D)
+### 4.19 `appliances` (D, Stage 8.1: parent-org trigger from the apartment; `check_appliance_links` trigger: room in the same apartment, model global or own; RLS like rooms with `appliance.write`)
 `id`, `organization_id`, `apartment_id`, `room_id`, `category_id`, `appliance_model_id null`, `name_en`, `name_ar`, `brand`, `model_number`, `notes`. Index `(apartment_id)`, `(room_id)`. Trigger: room belongs to same apartment.
 
 ### 4.20 `hotspots` (D)

@@ -25,6 +25,12 @@ import {
   updateRoomAction,
 } from '../../room-actions.ts';
 import { AddRoomForm, EditRoomForm, GenerateRoomsForm } from '../../room-forms.tsx';
+import {
+  addApplianceAction,
+  deleteApplianceAction,
+  updateApplianceAction,
+} from '../../appliance-actions.ts';
+import { AddApplianceForm, EditApplianceForm } from '../../appliance-forms.tsx';
 
 export const metadata: Metadata = { title: 'Apartment' };
 
@@ -76,6 +82,42 @@ export default async function ApartmentPage({ params }: { params: Promise<{ id: 
     rooms.map((r) => r.name_en),
   );
   const canWriteRooms = can('room.write');
+  const canWriteAppliances = can('appliance.write');
+  const [{ data: categoryRows }, { data: applianceRows }] = await Promise.all([
+    supabase.from('appliance_categories').select('id, name_en').order('sort_order'),
+    supabase
+      .from('appliances')
+      .select('id, room_id, category_id, name_en, name_ar, brand, model_number, notes')
+      .eq('apartment_id', row.id)
+      .order('name_en'),
+  ]);
+  const categories = ((categoryRows ?? []) as { id: string; name_en: string }[]).map((c) => ({
+    value: c.id,
+    label: c.name_en,
+  }));
+  const categoryName = new Map(categories.map((c) => [c.value, c.label]));
+  const roomOptions = rooms.map((r) => ({ value: r.id, label: r.name_en }));
+  const appliances = (
+    (applianceRows ?? []) as {
+      id: string;
+      room_id: string;
+      category_id: string;
+      name_en: string;
+      name_ar: string | null;
+      brand: string | null;
+      model_number: string | null;
+      notes: string | null;
+    }[]
+  ).map((a) => ({
+    id: a.id,
+    roomId: a.room_id,
+    categoryId: a.category_id,
+    nameEn: a.name_en,
+    nameAr: a.name_ar,
+    brand: a.brand,
+    modelNumber: a.model_number,
+    notes: a.notes,
+  }));
   const canManageQr = can('qr.manage');
   const guestBase = guestBaseUrl();
   const { data: qrRows } = canManageQr
@@ -231,6 +273,92 @@ export default async function ApartmentPage({ params }: { params: Promise<{ id: 
           <>
             <h3 className="ns-panel__subtitle">Add a room</h3>
             <AddRoomForm action={addRoomAction} apartmentId={row.id} />
+          </>
+        )}
+      </section>
+
+      <section className="ns-panel" aria-labelledby="appliances-h">
+        <h2 id="appliances-h" className="ns-panel__title">
+          Appliances
+        </h2>
+        {rooms.length === 0 ? (
+          <p className="ns-muted">Create the rooms first; every appliance belongs to a room.</p>
+        ) : (
+          <>
+            {appliances.length === 0 ? (
+              <p className="ns-muted">
+                No appliances yet. Add the ones guests ask about: air conditioners, TV, Wi-Fi,
+                kitchen and laundry.
+              </p>
+            ) : (
+              rooms
+                .filter((r) => appliances.some((a) => a.roomId === r.id))
+                .map((r) => (
+                  <div key={r.id}>
+                    <h3 className="ns-panel__subtitle">{r.name_en}</h3>
+                    <ul className="ns-rooms" aria-label={`Appliances in ${r.name_en}`}>
+                      {appliances
+                        .filter((a) => a.roomId === r.id)
+                        .map((a) => (
+                          <li key={a.id} className="ns-rooms__item">
+                            <div className="ns-rooms__row">
+                              <span className="ns-rooms__name">
+                                <span className="ns-rooms__en">{a.nameEn}</span>
+                                {a.nameAr && (
+                                  <span className="ns-muted" lang="ar" dir="rtl">
+                                    {' · '}
+                                    {a.nameAr}
+                                  </span>
+                                )}
+                              </span>
+                              <span className="ns-muted">
+                                {[categoryName.get(a.categoryId), a.brand, a.modelNumber]
+                                  .filter(Boolean)
+                                  .join(' · ')}
+                              </span>
+                              {canWriteAppliances && (
+                                <span className="ns-rooms__actions">
+                                  <form action={deleteApplianceAction}>
+                                    <input type="hidden" name="id" value={a.id} />
+                                    <button
+                                      type="submit"
+                                      className="ns-btn ns-btn--ghost ns-btn--sm"
+                                      aria-label={`Delete ${a.nameEn}`}
+                                    >
+                                      Delete
+                                    </button>
+                                  </form>
+                                </span>
+                              )}
+                            </div>
+                            {canWriteAppliances && (
+                              <details className="ns-rooms__edit">
+                                <summary>Edit {a.nameEn}</summary>
+                                <EditApplianceForm
+                                  action={updateApplianceAction}
+                                  appliance={a}
+                                  rooms={roomOptions}
+                                  categories={categories}
+                                />
+                              </details>
+                            )}
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                ))
+            )}
+            {canWriteAppliances && (
+              <>
+                <h3 className="ns-panel__subtitle">Add an appliance</h3>
+                <AddApplianceForm
+                  action={addApplianceAction}
+                  apartmentId={row.id}
+                  rooms={roomOptions}
+                  categories={categories}
+                />
+              </>
+            )}
           </>
         )}
       </section>

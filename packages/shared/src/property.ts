@@ -227,3 +227,15 @@ export function moveInOrder(
   [out[i], out[j]] = [out[j]!, out[i]!];
   return out;
 }
+
+/** Appliance in a room (Stage 8.1; mirrors the checks in migration 20261121001000). */
+export const applianceSchema = z.object({
+  roomId: z.uuid({ message: 'ROOM_REQUIRED' }),
+  categoryId: z.uuid({ message: 'CATEGORY_REQUIRED' }),
+  nameEn: name(80),
+  nameAr: optionalText(80),
+  brand: optionalText(60),
+  modelNumber: optionalText(60),
+  notes: optionalText(2000),
+});
+export type ApplianceInput = z.infer<typeof applianceSchema>;

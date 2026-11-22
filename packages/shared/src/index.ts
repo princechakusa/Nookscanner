@@ -12,6 +12,8 @@ export {
   KITCHEN_KINDS,
   ROOM_TYPE_LABELS,
   apartmentSchema,
+  applianceSchema,
+  type ApplianceInput,
   layoutSchema,
   layoutSummary,
   missingPlannedRooms,

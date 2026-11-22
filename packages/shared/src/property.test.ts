@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_LAYOUT,
+  applianceSchema,
   ROOM_TYPES,
   ROOM_TYPE_LABELS,
   apartmentSchema,
@@ -201,5 +202,46 @@ describe('rooms', () => {
     expect(moveInOrder(['a', 'b', 'c'], 'a', 'up')).toEqual(['a', 'b', 'c']);
     expect(moveInOrder(['a', 'b', 'c'], 'c', 'down')).toEqual(['a', 'b', 'c']);
     expect(moveInOrder(['a', 'b'], 'zz', 'up')).toEqual(['a', 'b']);
+  });
+});
+
+describe('applianceSchema (8.1)', () => {
+  const room = '11111111-1111-4111-8111-111111111111';
+  const cat = '22222222-2222-4222-8222-222222222222';
+  it('accepts a minimal appliance and clears empty optional fields', () => {
+    const r = applianceSchema.parse({
+      roomId: room,
+      categoryId: cat,
+      nameEn: '  Living room AC ',
+      nameAr: ' ',
+      brand: 'Daikin',
+      modelNumber: '',
+      notes: undefined,
+    });
+    expect(r).toEqual({
+      roomId: room,
+      categoryId: cat,
+      nameEn: 'Living room AC',
+      nameAr: null,
+      brand: 'Daikin',
+      modelNumber: null,
+      notes: null,
+    });
+  });
+  it('reports a missing room, category or name and over-long text', () => {
+    const r = applianceSchema.safeParse({
+      roomId: '',
+      categoryId: 'x',
+      nameEn: '',
+      notes: 'n'.repeat(2001),
+    });
+    expect(r.success).toBe(false);
+    const codes = Object.fromEntries(r.error!.issues.map((i) => [i.path[0], i.message]));
+    expect(codes).toEqual({
+      roomId: 'ROOM_REQUIRED',
+      categoryId: 'CATEGORY_REQUIRED',
+      nameEn: 'NAME_REQUIRED',
+      notes: 'TOO_LONG',
+    });
   });
 });
