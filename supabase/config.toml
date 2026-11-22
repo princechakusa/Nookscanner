@@ -87,3 +87,10 @@ verify_jwt = false
 
 [functions.claim-job]
 verify_jwt = false
+
+# Guests have no account: these functions authorise by QR token (Stage 9.1, ADR-023).
+[functions.guest-experience]
+verify_jwt = false
+
+[functions.guest-instruction]
+verify_jwt = false

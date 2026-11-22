@@ -2,5 +2,8 @@
 *
 !services/reconstruction/
 !packages/shared/src/fixtures/
+!packages/shared/src/device-tiers.json
 services/reconstruction/**/__pycache__
 services/reconstruction/**/*.pyc
+# The Modal app definition is not part of the image; editing it must not invalidate the build cache.
+services/reconstruction/modal_app.py

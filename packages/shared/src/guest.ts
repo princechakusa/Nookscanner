@@ -45,6 +45,17 @@ export const guestApplianceSchema = z.object({
   verified: z.boolean(),
   steps: z.array(guestStepSchema).max(30),
   troubleshooting: z.array(guestTroubleSchema).max(20),
+  /** Photos and videos frozen at publishing; URLs signed by the guest function (9.1). */
+  media: z
+    .array(
+      z.object({
+        kind: z.enum(['image', 'video']),
+        url: httpsUrl,
+        caption: localizedSchema.optional(),
+      }),
+    )
+    .max(20)
+    .optional(),
   video: z
     .object({
       url: httpsUrl,

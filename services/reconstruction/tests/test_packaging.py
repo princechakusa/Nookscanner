@@ -13,7 +13,9 @@ from nookscanner_reconstruction.commands import PipelineSettings
 from nookscanner_reconstruction.packaging import package_scene, write_test_ply
 
 REPO = Path(__file__).resolve().parents[3]
-BIN = REPO / "node_modules" / ".bin" / ("splat-transform.cmd" if os.name == "nt" else "splat-transform")
+_REPO_BIN = REPO / "node_modules" / ".bin" / ("splat-transform.cmd" if os.name == "nt" else "splat-transform")
+# Repository dev dependency locally and in CI; the global install inside the GPU image.
+BIN = _REPO_BIN if _REPO_BIN.exists() else Path(shutil.which("splat-transform") or _REPO_BIN)
 
 
 def local_runner(cmd: list[str]) -> None:

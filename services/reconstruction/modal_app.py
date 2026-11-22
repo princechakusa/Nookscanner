@@ -35,9 +35,14 @@ app = modal.App("nookscanner-reconstruction")
 secret = modal.Secret.from_name(os.environ.get("NOOK_MODAL_SECRET", "nookscanner-staging"))
 jobs_volume = modal.Volume.from_name("nookscanner-jobs", create_if_missing=True)
 
-worker_image = modal.Image.from_dockerfile(
-    REPO_ROOT / "services/reconstruction/Dockerfile.gpu", context_dir=REPO_ROOT
-).entrypoint([])
+worker_image = (
+    modal.Image.from_dockerfile(
+        REPO_ROOT / "services/reconstruction/Dockerfile.gpu", context_dir=REPO_ROOT
+    )
+    # Ubuntu 24.04 has python3 only; Modal looks for `python` (a layer on top keeps the cache).
+    .run_commands("ln -sf /usr/bin/python3 /usr/local/bin/python")
+    .entrypoint([])
+)
 
 endpoint_image = (
     modal.Image.debian_slim(python_version="3.12")

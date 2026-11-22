@@ -34,6 +34,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libeigen3-dev libflann-dev libfreeimage-dev libmetis-dev libgoogle-glog-dev \
       libgtest-dev libgmock-dev libsqlite3-dev libglew-dev libcgal-dev libceres-dev \
       libcurl4-openssl-dev libssl-dev libopenimageio-dev openimageio-tools \
+      # Ubuntu's OpenImageIO CMake target references OpenCV headers without depending on them.
+      libopencv-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # --- COLMAP (SfM incl. the global mapper) with CUDA, headless ---------------------------------
@@ -52,7 +54,7 @@ RUN git clone --depth 1 --branch ${COLMAP_VERSION} https://github.com/colmap/col
 # --- PyTorch + gsplat (CUDA kernels compiled at build time) + trainer example -----------------
 RUN python3 -m pip install setuptools wheel ninja \
     && python3 -m pip install torch==${TORCH_VERSION} torchvision --index-url https://download.pytorch.org/whl/cu126
-RUN git clone --depth 1 --branch v${GSPLAT_VERSION} https://github.com/nerfstudio-project/gsplat.git /opt/gsplat \
+RUN git clone --depth 1 --recurse-submodules --shallow-submodules --branch v${GSPLAT_VERSION} https://github.com/nerfstudio-project/gsplat.git /opt/gsplat \
     && python3 -m pip install --no-build-isolation /opt/gsplat \
     # The example requirements include CUDA extensions (fused-ssim, fused-bilagrid): build them
     # against the installed torch.
@@ -68,6 +70,9 @@ RUN curl -fsSL https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-li
 # --- the worker -------------------------------------------------------------------------------
 # Keep the repository layout: the tests read the shared contract fixture by relative path.
 COPY packages/shared/src/fixtures /src/packages/shared/src/fixtures
+# Capture tiers shared with the apps (Stage 5.3); the installed package cannot find the repo path.
+COPY packages/shared/src/device-tiers.json /src/packages/shared/src/device-tiers.json
+ENV NOOKSCANNER_DEVICE_TIERS=/src/packages/shared/src/device-tiers.json
 COPY services/reconstruction /src/services/reconstruction
 RUN python3 -m pip install /src/services/reconstruction \
     && cd /src/services/reconstruction && python3 -m unittest discover -s tests -t . -q

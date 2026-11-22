@@ -14,13 +14,15 @@ The platform and the worker prove messages to each other with a shared secret (H
 
 ## 1. Modal (now)
 
+**Status 2026-11-22:** steps 1-5 DONE. Workspace `chakusaprince`; secret `nookscanner-staging` (WORKER_HMAC_SECRET, same value as the Supabase secret); app `nookscanner-reconstruction` deployed (image ~18 min to build; the 65 worker tests run and pass INSIDE the image during the build). `submit` URL: `https://chakusaprince--nookscanner-reconstruction-submit.us-east.modal.run` (rejects unsigned requests). The build context is the repository filtered by `.dockerignore` (worker, contract fixtures, tier table only; `modal_app.py` excluded so editing it does not rebuild). Remaining: step 6 (deploy the Supabase functions with `WORKER_URL`) needs deployment approval.
+
 What it costs: Modal's Starter plan includes free usage every month (USD 30 at the 2026-11-19 price check, https://modal.com/pricing; re-check when signing up). With the spend limit below, **the bill can never exceed the amount you set**.
 
 1. Create an account at https://modal.com (sign in with GitHub or Google).
 2. Settings > Usage and billing: set the **workspace spend limit** to the free credit plus USD 30 (your decision), or to the free credit only for USD 0.
-3. In a terminal: `pip install modal==1.6.4` then `modal token new` (opens the browser to approve; no token is shown in chat).
+3. In a terminal: `pip install modal==1.6.3` then `modal token new` (opens the browser to approve; no token is shown in chat).
 4. `modal secret create nookscanner-staging WORKER_HMAC_SECRET=<the value from section 0>`
-5. From the repository root: `modal deploy services/reconstruction/modal_app.py`. The first deploy builds the image (COLMAP, gsplat, SplatTransform), which takes a while. Note the printed URL of `submit`.
+5. From the repository root: `modal deploy services/reconstruction/modal_app.py` (on Windows set `PYTHONIOENCODING=utf-8` first, or the progress output fails to print). The first deploy builds the image (COLMAP, gsplat, SplatTransform), which takes a while. Note the printed URL of `submit`.
 6. Point Supabase at it and deploy the functions (`docs/DEPLOYMENT.md` section 3): `WORKER_URL=<submit URL>`, deploy `dispatch-processing`, `job-callback` and `claim-job`, and schedule the dispatcher.
 
 Each finished job stores its GPU time and an estimated cost in the scan's report (`compute.usd_estimate`), so monthly use is visible. When the limit is reached, jobs wait and continue next month; nothing is lost.

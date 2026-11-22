@@ -2,6 +2,12 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-22: Stage 9.1 guest Edge Functions
+
+- Migration `20261122001500_guest_access.sql`: guest lookup, rate limits (hashed keys), media frozen in the snapshot.
+- `supabase/functions/guest-experience`, `guest-instruction` (+ `_shared/guest.ts`), `verify_jwt = false`; guest schema gains `media`.
+- Tests: guest functions 5 (PGlite + real stack), local Edge runtime checked with curl.
+
 ## 2026-11-22: Stage 8.5 publishing (Phase 8 complete)
 
 - Migration `20261122001400_publishing.sql` (ADR-022): publish rules in SQL, guest snapshot from verified content, immutable published versions, unpublish.
