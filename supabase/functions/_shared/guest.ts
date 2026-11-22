@@ -130,8 +130,9 @@ export async function handleGuestExperience(req: Request, deps: GuestDeps): Prom
     const signed = await deps.storage.sign('scene-drafts', scene.path, SCENE_URL_SECONDS);
     if (signed) {
       // Hotspots are kept for 9.2; the private path never leaves the server.
-      const { path: _path, ...sceneRest } = scene;
-      outScene = { ...sceneRest, url: signed };
+      const copy: Record<string, unknown> = { ...scene, url: signed };
+      delete copy.path;
+      outScene = copy;
     }
   }
   const body = {
@@ -156,8 +157,9 @@ export async function handleGuestInstruction(req: Request, deps: GuestDeps): Pro
   for (const m of appliance.media ?? []) {
     const url = await deps.storage.sign('instruction-media', m.path, MEDIA_URL_SECONDS);
     if (url) {
-      const { path: _path, ...rest } = m as Record<string, unknown>;
-      media.push({ ...rest, url });
+      const copy: Record<string, unknown> = { ...m, url };
+      delete copy.path;
+      media.push(copy);
     }
   }
   return new Response(JSON.stringify({ applianceId, media }), {
