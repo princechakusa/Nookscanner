@@ -2,6 +2,13 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-22: Stage 8.2 hotspot placement
+
+- Migration `20261122001100_hotspots.sql`: `hotspots` + `verification_status` enum; trigger checks (same apartment, aligned and unfrozen scene, inside the outline, unit normal) and resets verification on a move.
+- Viewer `project()` for markers; dashboard Hotspots panel (place/move/remove by tapping the real object; markers follow the camera).
+- Fixed during testing: a tap outside the outline ended placing mode (now the next tap tries again).
+- Tests: DB 5 new (real stack 119/119, PGlite 113 + 6 stack-only), real-scene E2E round trip within 4 px, reload, remove.
+
 ## 2026-11-22: Stage 8.1 appliance categories, model library and appliances
 
 - Migration `20261121001000_appliances.sql`: `appliance_categories` (22 seeded, EN/AR names and aliases, e.g. "ac" for air conditioners), `appliance_models` (global + organization library, https manuals), `appliances` (room of the same apartment, model global or own, tenant trigger).

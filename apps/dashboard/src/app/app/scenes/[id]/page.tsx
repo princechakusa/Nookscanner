@@ -32,7 +32,13 @@ export default async function ScenePage({ params }: { params: Promise<{ id: stri
   const scene = data as unknown as SceneRow;
 
   // Short-lived signed link (scene-drafts is private; storage RLS checks scan.read).
-  const [{ data: roomRows }, { data: viewRows }, { data: doorRows }] = await Promise.all([
+  const [
+    { data: roomRows },
+    { data: viewRows },
+    { data: doorRows },
+    { data: applianceRows },
+    { data: hotspotRows },
+  ] = await Promise.all([
     supabase
       .from('rooms')
       .select('id, name_en, room_type, sort_order')
@@ -46,7 +52,36 @@ export default async function ScenePage({ params }: { params: Promise<{ id: stri
       .from('scene_doorways')
       .select('room_a, room_b, position')
       .eq('scene_version_id', scene.id),
+    supabase
+      .from('appliances')
+      .select('id, name_en, rooms(name_en)')
+      .eq('apartment_id', scene.apartments?.id ?? '')
+      .order('name_en'),
+    supabase
+      .from('hotspots')
+      .select('id, appliance_id, position, verification_status')
+      .eq('scene_version_id', scene.id),
   ]);
+  const appliances = (
+    (applianceRows ?? []) as unknown as {
+      id: string;
+      name_en: string;
+      rooms: { name_en: string } | null;
+    }[]
+  ).map((a) => ({ id: a.id, name: a.name_en, roomName: a.rooms?.name_en ?? '' }));
+  const hotspots = (
+    (hotspotRows ?? []) as {
+      id: string;
+      appliance_id: string;
+      position: [number, number, number];
+      verification_status: string;
+    }[]
+  ).map((h) => ({
+    id: h.id,
+    applianceId: h.appliance_id,
+    position: h.position,
+    verified: h.verification_status === 'verified',
+  }));
   type V3 = [number, number, number];
   const rooms = ((roomRows ?? []) as { id: string; name_en: string; room_type: string }[]).map(
     (r) => ({ id: r.id, name: r.name_en, type: r.room_type }),
@@ -93,6 +128,9 @@ export default async function ScenePage({ params }: { params: Promise<{ id: stri
           rooms={rooms}
           views={views}
           doorways={doorways}
+          appliances={appliances}
+          initialHotspots={hotspots}
+          canPlaceHotspots={can('hotspot.write')}
           saved={
             scene.alignment && scene.bounds
               ? { alignment: scene.alignment, bounds: scene.bounds, start: scene.start_view }

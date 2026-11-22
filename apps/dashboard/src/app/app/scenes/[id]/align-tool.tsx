@@ -19,6 +19,7 @@ import type {
 import { Button } from '@nookscanner/ui';
 import { useEffect, useRef, useState } from 'react';
 import { saveAlignmentAction } from '../../scene-actions.ts';
+import { HotspotPanel, type ApplianceRow, type HotspotRow } from './hotspot-panel.tsx';
 import { NavigationPanel, type NavRoomRow } from './navigation-panel.tsx';
 
 type Step = 'floor' | 'measure' | 'corners' | 'review';
@@ -45,6 +46,9 @@ export function AlignTool({
   rooms = [],
   views = [],
   doorways = [],
+  appliances = [],
+  initialHotspots = [],
+  canPlaceHotspots = false,
 }: {
   sceneId: string;
   sceneUrl: string;
@@ -53,6 +57,10 @@ export function AlignTool({
   rooms?: NavRoomRow[];
   views?: RoomView[];
   doorways?: Doorway[];
+  appliances?: ApplianceRow[];
+  initialHotspots?: HotspotRow[];
+  /** hotspot.write (editors too), separate from aligning (scan.review). */
+  canPlaceHotspots?: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const viewer = useRef<Viewer | null>(null);
@@ -74,6 +82,29 @@ export function AlignTool({
   // Alignment stored in the database (navigation needs aligned metres).
   const [stored, setStored] = useState(!!saved);
   const pickHandler = useRef<((p: Vec3) => void) | null>(null);
+  const [hotspots, setHotspots] = useState<HotspotRow[]>(initialHotspots);
+  const markers = useRef(new Map<string, HTMLElement>());
+
+  // Hotspot markers follow the camera (projected every frame, no React re-render).
+  useEffect(() => {
+    if (status !== 'ready') return;
+    let frame = 0;
+    const tick = () => {
+      const v = viewer.current;
+      if (v) {
+        for (const h of hotspots) {
+          const el = markers.current.get(h.id);
+          if (!el) continue;
+          const p = v.project(h.position);
+          el.style.transform = `translate(${p.x}px, ${p.y}px)`;
+          el.hidden = !p.visible;
+        }
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [status, hotspots]);
 
   // The signed URL changes on every server render (e.g. after saving); the scene does not.
   const urlRef = useRef(sceneUrl);
@@ -107,7 +138,7 @@ export function AlignTool({
   }, [sceneId]);
 
   const onTap = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canEdit || !viewer.current) return;
+    if (!viewer.current || (!canEdit && !pickHandler.current)) return;
     if (step === 'review' && !pickHandler.current) return;
     // A drag (looking around) is not a tap.
     if (e.detail === 0) return;
@@ -224,6 +255,21 @@ export function AlignTool({
           onClick={onTap}
           aria-label="3D apartment. Drag to look around; tap to place a point."
         />
+        {status === 'ready' &&
+          hotspots.map((h) => (
+            <span
+              key={h.id}
+              ref={(el) => {
+                if (el) markers.current.set(h.id, el);
+                else markers.current.delete(h.id);
+              }}
+              className="ns-align__marker"
+              data-testid="hotspot-marker"
+              data-appliance={h.applianceId}
+            >
+              {appliances.find((a) => a.id === h.applianceId)?.name ?? ''}
+            </span>
+          ))}
         {status === 'loading' && (
           <p className="ns-align__overlay" role="status">
             Loading the 3D apartment…
@@ -323,6 +369,18 @@ export function AlignTool({
             }}
           />
         )}
+      {canPlaceHotspots && status === 'ready' && alignment && bounds && step === 'review' && (
+        <HotspotPanel
+          sceneId={sceneId}
+          appliances={appliances}
+          hotspots={hotspots}
+          onChange={setHotspots}
+          viewer={() => viewer.current}
+          onPickRequest={(cb) => {
+            pickHandler.current = cb;
+          }}
+        />
+      )}
     </section>
   );
 }

@@ -46,6 +46,13 @@ async function approvedScene(apartmentId: string): Promise<{ jobId: string; sess
        values ($1, $2, 'Entrance', 'entrance', 1), ($1, $2, 'Living room', 'living', 2)`,
       [org, apartmentId],
     );
+    // One appliance to pin (8.2).
+    await client.query(
+      `insert into public.appliances (apartment_id, room_id, category_id, name_en)
+       select $1, r.id, c.id, 'Living room AC' from public.rooms r, public.appliance_categories c
+       where r.apartment_id = $1 and r.name_en = 'Living room' and c.key = 'air_conditioner'`,
+      [apartmentId],
+    );
     const s = await client.query<{ id: string }>(
       `insert into public.scan_sessions (apartment_id, method, status) values ($1, 'video_upload', 'succeeded') returning id`,
       [apartmentId],
@@ -90,7 +97,7 @@ async function approvedScene(apartmentId: string): Promise<{ jobId: string; sess
   }
 }
 
-test('manager aligns a real 3D scene and sets room viewpoints and a doorway', async ({
+test('manager aligns a real 3D scene, sets room viewpoints and a doorway, pins an appliance', async ({
   page,
 }, info) => {
   test.skip(info.project.name !== 'desktop-chromium', 'needs a GPU-backed browser');
@@ -208,6 +215,49 @@ test('manager aligns a real 3D scene and sets room viewpoints and a doorway', as
   );
   await nav.getByRole('button', { name: 'Save rooms and doorways' }).click();
   await expect(nav.getByText('Rooms and doorways saved.')).toBeVisible();
+
+  // Stage 8.2: pin the appliance by tapping the scene; the marker is drawn back where tapped
+  // (pick -> aligned metres -> database -> projection), i.e. the point round-trips.
+  const hs = page.getByRole('region', { name: 'Hotspots' });
+  await hs.getByRole('button', { name: 'Place Living room AC in 3D' }).click();
+  await expect(hs.getByText('Tap Living room AC in the 3D view')).toBeVisible();
+  // The research scene has no true floor (its "floor" taps are guesses), so which screen points
+  // lie inside the aligned apartment is not known in advance: scan a grid. Points outside are
+  // refused by the database and the tool keeps waiting for the next tap.
+  let tapped: { x: number; y: number } | null = null;
+  const pinned = hs.getByText('Living room AC pinned.');
+  scan: for (let fy = 0.2; fy <= 0.9; fy += 0.1) {
+    for (let fx = 0.1; fx <= 0.9; fx += 0.1) {
+      await tap(fx, fy);
+      await page.waitForTimeout(400);
+      if (await pinned.isVisible()) {
+        tapped = { x: box.width * fx, y: box.height * fy };
+        break scan;
+      }
+    }
+  }
+  expect(tapped).not.toBeNull();
+  const marker = page.getByTestId('hotspot-marker');
+  await expect(marker).toHaveCount(1);
+  const markerAt = async () =>
+    marker.evaluate((el) => {
+      const m = /translate\(([-\d.]+)px, ([-\d.]+)px\)/.exec((el as HTMLElement).style.transform);
+      return m ? { x: Number(m[1]), y: Number(m[2]) } : null;
+    });
+  await expect.poll(markerAt).not.toBeNull();
+  const drawn = (await markerAt())!;
+  expect(Math.hypot(drawn.x - tapped!.x, drawn.y - tapped!.y)).toBeLessThan(4);
+  await expect(hs).toContainText('Living room AC · Living room · pinned');
+
+  // Survives a reload; then remove the pin.
+  await page.reload();
+  await expect(hs.getByRole('button', { name: 'Move Living room AC' })).toBeVisible({
+    timeout: 180_000,
+  });
+  await expect(page.getByTestId('hotspot-marker')).toHaveCount(1);
+  await hs.getByRole('button', { name: 'Remove pin of Living room AC' }).click();
+  await expect(hs.getByText('Living room AC unpinned.')).toBeVisible();
+  await expect(page.getByTestId('hotspot-marker')).toHaveCount(0);
 
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();

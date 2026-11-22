@@ -54,3 +54,58 @@ export async function saveNavigationAction(input: unknown): Promise<SaveAlignmen
   revalidatePath(`/app/scenes/${parsed.data.sceneId}`);
   return { ok: true };
 }
+
+const hotspotSchema = z.object({
+  sceneId: z.uuid(),
+  applianceId: z.uuid(),
+  position: vec3,
+  camera: z.object({ position: vec3, target: vec3 }).nullable(),
+});
+
+export type HotspotResult = { ok: true; id: string } | { ok: false; error: string };
+
+/**
+ * Stage 8.2: places (or moves) the hotspot of one appliance in this scene version. The database
+ * checks the point is inside the aligned apartment and resets verification on a move.
+ */
+export async function placeHotspotAction(input: unknown): Promise<HotspotResult> {
+  const parsed = hotspotSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: 'VALIDATION_FAILED' };
+  const d = parsed.data;
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('hotspots')
+    .upsert(
+      {
+        scene_version_id: d.sceneId,
+        appliance_id: d.applianceId,
+        position: d.position,
+        camera_pose: d.camera,
+      },
+      { onConflict: 'scene_version_id,appliance_id' },
+    )
+    .select('id')
+    .maybeSingle();
+  if (error) {
+    const outside = error.message?.includes('outside the apartment');
+    return { ok: false, error: outside ? 'OUTSIDE' : dbErrorCode(error) };
+  }
+  if (!data) return { ok: false, error: 'FORBIDDEN' };
+  revalidatePath(`/app/scenes/${d.sceneId}`);
+  return { ok: true, id: (data as { id: string }).id };
+}
+
+export async function deleteHotspotAction(input: unknown): Promise<SaveAlignmentResult> {
+  const parsed = z.object({ sceneId: z.uuid(), id: z.uuid() }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: 'VALIDATION_FAILED' };
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('hotspots')
+    .delete()
+    .eq('id', parsed.data.id)
+    .select('id');
+  if (error) return { ok: false, error: dbErrorCode(error) };
+  if (!data?.length) return { ok: false, error: 'FORBIDDEN' };
+  revalidatePath(`/app/scenes/${parsed.data.sceneId}`);
+  return { ok: true };
+}

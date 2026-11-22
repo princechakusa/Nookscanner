@@ -75,6 +75,11 @@ export interface Viewer {
   sceneUp(): Vec3;
   /** Current camera position and a point 1 m ahead, in world (aligned) coordinates. */
   getView(): { position: Vec3; target: Vec3 };
+  /**
+   * Screen position (CSS pixels from the canvas's top-left) of a WORLD point, for hotspot markers;
+   * `visible` is false behind the camera or outside the view.
+   */
+  project(point: Vec3): { x: number; y: number; visible: boolean };
   resize(): void;
   dispose(): void;
 }
@@ -280,6 +285,16 @@ export async function createViewer(o: ViewerOptions): Promise<Viewer> {
       return { position: [p.x, p.y, p.z], target: [t.x, t.y, t.z] };
     },
     setAlignment: applyAlignment,
+    project(point) {
+      const v = new THREE.Vector3(point[0], point[1], point[2]).project(camera);
+      const w = o.canvas.clientWidth;
+      const h = o.canvas.clientHeight;
+      return {
+        x: ((v.x + 1) / 2) * w,
+        y: ((1 - v.y) / 2) * h,
+        visible: v.z > -1 && v.z < 1 && Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1,
+      };
+    },
     resize,
     dispose() {
       disposed = true;

@@ -697,3 +697,29 @@ body {
   justify-content: space-between;
   gap: var(--nt-space-2);
 }
+/* Hotspot markers (Stage 8.2): projected each frame; the dot sits on the point. */
+.ns-align__marker {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  padding: 2px 8px 2px 18px;
+  border-radius: 999px;
+  background: var(--nt-color-viewer-panel);
+  color: var(--nt-color-viewer-text);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  translate: -7px -50%;
+}
+.ns-align__marker::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 2px;
+  inset-block-start: 50%;
+  inline-size: 10px;
+  block-size: 10px;
+  margin-block-start: -5px;
+  border-radius: 50%;
+  background: var(--nt-color-brand-accent);
+  box-shadow: 0 0 0 2px #fff;
+}

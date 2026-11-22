@@ -198,7 +198,7 @@ PK `(property_id, user_id)`; `organization_id`, `property_id FK properties on de
 ### 4.19 `appliances` (D, Stage 8.1: parent-org trigger from the apartment; `check_appliance_links` trigger: room in the same apartment, model global or own; RLS like rooms with `appliance.write`)
 `id`, `organization_id`, `apartment_id`, `room_id`, `category_id`, `appliance_model_id null`, `name_en`, `name_ar`, `brand`, `model_number`, `notes`. Index `(apartment_id)`, `(room_id)`. Trigger: room belongs to same apartment.
 
-### 4.20 `hotspots` (D)
+### 4.20 `hotspots` (D, migration `20261122001100`, Stage 8.2: aligned metres; `check_hotspot` trigger derives organization/apartment from the scene, requires an aligned draft/approved version and a point inside the outline + 0.5 m, resets verification on insert and on any move or client change; `verified_by/verified_at` set only by the platform (8.4 RPC); RLS `hotspot.write`, read with `apartment.read`. `room_id`, `reference_image_path` and `publication_status` are not stored: the room comes from the appliance, publication from the scene snapshot in 8.5)
 `id`, `organization_id`, `apartment_id`, `scene_version_id`, `room_id`, `appliance_id`, `position double precision[3]`, `normal double precision[3]`, `camera_pose jsonb`, `reference_image_path text`, `verification_status verification_status`, `publication_status publication_status`, `created_by`. Check array lengths = 3. Unique `(scene_version_id, appliance_id)`.
 
 ### 4.21 `instructions` (D)
