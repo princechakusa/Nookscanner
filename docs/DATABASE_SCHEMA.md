@@ -210,7 +210,7 @@ PK `(property_id, user_id)`; `organization_id`, `property_id FK properties on de
 ### 4.23 `instruction_media` (D, Stage 8.3: `kind image|video`, `object_path` must be `org/<org>/apartments/<apt>/instructions/<instruction>/<name>.<jpg|jpeg|png|webp|mp4|mov>` matching the kind; <= 50 MB; storage delete policy added)
 `id`, `organization_id`, `instruction_id`, `kind media_kind`, `bucket`, `object_path`, `locale null`, `caption_en`, `caption_ar`, `duration_ms`, `size_bytes`, `sort_order`, `transcode_status`.
 
-### 4.24 `published_versions` (D)
+### 4.24 `published_versions` (D, migration `20261122001400`, Stage 8.5, ADR-022: written only by `publish_apartment`; `publish_check` lists problems; `unpublish_apartment`; snapshot from verified content; read with `apartment.read`)
 `id`, `organization_id`, `apartment_id`, `version int`, `scene_version_id`, `snapshot jsonb` (guest payload), `published_by`, `published_at`. Insert only via `publish_apartment` RPC. Immutable.
 
 ### 4.25 `qr_codes` (M)

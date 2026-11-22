@@ -31,6 +31,8 @@ import {
   updateApplianceAction,
 } from '../../appliance-actions.ts';
 import { AddApplianceForm, EditApplianceForm } from '../../appliance-forms.tsx';
+import { publishAction, unpublishAction } from '../../publish-actions.ts';
+import { PublishForm } from '../../publish-forms.tsx';
 
 export const metadata: Metadata = { title: 'Apartment' };
 
@@ -136,6 +138,57 @@ export default async function ApartmentPage({ params }: { params: Promise<{ id: 
       p.verification_status === 'verified' ? 'verified' : 'unverified',
     ]),
   );
+  // Publishing (8.5): the newest approved scene version and what blocks it.
+  const canPublish = can('apartment.publish');
+  const { data: approvedRow } = await supabase
+    .from('scene_versions')
+    .select('id, version')
+    .eq('apartment_id', row.id)
+    .in('status', ['approved', 'published'])
+    .order('version', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const approved = approvedRow as { id: string; version: number } | null;
+  const { data: problemData } =
+    canPublish && approved
+      ? await supabase.rpc('publish_check', { p_apartment: row.id, p_scene: approved.id })
+      : { data: null };
+  const problems = (problemData ?? []) as { code: string; id?: string; locale?: string }[];
+  const { data: pubRow } = await supabase
+    .from('published_versions')
+    .select('version, published_at')
+    .eq('apartment_id', row.id)
+    .order('version', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const published = pubRow as { version: number; published_at: string } | null;
+  const roomName = new Map(rooms.map((r) => [r.id, r.name_en]));
+  const problemText = (p: { code: string; id?: string; locale?: string }) => {
+    const room = p.id ? roomName.get(p.id) : undefined;
+    // Called while rendering, after `appliances` below exists.
+    const appl = p.id ? appliances.find((x) => x.id === p.id)?.nameEn : undefined;
+    const lang = p.locale === 'ar' ? 'Arabic' : 'English';
+    switch (p.code) {
+      case 'SCENE_NOT_APPROVED':
+        return 'Approve a 3D scan first.';
+      case 'SCENE_NOT_ALIGNED':
+        return 'Align the 3D apartment (floor, size, outline).';
+      case 'SCENE_FILE_MISSING':
+        return 'The 3D file of this version is missing.';
+      case 'NO_ROOMS':
+        return 'Create the rooms.';
+      case 'ROOM_WITHOUT_VIEWPOINT':
+        return `${room ?? 'A room'} has no viewpoint in the 3D apartment.`;
+      case 'ROOM_UNREACHABLE':
+        return `${room ?? 'A room'} cannot be reached from the entrance (add a doorway).`;
+      case 'HOTSPOT_UNVERIFIED':
+        return `The pin of ${appl ?? 'an appliance'} is not verified.`;
+      case 'INSTRUCTION_UNVERIFIED':
+        return `${appl ?? 'An appliance'} has no verified ${lang} instructions.`;
+      default:
+        return p.code;
+    }
+  };
   const STATUS_TEXT: Record<Status, string> = {
     verified: 'verified',
     unverified: 'not verified',
@@ -424,6 +477,60 @@ export default async function ApartmentPage({ params }: { params: Promise<{ id: 
           </>
         )}
       </section>
+
+      {canPublish && (
+        <section className="ns-panel" aria-labelledby="publish-h">
+          <h2 id="publish-h" className="ns-panel__title">
+            Publish
+          </h2>
+          <p className="ns-muted" data-testid="publish-state">
+            {row.status === 'published' && published
+              ? `Published · version ${published.version}. Guests with a QR code see it.`
+              : published
+                ? `Not published (last published version ${published.version}). Guests cannot open it.`
+                : 'Not published yet. Guests cannot open it.'}
+          </p>
+          {!approved ? (
+            <p className="ns-muted">Approve a 3D scan of this apartment first.</p>
+          ) : problems.length > 0 ? (
+            <>
+              <p>Before guests can see 3D version {approved.version}:</p>
+              <ul className="ns-field__error" aria-label="Publishing blocked by">
+                {problems.map((p, i) => (
+                  <li key={i}>{problemText(p)}</li>
+                ))}
+              </ul>
+              <p>
+                <Link href={`/app/scenes/${approved.id}`}>Open the 3D apartment</Link>
+              </p>
+            </>
+          ) : (
+            <p className="ns-notice" role="status">
+              Ready: 3D version {approved.version}, every room reachable, pins and instructions
+              verified.
+            </p>
+          )}
+          <div className="ns-inline-form">
+            {approved && (
+              <PublishForm
+                action={publishAction}
+                apartmentId={row.id}
+                sceneId={approved.id}
+                label={row.status === 'published' ? 'Publish again' : 'Publish'}
+                disabled={problems.length > 0}
+              />
+            )}
+            {row.status === 'published' && (
+              <form action={unpublishAction}>
+                <input type="hidden" name="apartmentId" value={row.id} />
+                <button type="submit" className="ns-btn ns-btn--danger ns-btn--md">
+                  Unpublish now
+                </button>
+              </form>
+            )}
+          </div>
+        </section>
+      )}
 
       {canManageQr && (
         <section className="ns-panel" aria-labelledby="qr-h">

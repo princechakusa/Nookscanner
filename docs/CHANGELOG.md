@@ -2,6 +2,12 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-22: Stage 8.5 publishing (Phase 8 complete)
+
+- Migration `20261122001400_publishing.sql` (ADR-022): publish rules in SQL, guest snapshot from verified content, immutable published versions, unpublish.
+- Dashboard: Publish panel on the apartment page.
+- Tests: DB 5 new (snapshot validated against `guestExperienceSchema`), publish E2E 2/2.
+
 ## 2026-11-22: Stage 8.4 verification workflow
 
 - Migration `20261122001300_verification.sql`: `verify_instruction_version`, `verify_hotspot` (instruction.verify), hotspot trigger rebuilt from its latest body with a verification branch.

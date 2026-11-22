@@ -75,6 +75,8 @@ describe('migrations', () => {
       'create_invitation',
       'create_organization',
       'create_qr_code',
+      'publish_apartment',
+      'publish_check',
       'register_media_upload',
       'review_processing_result',
       'revoke_invitation',
@@ -82,6 +84,7 @@ describe('migrations', () => {
       'save_scene_alignment',
       'save_scene_navigation',
       'submit_scan_for_processing',
+      'unpublish_apartment',
       'verify_hotspot',
       'verify_instruction_version',
     ]);

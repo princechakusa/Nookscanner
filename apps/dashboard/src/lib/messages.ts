@@ -23,6 +23,7 @@ const MESSAGES: Record<string, string> = {
   ROOM_REQUIRED: 'Choose a room.',
   CATEGORY_REQUIRED: 'Choose what kind of appliance this is.',
   STEPS_REQUIRED: 'Write at least one step.',
+  PUBLISH_BLOCKED: 'Something changed and publishing is blocked again. Check the list above.',
   STEP_TOO_LONG: 'One of the steps is too long (1000 characters at most).',
   TOO_MANY_STEPS: 'Use at most 30 steps.',
   PROBLEM_REQUIRED: 'Each solution needs its problem.',
