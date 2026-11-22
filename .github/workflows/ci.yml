@@ -31,6 +31,8 @@ jobs:
           NEXT_PUBLIC_APP_ENV: local
           NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:56521
           NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ci_placeholder
+          # Public value (.env.example); the guest E2E intercepts these calls (guest-link.spec.ts).
+          VITE_GUEST_API_BASE: https://nfcnckwjrwpofkrzribd.supabase.co/functions/v1
       - run: npm run check:secrets
       # KI-029: a deployable guest build must never contain local 3D scene files.
       - run: node scripts/check-guest-dist.mjs
