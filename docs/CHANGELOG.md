@@ -2,6 +2,10 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-23: Modal worker crashed at start-up
+
+- First real walkthrough failed with WORKER_TIMEOUT after 3 attempts: every Modal container crashed importing `modal_app.py` (`Path(__file__).parents[2]` does not exist at `/root/modal_app.py`). The repository root is now computed only where it exists. Worker tests 65/65; redeployed.
+
 ## 2026-11-22: Capture app fixes from device testing
 
 - Bug: walkthroughs stayed in `recording` after their video uploaded (the app marks the session `recording` before queueing; completion only advanced `uploading`), so no 3D job could start. Migration `20261122002100_session_uploaded_from_recording.sql` (trigger on upload completion, both backends, plus backfill; applied to hosted, 2 sessions freed). Regression test in `capture.test.ts` (capture, R2, migrations: 41/41).

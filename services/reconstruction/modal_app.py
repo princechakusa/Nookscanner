@@ -24,7 +24,11 @@ from pathlib import Path
 
 import modal
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+# The repository root is needed only on the deploying machine (to build the image). Inside a Modal
+# container this file is /root/modal_app.py, which has no grandparent: computing parents[2] there
+# crashed every container at import (IndexError), so no job ever started.
+_HERE = Path(__file__).resolve()
+REPO_ROOT = _HERE.parents[2] if len(_HERE.parents) > 2 else _HERE.parent
 GPU = os.environ.get("NOOK_MODAL_GPU", "L40S")
 # Price per second for the GPU above (VERIFIED 2026-11-19, https://modal.com/pricing); used only
 # for the per-job cost estimate stored in the report. Re-check when prices change.
