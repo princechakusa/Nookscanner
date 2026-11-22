@@ -1,6 +1,7 @@
 import { estimateRemainingMs, formatDuration, type UploadJob } from '@nookscanner/shared';
 import { useCallback, useEffect, useState } from 'react';
 import { AppState, ScrollView, Text, View } from 'react-native';
+import { loadSettings, saveSettings } from '../lib/settings.ts';
 import { loadQueue, runQueue, type UploadProgress } from '../lib/uploads.ts';
 import { Button, ErrorText, Screen, colors, styles } from '../ui.tsx';
 
@@ -13,6 +14,7 @@ const mb = (n: number) => `${(n / (1024 * 1024)).toFixed(0)} MB`;
 export function Uploads({ onDone }: { onDone: () => void }) {
   const [jobs, setJobs] = useState<UploadJob[] | null>(null);
   const [progress, setProgress] = useState<UploadProgress | null>(null);
+  const [blocked, setBlocked] = useState<'offline' | 'wifi' | null>(null);
   // Speed is measured from the first progress this screen saw, not from when it opened: bytes
   // sent before (in the background or an earlier visit) must not make the estimate too short.
   const [baseline, setBaseline] = useState<{ uploadId: string; at: number; sent: number } | null>(
@@ -25,7 +27,7 @@ export function Uploads({ onDone }: { onDone: () => void }) {
 
   const refresh = useCallback(async () => setJobs(await loadQueue()), []);
   const run = useCallback(async () => {
-    await runQueue(setProgress);
+    await runQueue(setProgress, setBlocked);
     await refresh();
   }, [refresh]);
 
@@ -49,7 +51,30 @@ export function Uploads({ onDone }: { onDone: () => void }) {
       : null;
 
   return (
-    <Screen title="Uploading">
+    <Screen title="Uploads">
+      {blocked && jobs && jobs.length > 0 ? (
+        <View style={[styles.card, { gap: 8, borderColor: colors.accent }]}>
+          <Text style={[styles.text, { fontWeight: '700' }]}>
+            {blocked === 'wifi' ? 'Waiting for Wi-Fi' : 'No internet connection'}
+          </Text>
+          <Text style={styles.muted}>
+            {blocked === 'wifi'
+              ? 'Walkthroughs are large, so they upload on Wi-Fi only. Uploading resumes by itself on Wi-Fi.'
+              : 'Uploading resumes by itself when the phone is back online.'}
+          </Text>
+          {blocked === 'wifi' ? (
+            <Button
+              label="Use mobile data for uploads"
+              variant="secondary"
+              onPress={() =>
+                void loadSettings()
+                  .then((s) => saveSettings({ ...s, wifiOnly: false }))
+                  .then(run)
+              }
+            />
+          ) : null}
+        </View>
+      ) : null}
       <Text style={styles.muted}>
         You can switch to other apps; the upload continues. If the connection drops, it carries on
         where it stopped.

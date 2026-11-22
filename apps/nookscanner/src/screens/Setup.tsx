@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { supabase } from '../lib/supabase.ts';
 import { Button, ErrorText, colors, styles } from '../ui.tsx';
+import { JoinWithCode } from './JoinWithCode.tsx';
 
 /**
  * First-run setup in the app (for accounts made in the app, e.g. with Sign in with Apple, which
@@ -106,6 +107,7 @@ export function Setup({ email, onDone }: { email: string | null; onDone: () => v
         busy={busy}
         disabled={!ready}
       />
+      <JoinWithCode email={email} onJoined={onDone} />
       <Button label="Sign out" variant="secondary" onPress={() => void supabase.auth.signOut()} />
     </ScrollView>
   );

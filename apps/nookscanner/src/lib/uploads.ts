@@ -11,6 +11,7 @@ import {
   type UploadJob,
 } from '@nookscanner/shared';
 import { Directory, File, FileMode, Paths, UploadType } from 'expo-file-system';
+import { uploadBlocker } from './settings.ts';
 import { supabase, supabaseConfig } from './supabase.ts';
 
 /**
@@ -178,8 +179,15 @@ let running = false;
  * Works through the queue until it is empty or the network fails. Safe to call repeatedly (for
  * example whenever the app returns to the foreground); only one run happens at a time.
  */
-export async function runQueue(onProgress: (p: UploadProgress | null) => void): Promise<void> {
+export async function runQueue(
+  onProgress: (p: UploadProgress | null) => void,
+  onBlocked: (reason: 'offline' | 'wifi' | null) => void = () => {},
+): Promise<void> {
   if (running) return;
+  // Settings: walkthroughs wait for Wi-Fi unless mobile data is allowed (Account > Settings).
+  const blocked = await uploadBlocker();
+  onBlocked(blocked);
+  if (blocked) return;
   running = true;
   try {
     for (let job of await loadQueue()) {
@@ -197,6 +205,12 @@ export async function runQueue(onProgress: (p: UploadProgress | null) => void): 
       await updateJob(job);
 
       for (let part = nextPendingPart(job); part; part = nextPendingPart(job)) {
+        // Wi-Fi may drop while a long walkthrough uploads: stop before the next part.
+        const reason = await uploadBlocker();
+        if (reason) {
+          onBlocked(reason);
+          return;
+        }
         const done = job.parts
           .filter((p) => p.status === 'uploaded')
           .reduce((s, p) => s + p.sizeBytes, 0);

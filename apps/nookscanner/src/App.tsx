@@ -12,6 +12,7 @@ import { Account } from './screens/Account.tsx';
 import { ApartmentDetail } from './screens/ApartmentDetail.tsx';
 import { NewApartment } from './screens/NewApartment.tsx';
 import { ScanDetail } from './screens/ScanDetail.tsx';
+import { Team } from './screens/Team.tsx';
 import { Home } from './screens/Home.tsx';
 import { Uploads } from './screens/Uploads.tsx';
 import { loadQueue } from './lib/uploads.ts';
@@ -23,6 +24,7 @@ type Route =
   | { name: 'tabs' }
   | { name: 'apartment'; apartment: ApartmentItem }
   | { name: 'newApartment' }
+  | { name: 'team' }
   | { name: 'scan'; scanId: string; apartmentName: string; apartment?: ApartmentItem | undefined }
   | { name: 'plan'; apartment: ApartmentItem }
   | { name: 'capture'; job: CaptureJob }
@@ -75,7 +77,6 @@ export default function App() {
   switch (route.name) {
     case 'tabs': {
       const email = session.user.email ?? null;
-      const name = (session.user.user_metadata?.full_name as string | undefined) ?? null;
       return (
         <View style={{ flex: 1 }}>
           <View style={{ flex: 1 }}>
@@ -95,7 +96,14 @@ export default function App() {
               />
             )}
             {tab === 'uploads' && <Uploads onDone={() => setTab('home')} />}
-            {tab === 'account' && <Account email={email} name={name} />}
+            {tab === 'account' && (
+              <Account
+                email={email}
+                userId={session.user.id}
+                onTeam={() => setRoute({ name: 'team' })}
+                onJoined={() => setApartmentsVersion((v) => v + 1)}
+              />
+            )}
           </View>
           <TabBar active={tab} onChange={setTab} badges={{ uploads: uploading }} />
         </View>
@@ -112,6 +120,8 @@ export default function App() {
           }
         />
       );
+    case 'team':
+      return <Team onBack={() => setRoute({ name: 'tabs' })} />;
     case 'newApartment':
       return (
         <NewApartment
