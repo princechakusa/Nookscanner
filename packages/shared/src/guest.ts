@@ -139,19 +139,21 @@ export function pick(value: Localized, locale: GuestLocale): string {
  * taa-marbuta forms unified, Arabic-Indic digits to 0-9, punctuation to spaces.
  */
 export function normalizeQuery(input: string): string {
-  return input
-    .toLowerCase()
-    .normalize('NFKC')
-    // Harakat U+064B-U+065F, superscript alef U+0670, tatweel U+0640 (NOT the digits U+0660-9).
-    .replace(/[ً-ٰٟـ]/g, '')
-    .replace(/[إأآٱ]/g, 'ا')
-    .replace(/ى/g, 'ي')
-    .replace(/ة/g, 'ه')
-    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
-    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
-    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return (
+    input
+      .toLowerCase()
+      .normalize('NFKC')
+      // Harakat U+064B-U+065F, superscript alef U+0670, tatweel U+0640 (NOT the digits U+0660-9).
+      .replace(/[ً-ٰٟـ]/g, '')
+      .replace(/[إأآٱ]/g, 'ا')
+      .replace(/ى/g, 'ي')
+      .replace(/ة/g, 'ه')
+      .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+      .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+      .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  );
 }
 
 /** Words of a normalised text; the Arabic article "ال" is dropped ("المكيف" ~ "مكيف"). */
