@@ -201,13 +201,13 @@ PK `(property_id, user_id)`; `organization_id`, `property_id FK properties on de
 ### 4.20 `hotspots` (D, migration `20261122001100`, Stage 8.2: aligned metres; `check_hotspot` trigger derives organization/apartment from the scene, requires an aligned draft/approved version and a point inside the outline + 0.5 m, resets verification on insert and on any move or client change; `verified_by/verified_at` set only by the platform (8.4 RPC); RLS `hotspot.write`, read with `apartment.read`. `room_id`, `reference_image_path` and `publication_status` are not stored: the room comes from the appliance, publication from the scene snapshot in 8.5)
 `id`, `organization_id`, `apartment_id`, `scene_version_id`, `room_id`, `appliance_id`, `position double precision[3]`, `normal double precision[3]`, `camera_pose jsonb`, `reference_image_path text`, `verification_status verification_status`, `publication_status publication_status`, `created_by`. Check array lengths = 3. Unique `(scene_version_id, appliance_id)`.
 
-### 4.21 `instructions` (D)
+### 4.21 `instructions` (D, migration `20261122001200`, Stage 8.3: one per appliance (`appliance_id unique`); `apartment_id` derived for RLS; model-level rows reserved for the library, not exposed to clients yet; ADR-021)
 `id`, `organization_id null` (null for global model instructions), `appliance_id null`, `appliance_model_id null`, check exactly one of the two is set, `title_en`, `current_version_en uuid`, `current_version_ar uuid`.
 
-### 4.22 `instruction_versions` (D)
+### 4.22 `instruction_versions` (D, Stage 8.3: append-only; trigger assigns the next version per language, forces unverified, author = caller, checks step/troubleshooting shapes; no update/delete grants, updates only for verification via a definer flag in 8.4)
 `id`, `organization_id`, `instruction_id`, `locale locale_code`, `version int`, `title text`, `steps jsonb` (array of {text, media_id?}), `troubleshooting jsonb` (array of {problem, solution}), `body_md text` (sanitized on render), `verification_status`, `verified_by`, `verified_at`, `created_by`. Unique `(instruction_id, locale, version)`. Immutable after verification (trigger).
 
-### 4.23 `instruction_media` (D)
+### 4.23 `instruction_media` (D, Stage 8.3: `kind image|video`, `object_path` must be `org/<org>/apartments/<apt>/instructions/<instruction>/<name>.<jpg|jpeg|png|webp|mp4|mov>` matching the kind; <= 50 MB; storage delete policy added)
 `id`, `organization_id`, `instruction_id`, `kind media_kind`, `bucket`, `object_path`, `locale null`, `caption_en`, `caption_ar`, `duration_ms`, `size_bytes`, `sort_order`, `transcode_status`.
 
 ### 4.24 `published_versions` (D)

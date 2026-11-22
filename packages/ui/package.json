@@ -6,7 +6,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./ui.css": "./src/ui.css"
+    "./ui.css": "./src/ui.css",
+    "./markdown": "./src/markdown.tsx"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
@@ -27,5 +28,8 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "vitest": "^5.1.1"
+  },
+  "dependencies": {
+    "@nookscanner/shared": "*"
   }
 }

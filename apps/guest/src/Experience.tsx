@@ -13,6 +13,7 @@ import {
 } from '@nookscanner/shared';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { BrandMark, Icon, categoryIcon, roomIcon } from './icons.tsx';
+import { Markdown } from '@nookscanner/ui/markdown';
 import { Scene3D } from './Scene3D.tsx';
 import { format, localDigits, messages, type Locale } from './i18n.ts';
 
@@ -348,7 +349,9 @@ function InstructionSheet({
                     <span className="g-step__n" aria-hidden="true">
                       {localDigits(i + 1, locale)}
                     </span>
-                    <span>{pick(step.text, locale)}</span>
+                    <span>
+                      <Markdown source={pick(step.text, locale)} inline />
+                    </span>
                   </li>
                 ))}
               </ol>
@@ -361,7 +364,9 @@ function InstructionSheet({
                 <Icon name="help" />
                 {pick(tr.problem, locale)}
               </summary>
-              <p>{pick(tr.solution, locale)}</p>
+              <p>
+                <Markdown source={pick(tr.solution, locale)} inline />
+              </p>
             </details>
           ))}
 

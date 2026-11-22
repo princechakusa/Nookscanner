@@ -82,6 +82,8 @@ describe('migrations', () => {
       'save_scene_alignment',
       'save_scene_navigation',
       'submit_scan_for_processing',
+      'verify_hotspot',
+      'verify_instruction_version',
     ]);
   });
 

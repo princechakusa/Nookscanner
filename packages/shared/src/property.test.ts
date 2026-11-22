@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_LAYOUT,
   applianceSchema,
+  instructionSchema,
   ROOM_TYPES,
   ROOM_TYPE_LABELS,
   apartmentSchema,
@@ -243,5 +244,43 @@ describe('applianceSchema (8.1)', () => {
       nameEn: 'NAME_REQUIRED',
       notes: 'TOO_LONG',
     });
+  });
+});
+
+describe('instructionSchema (8.3)', () => {
+  it('turns lines into steps (dropping numbers and bullets) and drops empty troubleshooting pairs', () => {
+    const r = instructionSchema.parse({
+      locale: 'ar',
+      title: ' التبريد ',
+      steps: '1. Press **Power**\n\n- Choose Cool\r\n  3) Set 24 °C  ',
+      troubleshooting: [
+        { problem: 'No cold air', solution: 'Close the windows.' },
+        { problem: ' ', solution: '' },
+      ],
+      bodyMd: '',
+    });
+    expect(r).toEqual({
+      locale: 'ar',
+      title: 'التبريد',
+      steps: ['Press **Power**', 'Choose Cool', 'Set 24 °C'],
+      troubleshooting: [{ problem: 'No cold air', solution: 'Close the windows.' }],
+      bodyMd: null,
+    });
+  });
+  it('requires a title and a step, and complete troubleshooting pairs', () => {
+    const r = instructionSchema.safeParse({
+      locale: 'fr',
+      title: '',
+      steps: ' \n ',
+      troubleshooting: [{ problem: 'Noise', solution: '' }],
+    });
+    expect(r.success).toBe(false);
+    const codes = r.error!.issues.map((i) => i.message).sort();
+    expect(codes).toEqual([
+      'INVALID_VALUE',
+      'NAME_REQUIRED',
+      'SOLUTION_REQUIRED',
+      'STEPS_REQUIRED',
+    ]);
   });
 });

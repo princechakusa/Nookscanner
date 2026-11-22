@@ -723,3 +723,41 @@ body {
   background: var(--nt-color-brand-accent);
   box-shadow: 0 0 0 2px #fff;
 }
+
+/* Instructions (Stage 8.3) */
+.ns-steps {
+  margin: 0;
+  padding-inline-start: 1.4em;
+  display: grid;
+  gap: var(--nt-space-2);
+}
+.ns-trouble {
+  display: grid;
+  gap: var(--nt-space-3);
+  margin: var(--nt-space-4) 0 0;
+}
+.ns-trouble dt {
+  font-weight: 600;
+}
+.ns-trouble dd {
+  margin: 0;
+}
+.ns-media {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--nt-space-4);
+  margin: 0 0 var(--nt-space-4);
+  padding: 0;
+  list-style: none;
+}
+.ns-media__item {
+  display: grid;
+  gap: var(--nt-space-2);
+}
+.ns-media__thumb {
+  inline-size: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--nt-radius-md);
+  background: var(--nt-color-neutral-subtle);
+}

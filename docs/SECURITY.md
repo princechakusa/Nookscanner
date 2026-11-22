@@ -48,7 +48,7 @@ Version 1.0 (2026-11-19). Threats and mitigations are analysed in [`THREAT_MODEL
 
 | Topic | Control |
 |---|---|
-| XSS | React escaping; no `dangerouslySetInnerHTML` except sanitized Markdown (rehype-sanitize allowlist); strict CSP (no inline scripts except nonce'd Next.js) |
+| XSS | React escaping; no `dangerouslySetInnerHTML` anywhere; instruction text is a Markdown subset parsed to a tree and rendered as React elements, links https/tel/mailto only (ADR-021); strict CSP (no inline scripts except nonce'd Next.js) |
 | SQL injection | PostgREST/parameterized RPC only; no dynamic SQL in functions except `format()` with `%I/%L` |
 | CSRF | Dashboard server actions: Next.js Origin check + SameSite=Lax cookies; Supabase REST uses Bearer tokens (not cookies) |
 | SSRF | No server fetches user-supplied URLs; `manual_url` stored but never fetched server-side; worker downloads only from our signed storage URLs (host allowlist) |

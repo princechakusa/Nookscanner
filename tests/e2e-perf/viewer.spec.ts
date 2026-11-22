@@ -112,6 +112,8 @@ test('a device that cannot hold 30 fps steps quality down (governor, 7.5)', asyn
     .toBe(true);
   const fps = await scene.getAttribute('data-fps').catch(() => null);
   const level = await scene.getAttribute('data-quality-level').catch(() => null);
-  console.warn(`throttled: fps=${fps} qualityLevel=${level} fallback=${await fallback.isVisible()}`);
+  console.warn(
+    `throttled: fps=${fps} qualityLevel=${level} fallback=${await fallback.isVisible()}`,
+  );
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
 });

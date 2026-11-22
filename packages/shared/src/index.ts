@@ -13,6 +13,8 @@ export {
   ROOM_TYPE_LABELS,
   apartmentSchema,
   applianceSchema,
+  instructionSchema,
+  type InstructionInput,
   type ApplianceInput,
   layoutSchema,
   layoutSummary,
@@ -36,3 +38,4 @@ export * from './capture.ts';
 export * from './quality.ts';
 export * from './upload-queue.ts';
 export * from './scene-quality.ts';
+export * from './markdown.ts';

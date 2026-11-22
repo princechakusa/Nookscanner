@@ -2,6 +2,14 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-22: Stage 8.3 instructions, versions and media (EN/AR)
+
+- Migration `20261122001200_instructions.sql`: `instructions`, append-only `instruction_versions`, `instruction_media`, storage delete policy for `instruction-media`.
+- `packages/shared/src/markdown.ts` + `packages/ui/src/markdown.tsx` (ADR-021); guest sheet renders steps and solutions with it.
+- Dashboard: "Instructions" per appliance (EN/AR editors, preview, versions, photos/videos); CSP allows images/video from the Storage origin.
+- Fixed during testing: troubleshooting entries without a solution passed the SQL check (`<>` on NULL); now `is distinct from`. CI: Prettier slip in the perf spec (7.5) and an appliances spec race on the slower CI runner.
+- Tests: shared 190, ui 8, guest 20, dashboard 30, DB real stack 125/125, instructions E2E 2/2.
+
 ## 2026-11-22: Stage 8.2 hotspot placement
 
 - Migration `20261122001100_hotspots.sql`: `hotspots` + `verification_status` enum; trigger checks (same apartment, aligned and unfrozen scene, inside the outline, unit normal) and resets verification on a move.

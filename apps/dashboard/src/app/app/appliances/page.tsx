@@ -50,7 +50,9 @@ export default async function AppliancesPage() {
             <li key={a.id} className="ns-rooms__item">
               <div className="ns-rooms__row">
                 <span className="ns-rooms__name">
-                  <span className="ns-rooms__en">{a.name_en}</span>
+                  <Link href={`/app/appliances/${a.id}`} className="ns-rooms__en">
+                    {a.name_en}
+                  </Link>
                 </span>
                 <span className="ns-muted">
                   {[a.appliance_categories?.name_en, a.brand, a.model_number]

@@ -259,3 +259,29 @@ describe('hotspots', () => {
     );
   });
 });
+
+describe('hotspot verification (8.4)', () => {
+  it('managers verify; a move makes it unverified; editors and other orgs cannot verify', async () => {
+    const scene = await alignedScene(apartment);
+    const appl = await appliance(apartment, room);
+    const h = await place(u.editor, scene, appl, [0, 1, 0]);
+    const verify = (user: string) =>
+      asUser(db, user, (tx) => tx.query(`select public.verify_hotspot($1)`, [h]));
+    const status = async () =>
+      await one(
+        db.query<{ verification_status: string; verified_by: string | null }>(
+          `select verification_status::text, verified_by from public.hotspots where id = $1`,
+          [h],
+        ),
+      );
+    for (const user of [u.editor, u.viewer, u.ownerB]) {
+      expect(await expectError(verify(user))).toMatch(/NOT_FOUND/);
+    }
+    await verify(u.owner);
+    expect(await status()).toEqual({ verification_status: 'verified', verified_by: u.owner });
+    await asUser(db, u.editor, (tx) =>
+      tx.query(`update public.hotspots set position = '{0.2,1,0}' where id = $1`, [h]),
+    );
+    expect(await status()).toEqual({ verification_status: 'unverified', verified_by: null });
+  });
+});

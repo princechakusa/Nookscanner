@@ -19,6 +19,7 @@ export function contentSecurityPolicy({
   nonce?: string;
 }): string {
   const supabase = supabaseUrl ? ` ${supabaseUrl} ${supabaseUrl.replace(/^http/, 'ws')}` : '';
+  const storage = supabaseUrl ? ` ${supabaseUrl}` : '';
   // 'wasm-unsafe-eval' lets the 3D viewer (Spark) compile its WebAssembly module; it does not
   // allow eval() of JavaScript strings.
   const scripts = nonce
@@ -28,10 +29,11 @@ export function contentSecurityPolicy({
     'default-src': "'self'",
     'script-src': scripts,
     'style-src': "'self' 'unsafe-inline'",
-    'img-src': "'self' data: blob:",
+    // Signed Storage URLs for instruction photos and videos (Stage 8.3); http(s) origin only.
+    'img-src': `'self' data: blob:${storage}`,
     'font-src': "'self'",
     'connect-src': `'self'${supabase}`,
-    'media-src': "'self' blob:",
+    'media-src': `'self' blob:${storage}`,
     'worker-src': "'self' blob:",
     'frame-ancestors': "'none'",
     'base-uri': "'self'",

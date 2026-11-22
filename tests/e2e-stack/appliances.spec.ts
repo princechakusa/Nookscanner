@@ -62,6 +62,10 @@ test('appliances: add, validate, edit, move room, delete, organization list', as
   await edit.getByLabel('Name (English)').fill('Bedroom AC');
   await edit.getByLabel('Room', { exact: true }).selectOption({ label: 'Bedroom' });
   await edit.getByRole('button', { name: 'Save Living room AC' }).click();
+  // Wait for the server action (the row moves to the bedroom) before reloading; CI is slower.
+  await expect(section.getByRole('list', { name: 'Appliances in Bedroom' })).toContainText(
+    'Bedroom AC',
+  );
   await page.reload();
   await expect(section.getByRole('list', { name: 'Appliances in Bedroom' })).toContainText(
     'Bedroom AC',
@@ -73,7 +77,7 @@ test('appliances: add, validate, edit, move room, delete, organization list', as
   const all = page.getByRole('list', { name: 'All appliances' });
   await expect(all.getByRole('listitem')).toHaveCount(2);
   await expect(all).toContainText('Bedroom AC');
-  await all.getByRole('link', { name: /Bedroom/ }).click();
+  await all.getByRole('link', { name: /Appl Flat .* · Bedroom/ }).click();
   await expect(page).toHaveURL(apartmentUrl);
 
   // Delete.

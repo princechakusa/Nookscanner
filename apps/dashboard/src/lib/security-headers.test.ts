@@ -38,4 +38,15 @@ describe('dashboard security headers', () => {
     expect(atob(a)).toHaveLength(16);
     expect(createNonce()).not.toBe(a);
   });
+
+  it('allows images and video only from the site and the Storage origin (8.3)', () => {
+    const csp = contentSecurityPolicy({
+      isDev: false,
+      nonce: 'n',
+      supabaseUrl: 'https://abc.supabase.co',
+    });
+    expect(csp).toContain("img-src 'self' data: blob: https://abc.supabase.co;");
+    expect(csp).toContain("media-src 'self' blob: https://abc.supabase.co;");
+    expect(csp).not.toMatch(/img-src[^;]*\*/);
+  });
 });

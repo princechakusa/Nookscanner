@@ -92,4 +92,28 @@ describe('guest experience shell', () => {
     expect(dialog.getByText('٢')).toBeTruthy();
     expect(dialog.getByRole('link', { name: /تواصل معنا/ })).toBeTruthy();
   });
+
+  it('renders instruction formatting safely; injected HTML stays text (8.3)', () => {
+    const ac = DEMO_EXPERIENCE.appliances[0]!;
+    const experience = {
+      ...DEMO_EXPERIENCE,
+      appliances: [
+        {
+          ...ac,
+          steps: [
+            { text: { en: 'Press **Power** on the remote' } },
+            { text: { en: '<img src=x onerror="window.__pwned=1"> [x](javascript:alert(1))' } },
+          ],
+        },
+        ...DEMO_EXPERIENCE.appliances.slice(1),
+      ],
+    };
+    setup({ experience });
+    fireEvent.click(screen.getAllByRole('button', { name: new RegExp(ac.name.en) })[0]!);
+    const dialog = document.querySelector('dialog')!;
+    expect(dialog.querySelector('strong')?.textContent).toBe('Power');
+    expect(dialog.querySelector('img, script')).toBeNull();
+    expect(dialog.querySelector('a[href^="javascript"]')).toBeNull();
+    expect(dialog.textContent).toContain('<img src=x onerror="window.__pwned=1">');
+  });
 });

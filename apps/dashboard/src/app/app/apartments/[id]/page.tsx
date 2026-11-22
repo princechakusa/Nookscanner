@@ -316,6 +316,15 @@ export default async function ApartmentPage({ params }: { params: Promise<{ id: 
                                   .filter(Boolean)
                                   .join(' · ')}
                               </span>
+                              <span className="ns-rooms__actions">
+                                <Link
+                                  href={`/app/appliances/${a.id}`}
+                                  className="ns-btn ns-btn--ghost ns-btn--sm"
+                                  aria-label={`Instructions for ${a.nameEn}`}
+                                >
+                                  Instructions
+                                </Link>
+                              </span>
                               {canWriteAppliances && (
                                 <span className="ns-rooms__actions">
                                   <form action={deleteApplianceAction}>

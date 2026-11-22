@@ -239,3 +239,47 @@ export const applianceSchema = z.object({
   notes: optionalText(2000),
 });
 export type ApplianceInput = z.infer<typeof applianceSchema>;
+
+/**
+ * One saved version of an appliance's instructions in one language (Stage 8.3; mirrors
+ * check_instruction_version). Steps come from a textarea, one step per line; troubleshooting
+ * from problem/solution pairs; empty pairs are dropped.
+ */
+export const instructionSchema = z.object({
+  locale: z.enum(['en', 'ar'], { message: 'INVALID_VALUE' }),
+  title: name(120),
+  steps: z
+    .string()
+    .transform((s) =>
+      s
+        .split(/\r?\n/)
+        .map((l) => l.replace(/^\s*(\d{1,3}[.)]|[-*])\s+/, '').trim())
+        .filter(Boolean),
+    )
+    .pipe(
+      z
+        .array(z.string().max(1000, { message: 'STEP_TOO_LONG' }))
+        .min(1, { message: 'STEPS_REQUIRED' })
+        .max(30, { message: 'TOO_MANY_STEPS' }),
+    ),
+  troubleshooting: z
+    .array(z.object({ problem: z.string().trim(), solution: z.string().trim() }))
+    .max(20)
+    .transform((pairs) => pairs.filter((p) => p.problem || p.solution))
+    .pipe(
+      z.array(
+        z.object({
+          problem: z
+            .string()
+            .min(1, { message: 'PROBLEM_REQUIRED' })
+            .max(300, { message: 'TOO_LONG' }),
+          solution: z
+            .string()
+            .min(1, { message: 'SOLUTION_REQUIRED' })
+            .max(1000, { message: 'TOO_LONG' }),
+        }),
+      ),
+    ),
+  bodyMd: optionalText(5000),
+});
+export type InstructionInput = z.infer<typeof instructionSchema>;
