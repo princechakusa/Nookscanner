@@ -7,6 +7,16 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
+// The preview server sends the production CSP (apps/guest/public/_headers): any violation fails.
+test.beforeEach(({ page }) => {
+  page.on('console', (m) => {
+    const text = m.text();
+    if (m.type() === 'error' && /Content Security Policy|violates|Refused to/i.test(text)) {
+      throw new Error(`CSP violation: ${text.slice(0, 200)}`);
+    }
+  });
+});
+
 const TOKEN = 'T'.repeat(43);
 const PAYLOAD = {
   apartment: { name: { en: 'Marina 12B', ar: 'مارينا 12B' }, property: { en: 'Marina Tower' } },

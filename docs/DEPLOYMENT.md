@@ -32,6 +32,9 @@ Email templates: copy `supabase/templates/confirmation.html` and `recovery.html`
 - Vercel project `nookscanner-dashboard` (root `apps/dashboard`, build `npm run build -w @nookscanner/dashboard`) and `nookscanner-guest` (root `apps/guest`, output `apps/guest/dist`, SPA rewrite `/a/* -> /index.html`).
 - Environment variables per environment from `.env.example` (public ones only in Vercel).
 
+## 2b. Guest app on Cloudflare Pages (ADR-024)
+`npm run deploy:guest` (needs `npx wrangler login` once; ignores a stray `CLOUDFLARE_API_TOKEN`). Project `nookscanner-guest`, production branch `main`, https://nookscanner-guest.pages.dev. The script refuses builds with scene files (`check:guest-dist`) and strips source maps. Headers: `apps/guest/public/_headers`. After changing the guest origin, update the `GUEST_ORIGIN` function secret and `NEXT_PUBLIC_GUEST_URL` of the dashboard. Verified 2026-11-22: CSP/HSTS/frame-deny live, QR paths served by the SPA, a bad token shows "This link is not active" through the live function, no console errors.
+
 ## 3. Edge Functions (Phase 2+)
 `npx supabase functions deploy <name>`; secrets via `npx supabase secrets set NAME=value` (run by the user or CI with a scoped access token).
 

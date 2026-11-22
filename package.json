@@ -30,7 +30,9 @@
     "ci": "npm run lint && npm run format:check && npm run typecheck && npm test && npm run build && npm run check:secrets && npm run test:worker",
     "test:db:stack": "npm run test:stack -w @nookscanner/database",
     "test:e2e:stack": "node scripts/e2e-stack.mjs",
-    "test:hosted:smoke": "node scripts/hosted-smoke.mjs"
+    "test:hosted:smoke": "node scripts/hosted-smoke.mjs",
+    "deploy:guest": "node scripts/deploy-guest.mjs",
+    "check:guest-dist": "node scripts/check-guest-dist.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",

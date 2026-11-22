@@ -32,6 +32,8 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:56521
           NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ci_placeholder
       - run: npm run check:secrets
+      # KI-029: a deployable guest build must never contain local 3D scene files.
+      - run: node scripts/check-guest-dist.mjs
       # ffmpeg/ffprobe for the Stage 5.2 validation tests (real sample videos per device tier).
       - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg && ffprobe -version | head -1
       # Runners have no GPU: SplatTransform's SOG encoder then runs on the CPU (same files, slower).

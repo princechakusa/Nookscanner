@@ -34,9 +34,12 @@ test('real interior scene loads and renders in the guest viewer', async ({ page 
   const before = await canvasEl.screenshot();
   {
     const b = (await canvasEl.boundingBox())!;
-    await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+    // Start below the centre: the dev build pins an appliance there (9.2), and a press on a pin
+    // is a tap on the pin, not a drag of the view.
+    const y = b.y + b.height * 0.75;
+    await page.mouse.move(b.x + b.width * 0.3, y);
     await page.mouse.down();
-    await page.mouse.move(b.x + b.width / 2 + 220, b.y + b.height / 2, { steps: 12 });
+    await page.mouse.move(b.x + b.width * 0.3 + 220, y, { steps: 12 });
     await page.mouse.up();
   }
   await page.waitForTimeout(1500);
