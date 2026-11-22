@@ -196,6 +196,54 @@ export function VideoUploader({
     });
   }
 
+  /**
+   * Stage 5.7: one part straight to R2 through the uploads Worker, with the manager's session.
+   * XMLHttpRequest for upload progress; network errors and 5xx retry with back-off, and an
+   * offline browser waits for the connection. The Worker completes the part itself.
+   */
+  function uploadPartR2(
+    f: File,
+    mime: string,
+    uploadId: string,
+    part: UploadPartPlan,
+    start: number,
+    base: number,
+  ) {
+    const workerUrl = (process.env.NEXT_PUBLIC_UPLOADS_URL ?? '').replace(/\/+$/, '');
+    const supabase = createSupabaseBrowserClient();
+    const body = f.slice(start, start + part.sizeBytes, mime);
+    const attempt = (n: number): Promise<void> =>
+      new Promise<void>((resolve, reject) => {
+        void supabase.auth.getSession().then(({ data }) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('PUT', `${workerUrl}/parts/${uploadId}/${part.partNumber}`);
+          xhr.setRequestHeader('authorization', `Bearer ${data.session?.access_token ?? ''}`);
+          xhr.setRequestHeader('content-type', 'application/octet-stream');
+          xhr.upload.onprogress = (e) => {
+            setOffline(!navigator.onLine);
+            setSent(base + e.loaded);
+          };
+          const retry = () => {
+            if (n >= RETRY_DELAYS.length) return reject(new Error('NETWORK'));
+            const again = () =>
+              setTimeout(() => attempt(n + 1).then(resolve, reject), RETRY_DELAYS[n]);
+            if (!navigator.onLine) {
+              setOffline(true);
+              window.addEventListener('online', again, { once: true });
+            } else again();
+          };
+          xhr.onload = () => {
+            if (xhr.status === 200) return resolve();
+            if (xhr.status >= 500 || xhr.status === 429) return retry();
+            reject(new Error(xhr.status === 401 ? 'UNAUTHENTICATED' : 'PART_INCOMPLETE'));
+          };
+          xhr.onerror = retry;
+          xhr.send(body);
+        }, reject);
+      });
+    return attempt(0);
+  }
+
   async function start() {
     if (!file) return;
     if (resume && (resume.filename !== file.name || resume.sizeBytes !== file.size)) {
@@ -233,15 +281,23 @@ export function VideoUploader({
         continue;
       }
       try {
-        await uploadPart(file, plan.mime, part, start, base);
-      } catch {
-        setError(text('NETWORK'));
+        if (plan.backend === 'r2') {
+          await uploadPartR2(file, plan.mime, plan.uploadId, part, start, base);
+        } else {
+          await uploadPart(file, plan.mime, part, start, base);
+        }
+      } catch (e) {
+        const code = e instanceof Error && e.message !== 'NETWORK' ? e.message : 'NETWORK';
+        setError(text(code));
         return setPhase('error');
       }
-      const result = await completeUploadPartAction(plan.uploadId, part.partNumber, apartmentId);
-      if (!result.ok) {
-        setError(text(result.error));
-        return setPhase('error');
+      // R2 parts are completed by the Worker (receipt); Supabase parts are verified here.
+      if (plan.backend !== 'r2') {
+        const result = await completeUploadPartAction(plan.uploadId, part.partNumber, apartmentId);
+        if (!result.ok) {
+          setError(text(result.error));
+          return setPhase('error');
+        }
       }
       done += 1;
       base += part.sizeBytes;

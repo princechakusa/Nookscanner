@@ -2,6 +2,11 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-22: Stage 5.7 raw footage on Cloudflare R2 (implemented)
+
+- Migrations `20261122001700_r2_raw_footage.sql`, `20261122001800_hmac_lint.sql`; Worker `services/uploads-worker` (deployed); dispatcher R2 reads; dashboard and app R2 uploads (ADR-025).
+- Fixed on the way: the dashboard axe helper raced a missing title after server actions on CI; CI built the guest app without its API base.
+
 ## 2026-11-22: Stage 9.5 fallback list mode (Phase 9 complete)
 
 - E2E: a published apartment with a 3D scene on a phone without WebGL lists every room, opens instructions and never downloads the scene.

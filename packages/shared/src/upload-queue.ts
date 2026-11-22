@@ -21,6 +21,8 @@ export const uploadJobSchema = z.object({
   apartmentName: z.string().max(120),
   fileUri: z.string().min(1),
   mime: z.enum(['video/mp4', 'video/quicktime']),
+  /** Stage 5.7: parts go to Supabase Storage or to R2 through the uploads Worker. */
+  backend: z.enum(['supabase', 'r2']).default('supabase'),
   sizeBytes: z.number().int().positive(),
   parts: z.array(partSchema).min(1).max(1000),
   createdAt: z.iso.datetime(),
@@ -56,6 +58,7 @@ export function createJob(input: {
   fileUri: string;
   mime: 'video/mp4' | 'video/quicktime';
   sizeBytes: number;
+  backend?: 'supabase' | 'r2';
   serverParts: ReadonlyArray<{
     partNumber: number;
     objectPath: string;
@@ -81,6 +84,7 @@ export function createJob(input: {
     fileUri: input.fileUri,
     mime: input.mime,
     sizeBytes: input.sizeBytes,
+    backend: input.backend ?? 'supabase',
     parts: sorted.map((p) => ({
       partNumber: p.partNumber,
       objectPath: p.objectPath,

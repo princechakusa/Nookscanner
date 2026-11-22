@@ -1,0 +1,18 @@
+# Cloudflare Worker for raw footage on R2 (Stage 5.7, ADR-025). Deploy: npm run deploy:uploads
+name = "nookscanner-uploads"
+main = "src/worker.ts"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+[[r2_buckets]]
+binding = "RAW"
+bucket_name = "nookscanner-raw-footage"
+
+[vars]
+SUPABASE_URL = "https://nfcnckwjrwpofkrzribd.supabase.co"
+# Public (publishable) key: identifies the project to the REST API; the user's session authorises.
+SUPABASE_PUBLISHABLE_KEY = ""
+ALLOWED_ORIGINS = "http://localhost:3000,http://localhost:3001"
+
+# Secrets (wrangler secret put): R2_RECEIPT_SECRET (same value as private.platform_secrets
+# r2_receipt_secret), RAW_READ_SECRET (same value as the Supabase function secret).

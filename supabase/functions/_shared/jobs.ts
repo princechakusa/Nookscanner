@@ -31,6 +31,8 @@ export interface JobRow {
 
 export interface InputRow {
   uploadId: string;
+  /** Where the parts live (Stage 5.7): Supabase Storage or Cloudflare R2. */
+  backend?: 'supabase' | 'r2';
   mime: 'video/mp4' | 'video/quicktime';
   sizeBytes: number;
   parts: Array<{ partNumber: number; sizeBytes: number; objectPath: string }>;
@@ -58,7 +60,11 @@ export interface PlatformDb {
 
 export interface PlatformStorage {
   /** Signed GET URL for a raw-footage part. */
-  signedDownloadUrl(path: string, expiresInSeconds: number): Promise<string>;
+  signedDownloadUrl(
+    path: string,
+    expiresInSeconds: number,
+    backend?: 'supabase' | 'r2',
+  ): Promise<string>;
   /** Signed PUT URL for an output file in scene-drafts. */
   signedUploadUrl(path: string): Promise<string>;
 }
@@ -217,7 +223,11 @@ export async function buildJobRequest(
             partNumber: p.partNumber,
             sizeBytes: p.sizeBytes,
             // Long enough for a queued GPU job to start; parts are private, never public.
-            downloadUrl: await deps.storage.signedDownloadUrl(p.objectPath, 6 * 3600),
+            downloadUrl: await deps.storage.signedDownloadUrl(
+              p.objectPath,
+              6 * 3600,
+              i.backend ?? 'supabase',
+            ),
           })),
         ),
       })),

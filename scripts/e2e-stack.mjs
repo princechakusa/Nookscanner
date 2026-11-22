@@ -33,6 +33,10 @@ const result = spawnSync(
       NEXT_PUBLIC_APP_ENV: 'local',
       NEXT_PUBLIC_SUPABASE_URL: env.API_URL,
       NEXT_PUBLIC_SUPABASE_ANON_KEY: env.ANON_KEY,
+      // Hermetic: values from a developer's apps/dashboard/.env.local (hosted guest site, R2
+      // uploads Worker) must not leak into the local-stack build; these win over .env files.
+      NEXT_PUBLIC_GUEST_URL: 'http://localhost:5173',
+      NEXT_PUBLIC_UPLOADS_URL: '',
       MAILPIT_URL: env.MAILPIT_URL ?? 'http://127.0.0.1:56524',
     },
   },

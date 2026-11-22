@@ -20,6 +20,10 @@ export function contentSecurityPolicy({
 }): string {
   const supabase = supabaseUrl ? ` ${supabaseUrl} ${supabaseUrl.replace(/^http/, 'ws')}` : '';
   const storage = supabaseUrl ? ` ${supabaseUrl}` : '';
+  // Stage 5.7: browser PUTs raw footage parts to the uploads Worker (R2).
+  const uploads = process.env.NEXT_PUBLIC_UPLOADS_URL
+    ? ` ${process.env.NEXT_PUBLIC_UPLOADS_URL}`
+    : '';
   // 'wasm-unsafe-eval' lets the 3D viewer (Spark) compile its WebAssembly module; it does not
   // allow eval() of JavaScript strings.
   const scripts = nonce
@@ -32,7 +36,7 @@ export function contentSecurityPolicy({
     // Signed Storage URLs for instruction photos and videos (Stage 8.3); http(s) origin only.
     'img-src': `'self' data: blob:${storage}`,
     'font-src': "'self'",
-    'connect-src': `'self'${supabase}`,
+    'connect-src': `'self'${supabase}${uploads}`,
     'media-src': `'self' blob:${storage}`,
     'worker-src': "'self' blob:",
     'frame-ancestors': "'none'",

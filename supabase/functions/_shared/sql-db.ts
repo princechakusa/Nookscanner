@@ -56,23 +56,25 @@ export function sqlPlatformDb(sql: Sql): PlatformDb {
     async jobInputs(job) {
       const { rows } = await sql.query<{
         id: string;
+        storage_backend: 'supabase' | 'r2';
         mime_type: InputRow['mime'];
         size_bytes: string | number;
         parts: Array<{ part_number: number; size_bytes: string | number; object_path: string }>;
       }>(
-        `select mu.id, mu.mime_type, mu.size_bytes,
+        `select mu.id, mu.storage_backend, mu.mime_type, mu.size_bytes,
                 json_agg(json_build_object('part_number', p.part_number, 'size_bytes', p.size_bytes,
                                            'object_path', p.object_path)
                          order by p.part_number) as parts
          from public.media_uploads mu
          join public.media_upload_parts p on p.media_upload_id = mu.id and p.status = 'uploaded'
          where mu.scan_session_id = $1::uuid and mu.status in ('uploaded', 'validating', 'validated')
-         group by mu.id, mu.mime_type, mu.size_bytes, mu.created_at
+         group by mu.id, mu.storage_backend, mu.mime_type, mu.size_bytes, mu.created_at
          order by mu.created_at`,
         [job.scan_session_id],
       );
       return rows.map((r) => ({
         uploadId: r.id,
+        backend: r.storage_backend ?? 'supabase',
         mime: r.mime_type,
         sizeBytes: Number(r.size_bytes),
         parts: r.parts.map((p) => ({

@@ -1,0 +1,26 @@
+# Hosted-only auth settings pushed with `supabase config push --remote=nfcnckwjrwpofkrzribd` from
+# this folder (docs/DEPLOYMENT.md). Email templates are NOT declared here: on the Supabase Free
+# plan with the default email provider they cannot be changed (needs custom SMTP, Blocked item 1).
+# The full local stack config stays in ../../supabase/config.toml.
+project_id = "nookscanner"
+
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/confirm", "http://localhost:3001/auth/confirm"]
+enable_signup = true
+minimum_password_length = 10
+password_requirements = "lower_upper_letters_digits"
+
+[auth.email]
+enabled = true
+enable_confirmations = true
+double_confirm_changes = true
+secure_password_change = true
+otp_length = 6
+otp_expiry = 3600
+
+# Sign in with Apple, native iOS flow (signInWithIdToken); audiences: capture app + Expo Go.
+[auth.external.apple]
+enabled = true
+client_id = "com.nookscanner.capture,host.exp.Exponent"
+secret = ""

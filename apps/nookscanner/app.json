@@ -16,9 +16,10 @@
       },
       "config": {
         "usesNonExemptEncryption": false
-      }
+      },
+      "usesAppleSignIn": true
     },
-    "plugins": ["expo-secure-store"],
+    "plugins": ["expo-secure-store", "expo-apple-authentication"],
     "owner": "princechakusa",
     "extra": {
       "eas": {

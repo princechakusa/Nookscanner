@@ -35,6 +35,9 @@ Email templates: copy `supabase/templates/confirmation.html` and `recovery.html`
 ## 2b. Guest app on Cloudflare Pages (ADR-024)
 `npm run deploy:guest` (needs `npx wrangler login` once; ignores a stray `CLOUDFLARE_API_TOKEN`). Project `nookscanner-guest`, production branch `main`, https://nookscanner-guest.pages.dev. The script refuses builds with scene files (`check:guest-dist`) and strips source maps. Headers: `apps/guest/public/_headers`. After changing the guest origin, update the `GUEST_ORIGIN` function secret and `NEXT_PUBLIC_GUEST_URL` of the dashboard. Verified 2026-11-22: CSP/HSTS/frame-deny live, QR paths served by the SPA, a bad token shows "This link is not active" through the live function, no console errors.
 
+## 2c. Uploads Worker (raw footage on R2, ADR-025)
+`npm run deploy:uploads` (wrangler deploy from `services/uploads-worker`, publishable key passed as a variable). Secrets: Worker `R2_RECEIPT_SECRET` = `private.platform_secrets.r2_receipt_secret`; Worker `RAW_READ_SECRET` = Supabase function secret `RAW_READ_SECRET`; Supabase `R2_WORKER_URL`. Dashboard/app env: `NEXT_PUBLIC_UPLOADS_URL` / `EXPO_PUBLIC_UPLOADS_URL`. Switch new uploads to R2: `update private.platform_settings set value = 'r2' where key = 'raw_footage_backend'` (in-flight uploads keep their backend). Done 2026-11-22 except the switch.
+
 ## 3. Edge Functions (Phase 2+)
 `npx supabase functions deploy <name>`; secrets via `npx supabase secrets set NAME=value` (run by the user or CI with a scoped access token).
 

@@ -6,6 +6,7 @@ import type { CaptureResult } from './screens/Capture.tsx';
 import { CaptureScreen } from './screens/CaptureScreen.ts';
 import { Plan, type CaptureJob } from './screens/Plan.tsx';
 import { Review } from './screens/Review.tsx';
+import { Setup } from './screens/Setup.tsx';
 import { SignIn } from './screens/SignIn.tsx';
 import { Uploads } from './screens/Uploads.tsx';
 import { Screen } from './ui.tsx';
@@ -21,6 +22,17 @@ type Route =
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [route, setRoute] = useState<Route>({ name: 'apartments' });
+  // Accounts made in the app (e.g. Sign in with Apple) start without a company: first-run setup.
+  const [hasOrg, setHasOrg] = useState<boolean | null>(null);
+  const userId = session?.user.id ?? null;
+  useEffect(() => {
+    if (!userId) return setHasOrg(null);
+    void supabase
+      .from('organization_members')
+      .select('organization_id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .then(({ count, error }) => setHasOrg(error ? true : (count ?? 0) > 0));
+  }, [userId]);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -33,6 +45,8 @@ export default function App() {
 
   if (session === undefined) return <Screen title="Nookscanner Capture">{null}</Screen>;
   if (!session) return <SignIn />;
+  if (hasOrg === null) return <Screen title="Nookscanner Capture">{null}</Screen>;
+  if (!hasOrg) return <Setup email={session.user.email ?? null} onDone={() => setHasOrg(true)} />;
 
   switch (route.name) {
     case 'apartments':

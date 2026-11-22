@@ -62,7 +62,7 @@ export async function enqueueRecording(input: {
 
   const { data: existing } = await supabase
     .from('media_uploads')
-    .select('id')
+    .select('id, storage_backend')
     .eq('scan_session_id', input.sessionId)
     .eq('status', 'pending')
     .eq('size_bytes', sizeBytes)
@@ -79,6 +79,7 @@ export async function enqueueRecording(input: {
         .single();
   if (error || !upload) throw new Error(error?.message ?? 'Could not register the upload');
   const uploadId = (upload as { id: string }).id;
+  const backend = (upload as { storage_backend?: 'supabase' | 'r2' }).storage_backend ?? 'supabase';
   const { data: parts, error: partsError } = await supabase
     .from('media_upload_parts')
     .select('part_number, object_path, size_bytes, status')
@@ -93,6 +94,7 @@ export async function enqueueRecording(input: {
     fileUri: kept.uri,
     mime: 'video/quicktime',
     sizeBytes,
+    backend,
     serverParts: (
       (parts ?? []) as Array<{
         part_number: number;
@@ -135,14 +137,31 @@ async function writePartFile(job: UploadJob, partNumber: number): Promise<File> 
   return out;
 }
 
-/** Asks the database whether a part is stored completely (also after a background finish). */
-async function confirmPart(uploadId: string, partNumber: number): Promise<boolean> {
+/**
+ * Asks the database whether a part is stored completely (also after a background finish).
+ * Supabase parts are verified here; R2 parts were completed by the uploads Worker (5.7).
+ */
+async function confirmPart(
+  uploadId: string,
+  partNumber: number,
+  backend: 'supabase' | 'r2' = 'supabase',
+): Promise<boolean> {
+  if (backend === 'r2') {
+    const { data, error } = await supabase.rpc('r2_part_target', {
+      p_upload: uploadId,
+      p_part: partNumber,
+    });
+    return !error && (data as { status: string }[] | null)?.[0]?.status === 'uploaded';
+  }
   const { error } = await supabase.rpc('complete_media_upload_part', {
     p_upload: uploadId,
     p_part: partNumber,
   });
   return !error;
 }
+
+/** Stage 5.7: the uploads Worker (EXPO_PUBLIC_UPLOADS_URL) stores R2 parts with the session. */
+const uploadsUrl = (process.env.EXPO_PUBLIC_UPLOADS_URL ?? '').replace(/\/+$/, '');
 
 export interface UploadProgress {
   uploadId: string;
@@ -193,7 +212,7 @@ export async function runQueue(onProgress: (p: UploadProgress | null) => void): 
         report(0);
 
         // Finished in the background or before a crash? Then nothing to send.
-        if (await confirmPart(job.uploadId, part.partNumber)) {
+        if (await confirmPart(job.uploadId, part.partNumber, job.backend)) {
           job = markPart(job, part.partNumber, 'uploaded');
           await updateJob(job);
           continue;
@@ -204,24 +223,30 @@ export async function runQueue(onProgress: (p: UploadProgress | null) => void): 
           const { data } = await supabase.auth.getSession();
           const token = data.session?.access_token;
           if (!token) throw new Error('Signed out');
+          const r2 = job.backend === 'r2';
+          if (r2 && !uploadsUrl) throw new Error('Uploads service not configured');
           const task = partFile.createUploadTask(
-            partUploadUrl(supabaseConfig.url, part.objectPath),
+            r2
+              ? `${uploadsUrl}/parts/${job.uploadId}/${part.partNumber}`
+              : partUploadUrl(supabaseConfig.url, part.objectPath),
             {
-              httpMethod: 'POST',
+              httpMethod: r2 ? 'PUT' : 'POST',
               uploadType: UploadType.BINARY_CONTENT,
               sessionType: 'background',
-              headers: {
-                authorization: `Bearer ${token}`,
-                apikey: supabaseConfig.anonKey,
-                'content-type': job.mime,
-                'x-upsert': 'false',
-              },
+              headers: r2
+                ? { authorization: `Bearer ${token}`, 'content-type': 'application/octet-stream' }
+                : {
+                    authorization: `Bearer ${token}`,
+                    apikey: supabaseConfig.anonKey,
+                    'content-type': job.mime,
+                    'x-upsert': 'false',
+                  },
               onProgress: (p) => report(p.bytesSent),
             },
           );
           const result = await task.uploadAsync();
           // 2xx, or "already exists" from an earlier attempt: the database decides either way.
-          if (!(await confirmPart(job.uploadId, part.partNumber))) {
+          if (!(await confirmPart(job.uploadId, part.partNumber, job.backend))) {
             throw new Error(`Part ${part.partNumber} was not stored (HTTP ${result.status})`);
           }
           job = markPart(job, part.partNumber, 'uploaded');

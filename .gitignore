@@ -55,3 +55,6 @@ dist-ci/
 apps/guest/public/dev-scenes/
 *.splat
 dist-perf/
+
+# Supabase CLI state for the hosted-config folder (linked project ref)
+infra/supabase-hosted/supabase/.temp/

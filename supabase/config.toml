@@ -59,6 +59,9 @@ enabled = true
 enable_confirmations = true
 double_confirm_changes = true
 secure_password_change = true
+# 6-digit codes in the emails (the phone app types them; links only work on the computer).
+otp_length = 6
+otp_expiry = 3600
 
 # Links are built from site_url + token_hash and confirmed by a POST on /auth/confirm (works across
 # devices, unlike PKCE links, and survives mail scanners). Mirror these templates on hosted projects.
@@ -69,6 +72,19 @@ content_path = "./supabase/templates/confirmation.html"
 [auth.email.template.recovery]
 subject = "Reset your Nookscanner password"
 content_path = "./supabase/templates/recovery.html"
+
+# Passwordless sign-in code (capture app, "Email me a sign-in code").
+[auth.email.template.magic_link]
+subject = "Your Nookscanner sign-in code"
+content_path = "./supabase/templates/magic_link.html"
+
+# Sign in with Apple, native iOS flow: the app sends Apple's identity token
+# (signInWithIdToken). Audiences: the capture app and Expo Go (testing). No secret needed for
+# the native flow; a Services ID + key are only for web sign-in.
+[auth.external.apple]
+enabled = true
+client_id = "com.nookscanner.capture,host.exp.Exponent"
+secret = ""
 
 # Local stack only: allow E2E runs to send more than the default 2 emails per hour.
 [auth.rate_limit]

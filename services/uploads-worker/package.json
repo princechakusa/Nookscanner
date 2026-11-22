@@ -1,0 +1,14 @@
+{
+  "name": "@nookscanner/uploads-worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloudflare Worker: raw footage parts to R2 with the uploader's Supabase session; signed reads for the GPU worker (Stage 5.7, ADR-025)",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^5.1.1"
+  }
+}

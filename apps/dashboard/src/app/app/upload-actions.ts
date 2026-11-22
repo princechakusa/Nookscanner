@@ -21,7 +21,14 @@ export interface UploadPartPlan {
 }
 
 export type StartUploadResult =
-  | { ok: true; uploadId: string; mime: string; parts: UploadPartPlan[] }
+  | {
+      ok: true;
+      uploadId: string;
+      mime: string;
+      /** Where the parts go (Stage 5.7): Supabase Storage (TUS) or R2 (uploads Worker). */
+      backend: 'supabase' | 'r2';
+      parts: UploadPartPlan[];
+    }
   | { ok: false; error: string };
 
 const startSchema = z.object({
@@ -86,11 +93,12 @@ export async function startVideoUploadAction(input: {
     })
     .single();
   if (error || !upload) return { ok: false, error: dbErrorCode(error) };
-  const row = upload as { id: string; mime_type: string };
+  const row = upload as { id: string; mime_type: string; storage_backend?: 'supabase' | 'r2' };
   return {
     ok: true,
     uploadId: row.id,
     mime: row.mime_type,
+    backend: row.storage_backend ?? 'supabase',
     parts: await partsOf(supabase, row.id),
   };
 }
@@ -102,10 +110,15 @@ export async function resumeVideoUploadAction(uploadId: string): Promise<StartUp
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from('media_uploads')
-    .select('id, mime_type, status')
+    .select('id, mime_type, status, storage_backend')
     .eq('id', id.data)
     .maybeSingle();
-  const row = data as { id: string; mime_type: string; status: string } | null;
+  const row = data as {
+    id: string;
+    mime_type: string;
+    status: string;
+    storage_backend: 'supabase' | 'r2';
+  } | null;
   // An upload finished just before the page closed resumes as already complete (all parts done).
   if (!row || !['pending', 'uploaded'].includes(row.status))
     return { ok: false, error: 'NOT_FOUND' };
@@ -113,6 +126,7 @@ export async function resumeVideoUploadAction(uploadId: string): Promise<StartUp
     ok: true,
     uploadId: row.id,
     mime: row.mime_type,
+    backend: row.storage_backend ?? 'supabase',
     parts: await partsOf(supabase, row.id),
   };
 }

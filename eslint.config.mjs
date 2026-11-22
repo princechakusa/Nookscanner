@@ -17,7 +17,8 @@ export default tseslint.config(
       'apps/nookscanner/ios/**',
       'apps/nookscanner/android/**',
       'apps/nookscanner/metro.config.js',
-      'services/**',
+      // Python worker; the TypeScript uploads Worker is linted like the apps.
+      'services/reconstruction/**',
       // Node CLI scripts that drive Playwright for the store screenshots (not shipped code).
       'store/screenshot-harness/*.cjs',
       '**/next-env.d.ts',

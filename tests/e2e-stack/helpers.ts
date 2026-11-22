@@ -27,6 +27,9 @@ test.afterEach(async () => {
 
 /** axe scan with the WCAG 2.2 AA rule set; fails on any violation. */
 export async function expectAccessible(page: Page) {
+  // After a server action re-renders the page, Next.js briefly has no <title>; on the slower CI
+  // runner axe sometimes caught that moment (document-title). Check the settled page.
+  await expect(page).toHaveTitle(/\S/);
   const result = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();

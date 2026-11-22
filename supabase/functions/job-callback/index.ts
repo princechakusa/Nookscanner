@@ -9,6 +9,8 @@ const env = (name: string) => Deno.env.get(name) ?? '';
 const pool = new pg.Pool({ connectionString: env('SUPABASE_DB_URL'), max: 3 });
 const storage = supabaseStorage(
   createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY')),
+  // Raw footage on R2 is read through the uploads Worker (Stage 5.7).
+  { workerUrl: env('R2_WORKER_URL'), readSecret: env('RAW_READ_SECRET') },
 );
 
 Deno.serve((req) =>
