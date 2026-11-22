@@ -147,3 +147,68 @@ test('the instruction sheet shows photos from Storage under the CSP; support ope
   await expect(support).toHaveAttribute('href', 'https://wa.me/971501234567');
   await axe(page);
 });
+
+test('without WebGL a published 3D apartment falls back to the list and never downloads the scene (9.5)', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (type: string, ...rest: unknown[]) {
+      if (type === 'webgl2' || type === 'webgl') return null;
+      return (original as (...a: unknown[]) => unknown).call(this, type, ...rest) as never;
+    } as typeof original;
+  });
+  const sceneUrl =
+    'https://nfcnckwjrwpofkrzribd.supabase.co/storage/v1/object/sign/scene-drafts/s.sog?token=t';
+  let sceneRequested = false;
+  await page.route(sceneUrl, (route) => {
+    sceneRequested = true;
+    return route.abort();
+  });
+  await page.route('**/guest-experience?**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ...PAYLOAD,
+        appliances: [
+          ...PAYLOAD.appliances,
+          {
+            ...PAYLOAD.appliances[0],
+            id: 'oven',
+            roomId: 'kit',
+            category: 'oven',
+            name: { en: 'Oven', ar: 'الفرن' },
+            aliases: { en: [], ar: [] },
+          },
+        ],
+        scene: {
+          url: sceneUrl,
+          sizeBytes: 40_000_000,
+          hotspots: [{ applianceId: 'ac', position: [0, 1, -2] }],
+        },
+      }),
+    }),
+  );
+  await page.route('**/guest-instruction?**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: '{"applianceId":"ac","media":[]}',
+    }),
+  );
+  await page.goto(`/a/${TOKEN}`);
+  await expect(page.getByRole('status').filter({ hasText: /3D/ }).first()).toBeVisible();
+  // Every room, each with its appliances, without choosing a room first.
+  await expect(page.getByRole('heading', { level: 3, name: 'Living room' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 3, name: 'Kitchen' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Oven/ })).toBeVisible();
+  await page
+    .getByRole('button', { name: /Living room AC/ })
+    .first()
+    .click();
+  await expect(page.locator('dialog[open]').locator('strong')).toHaveText('Power');
+  await expect(page.locator('canvas')).toHaveCount(0);
+  expect(sceneRequested).toBe(false);
+  await axe(page);
+});

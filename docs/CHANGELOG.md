@@ -2,6 +2,10 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-22: Stage 9.5 fallback list mode (Phase 9 complete)
+
+- E2E: a published apartment with a 3D scene on a phone without WebGL lists every room, opens instructions and never downloads the scene.
+
 ## 2026-11-22: Stage 9.4 instructions with photos and videos for guests
 
 - `loadMedia` (guest-instruction) and a gallery in the instruction sheet (EN/AR captions, lazy images, inline video).

@@ -32,6 +32,7 @@ Updated 2026-11-20. Severity: Critical / High / Medium / Low. Close an item only
 | KI-032 | Low | Content | The guest payload keeps steps per index with EN and AR text; Arabic step text is published only when the verified Arabic version has the same number of steps as the English one (otherwise Arabic guests see English steps for that appliance) | Phase 9: per-language step lists in the guest payload, or a warning in the editor when counts differ | Dev | Open |
 | KI-033 | Low | Deployment | (Confirmed 2026-11-22: hosted sends our `Access-Control-Allow-Origin`.) The LOCAL Supabase gateway answers CORS preflights itself and rewrites `Access-Control-Allow-Origin` to `*` for functions; hosted functions send our headers (`GUEST_ORIGIN`). Guest endpoints are credential-free GETs, so CORS is not the security boundary (token, uniform 404, rate limit are) | Re-check headers on the hosted project after the first deploy | Dev | Open |
 | KI-034 | Low | Tooling | A `CLOUDFLARE_API_TOKEN` (and `CLOUDFLARE_ACCOUNT_ID`) user environment variable on the dev PC is rejected by Cloudflare (expired or missing permissions) and would override the browser login | `deploy-guest.mjs` and the agent's wrangler calls unset both for the command; the user may delete the variables | User | Open |
+| KI-035 | Low | Guest UX | GX-07 asks for reference images in the fallback list; photos appear inside the instruction sheet only | Show the first photo on each list card (needs the media list in guest-experience or a lazy per-card fetch) | Dev | Open |
 
 ## Resolved
 
