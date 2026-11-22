@@ -104,6 +104,11 @@ export const guestExperienceSchema = z.object({
         .array(z.object({ roomId: z.string().min(1).max(64), position: vec3, target: vec3 }))
         .max(40)
         .optional(),
+      /** Appliance pins in aligned metres (Stage 8.2), shown as tappable markers (9.2). */
+      hotspots: z
+        .array(z.object({ applianceId: z.string().min(1).max(64), position: vec3 }))
+        .max(300)
+        .optional(),
       /** Doorways connecting rooms (route for room-to-room transitions). */
       doorways: z
         .array(

@@ -1,10 +1,13 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App.tsx';
 import { detectLocale } from './i18n.ts';
 import { parseGuestToken } from './route.ts';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  localStorage.clear();
+});
 
 const VALID_TOKEN = 'k3J9_xQ2-LmN8pR4sT6vWy';
 
@@ -48,5 +51,27 @@ describe('guest shell', () => {
     expect(document.documentElement.dir).toBe('rtl');
     expect(document.documentElement.lang).toBe('ar');
     expect(screen.getByRole('heading', { name: 'امسح رمز QR الموجود في شقتك' })).toBeTruthy();
+  });
+
+  it('loads a QR link and shows the apartment, or explains why not (9.2)', async () => {
+    const token = 'Q'.repeat(43);
+    const { DEMO_EXPERIENCE } = await import('./demo.ts');
+    const ok = vi.fn().mockResolvedValue({ kind: 'ok', experience: DEMO_EXPERIENCE });
+    const { unmount } = render(<App pathname={`/a/${token}`} languages={['en']} load={ok} />);
+    expect(await screen.findByRole('heading', { level: 1, name: /Demo apartment/ })).toBeTruthy();
+    expect(ok).toHaveBeenCalledWith(token);
+    unmount();
+    const gone = vi.fn().mockResolvedValue({ kind: 'not-found' });
+    const second = render(<App pathname={`/a/${token}`} languages={['ar']} load={gone} />);
+    expect((await screen.findByRole('alert')).textContent).toContain('هذا الرابط غير مفعّل');
+    second.unmount();
+    const offline = vi
+      .fn()
+      .mockResolvedValueOnce({ kind: 'error' })
+      .mockResolvedValueOnce({ kind: 'ok', experience: DEMO_EXPERIENCE });
+    render(<App pathname={`/a/${token}`} languages={['en']} load={offline} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Try again' }));
+    expect(await screen.findByRole('heading', { level: 1, name: /Demo apartment/ })).toBeTruthy();
+    expect(offline).toHaveBeenCalledTimes(2);
   });
 });

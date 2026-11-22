@@ -102,3 +102,15 @@ body,
     animation: none;
   }
 }
+
+.nt-guest__retry {
+  min-height: 44px;
+  margin-block-start: var(--nt-space-4);
+  padding: 0 var(--nt-space-6);
+  border: 0;
+  border-radius: var(--nt-radius-pill);
+  background: var(--nt-color-brand-accent);
+  color: #0e1116;
+  font: inherit;
+  font-weight: 600;
+}

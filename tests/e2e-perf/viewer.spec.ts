@@ -117,3 +117,28 @@ test('a device that cannot hold 30 fps steps quality down (governor, 7.5)', asyn
   );
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
 });
+
+test('appliance pins follow the real scene and open the instructions (9.2)', async ({ page }) => {
+  test.setTimeout(300_000);
+  await page.goto('/demo');
+  const scene = page.locator('.g-scene');
+  await expect(scene).toHaveAttribute('data-state', 'ready', { timeout: 180_000 });
+  const pin = page.getByTestId('guest-pin');
+  await expect(pin).toHaveCount(1);
+  await expect(pin).toBeVisible();
+  // Projected near the centre of the canvas (the pin is straight ahead of the camera).
+  const canvas = (await page.locator('.g-scene__canvas').boundingBox())!;
+  await expect
+    .poll(async () => {
+      const t = await pin.evaluate((el) => (el as HTMLElement).style.transform);
+      const m = /translate\(([-\d.]+)px, ([-\d.]+)px\)/.exec(t);
+      return m
+        ? Math.abs(Number(m[1]) - canvas.width / 2) < 4 &&
+            Math.abs(Number(m[2]) - canvas.height / 2) < 4
+        : false;
+    })
+    .toBe(true);
+  await pin.click();
+  await expect(page.locator('dialog[open]')).toBeVisible();
+  await expect(pin).toHaveAttribute('aria-pressed', 'true');
+});

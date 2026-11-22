@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { brand } from '@nookscanner/design-tokens';
+import { loadExperience, type LoadResult } from './api.ts';
 import { DEMO_EXPERIENCE } from './demo.ts';
 import { Experience } from './Experience.tsx';
 import { detectLocale, directionOf, messages, type Locale } from './i18n.ts';
@@ -9,6 +10,8 @@ import { hasWebGL2 } from './webgl.ts';
 export interface AppProps {
   pathname: string;
   languages: readonly string[];
+  /** Injectable for tests (defaults to the guest-experience Edge Function). */
+  load?: (token: string) => Promise<LoadResult>;
 }
 
 /**
@@ -16,12 +19,37 @@ export interface AppProps {
  * `/demo` (fictional demo apartment for design review and tests), anything else asks the guest
  * to scan the QR code.
  */
-export function App({ pathname, languages }: AppProps) {
-  const [locale, setLocale] = useState<Locale>(() => detectLocale(languages));
+export function App({ pathname, languages, load = loadExperience }: AppProps) {
+  // The guest's language choice is remembered on this phone (convenience only; storage may be
+  // unavailable in private browsing, then the browser language is used).
+  const [locale, setLocaleState] = useState<Locale>(() => {
+    try {
+      const saved = localStorage.getItem('nookscanner.locale');
+      if (saved === 'en' || saved === 'ar') return saved;
+    } catch {
+      /* storage blocked */
+    }
+    return detectLocale(languages);
+  });
+  const setLocale = useCallback((l: Locale) => {
+    setLocaleState(l);
+    try {
+      localStorage.setItem('nookscanner.locale', l);
+    } catch {
+      /* storage blocked */
+    }
+  }, []);
   const [webgl] = useState(() => hasWebGL2());
   const token = parseGuestToken(pathname);
   const isDemo = /^\/demo\/?$/.test(pathname);
   const t = messages[locale];
+  const [result, setResult] = useState<LoadResult | null>(null);
+  const fetchGuide = useCallback(() => {
+    if (!token) return;
+    setResult(null);
+    void load(token).then(setResult);
+  }, [token, load]);
+  useEffect(fetchGuide, [fetchGuide]);
 
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -33,7 +61,20 @@ export function App({ pathname, languages }: AppProps) {
     // (VITE_DEV_SCENE_URL, never set in production builds; the file is never committed).
     const devScene = import.meta.env.VITE_DEV_SCENE_URL as string | undefined;
     const experience = devScene
-      ? { ...DEMO_EXPERIENCE, scene: { url: devScene, sizeBytes: 1 } }
+      ? {
+          ...DEMO_EXPERIENCE,
+          scene: {
+            url: devScene,
+            sizeBytes: 1,
+            // One pin 2 m in front of the starting camera, to exercise markers on a real scene.
+            hotspots: [
+              {
+                applianceId: DEMO_EXPERIENCE.appliances[0]!.id,
+                position: [0, 0, -2] as [number, number, number],
+              },
+            ],
+          },
+        }
       : DEMO_EXPERIENCE;
     return (
       <Experience
@@ -46,6 +87,17 @@ export function App({ pathname, languages }: AppProps) {
     );
   }
 
+  if (result?.kind === 'ok') {
+    return (
+      <Experience
+        experience={result.experience}
+        locale={locale}
+        onLocaleChange={setLocale}
+        webgl={webgl}
+      />
+    );
+  }
+
   return (
     <div className="nt-guest">
       <header className="nt-guest__bar">
@@ -53,18 +105,41 @@ export function App({ pathname, languages }: AppProps) {
         <button
           type="button"
           className="nt-guest__lang"
-          aria-label={t.languageToggleLabel}
           onClick={() => setLocale(locale === 'en' ? 'ar' : 'en')}
         >
-          {t.languageToggle}
+          {/* WCAG 2.5.3: the accessible name starts with the visible word. */}
+          <span lang={locale === 'en' ? 'ar' : 'en'}>{t.languageToggle}</span>
+          <span className="g-visually-hidden"> ({t.languageToggleLabel})</span>
         </button>
       </header>
       <main className="nt-guest__stage">
-        {token ? (
+        {token && !result ? (
           <section className="nt-guest__panel" aria-live="polite">
             <div className="nt-guest__spinner" aria-hidden="true" />
             <h1>{t.loadingTitle}</h1>
-            <p>{t.notConnected}</p>
+            <p>{t.loadingBody}</p>
+          </section>
+        ) : token && result ? (
+          <section className="nt-guest__panel" role="alert">
+            <h1>
+              {result.kind === 'not-found'
+                ? t.linkInactiveTitle
+                : result.kind === 'rate-limited'
+                  ? t.rateLimitedTitle
+                  : t.loadErrorTitle}
+            </h1>
+            <p>
+              {result.kind === 'not-found'
+                ? t.linkInactiveBody
+                : result.kind === 'rate-limited'
+                  ? t.rateLimitedBody
+                  : t.loadErrorBody}
+            </p>
+            {result.kind !== 'not-found' && (
+              <button type="button" className="nt-guest__retry" onClick={fetchGuide}>
+                {t.retry}
+              </button>
+            )}
           </section>
         ) : (
           <section className="nt-guest__panel">

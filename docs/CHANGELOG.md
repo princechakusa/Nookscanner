@@ -2,6 +2,13 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-22: Stage 9.2 guest 3D exploration, pins and highlight
+
+- `apps/guest/src/api.ts`: QR token -> guest-experience, validated; App states for inactive links, rate limits and errors (EN/AR, retry).
+- Scene3D: appliance pins (tap opens instructions), focus flight to the appliance's room viewpoint looking at it, pulsing highlight; guest schema `scene.hotspots`.
+- Fixed: language toggle accessible name (WCAG 2.5.3); language choice remembered.
+- Tests: guest 24, guest E2E 16/16, real-scene pins 2/2.
+
 ## 2026-11-22: Stage 9.1 guest Edge Functions
 
 - Migration `20261122001500_guest_access.sql`: guest lookup, rate limits (hashed keys), media frozen in the snapshot.

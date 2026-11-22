@@ -23,6 +23,18 @@ export interface Scene3DProps {
   onTooSlow?: () => void;
   /** NFR-PERF-03: full detail within 20 s; after that the guest is offered the list. */
   slowLoadMs?: number;
+  /** Appliance pins (9.2): tappable markers; `id` is the appliance id. */
+  hotspots?: SceneHotspot[] | undefined;
+  /** Appliance to show: the camera flies to its room, looks at it, and its marker pulses. */
+  focusId?: string | null | undefined;
+  onHotspot?: (applianceId: string) => void;
+}
+
+export interface SceneHotspot {
+  id: string;
+  label: string;
+  roomId: string;
+  position: Vec3;
 }
 
 export function Scene3D({
@@ -37,6 +49,9 @@ export function Scene3D({
   onFailed,
   onTooSlow,
   slowLoadMs = 20_000,
+  hotspots,
+  focusId,
+  onHotspot,
 }: Scene3DProps) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const host = useRef<HTMLDivElement>(null);
@@ -44,6 +59,7 @@ export function Scene3D({
   const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading');
   const viewerRef = useRef<Viewer | null>(null);
   const [slowLoad, setSlowLoad] = useState(false);
+  const markers = useRef(new Map<string, HTMLElement>());
   const tooSlow = useRef(onTooSlow);
   tooSlow.current = onTooSlow;
   // The room the camera is in (route start for the next transition).
@@ -111,6 +127,54 @@ export function Scene3D({
     return () => clearTimeout(timer);
   }, [state, slowLoadMs]);
 
+  // Markers follow the camera: projected every frame, written to the DOM without re-rendering.
+  useEffect(() => {
+    if (state !== 'ready' || !hotspots?.length) return;
+    let frame = 0;
+    const tick = () => {
+      const v = viewerRef.current;
+      if (v) {
+        for (const h of hotspots) {
+          const el = markers.current.get(h.id);
+          if (!el) continue;
+          const p = v.project(h.position);
+          el.style.transform = `translate(${p.x}px, ${p.y}px)`;
+          el.hidden = !p.visible;
+        }
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [state, hotspots]);
+
+  // Showing an appliance: walk to its room's viewpoint (through doorways) and look at it.
+  // Declared before the room effect: it claims the room first, so the two never fly at once.
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    const h = hotspots?.find((x) => x.id === focusId);
+    if (state !== 'ready' || !viewer || !h) return;
+    const from = atRoom.current;
+    atRoom.current = h.roomId;
+    let cancelled = false;
+    (async () => {
+      const nav = await import('@nookscanner/viewer');
+      if (cancelled) return;
+      const view = viewer.getView();
+      const stand = viewpoints?.find((v) => v.roomId === h.roomId)?.position ?? view.position;
+      const route = from ? (nav.roomRoute(from, h.roomId, doorways ?? []) ?? []) : [];
+      const reducedMotion =
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      void viewer.flyTo(nav.flightPath(view, { position: stand, target: h.position }, route), {
+        reducedMotion,
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [focusId, state, hotspots, viewpoints, doorways]);
+
   // Room chips: fly from the current room through the doorways on the route (navigation.ts).
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -158,6 +222,25 @@ export function Scene3D({
           )}
         </div>
       )}
+      {state === 'ready' &&
+        hotspots?.map((h) => (
+          <button
+            key={h.id}
+            type="button"
+            ref={(el) => {
+              if (el) markers.current.set(h.id, el);
+              else markers.current.delete(h.id);
+            }}
+            className={`g-pin${h.id === focusId ? ' g-pin--focus' : ''}`}
+            aria-label={h.label}
+            aria-pressed={h.id === focusId}
+            data-testid="guest-pin"
+            onClick={() => onHotspot?.(h.id)}
+          >
+            <span className="g-pin__dot" aria-hidden="true" />
+            <span className="g-pin__label">{h.label}</span>
+          </button>
+        ))}
       {state === 'ready' && (
         <div className="g-scene__controls">
           <button

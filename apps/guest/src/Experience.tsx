@@ -37,6 +37,24 @@ export function Experience({ experience, locale, onLocaleChange, webgl, demo }: 
     [experience, query, locale],
   );
   const open = experience.appliances.find((a) => a.id === openId) ?? null;
+  // Pins of appliances that are in this payload (published + verified), labelled in the language.
+  const pins = useMemo(() => {
+    const byId = new Map(experience.appliances.map((a) => [a.id, a]));
+    return (experience.scene?.hotspots ?? []).flatMap((h) => {
+      const a = byId.get(h.applianceId);
+      return a
+        ? [{ id: a.id, label: pick(a.name, locale), roomId: a.roomId, position: h.position }]
+        : [];
+    });
+  }, [experience, locale]);
+  const showAppliance = useCallback(
+    (id: string) => {
+      const a = experience.appliances.find((x) => x.id === id);
+      if (a) setRoomId(a.roomId);
+      setOpenId(id);
+    },
+    [experience],
+  );
   const roomName = (id: string) => {
     const r = experience.rooms.find((x) => x.id === id);
     return r ? pick(r.name, locale) : '';
@@ -104,6 +122,9 @@ export function Experience({ experience, locale, onLocaleChange, webgl, demo }: 
             }}
             onFailed={onSceneFailed}
             onTooSlow={onSceneSlow}
+            hotspots={pins}
+            focusId={openId}
+            onHotspot={showAppliance}
           />
         )}
         {viewerMessage && (

@@ -132,4 +132,50 @@ describe('Scene3D', () => {
       vi.useRealTimers();
     }
   });
+
+  it('shows tappable appliance pins and flies to look at the focused one (9.2)', async () => {
+    const flyTo = vi.fn().mockResolvedValue(undefined);
+    createViewer.mockResolvedValue({
+      stats: { tier: 'mid', loadMs: 1, firstFrameMs: 2, fps: 60 },
+      reset,
+      resize: vi.fn(),
+      lookAt: vi.fn(),
+      getView: () => ({ position: [0, 1.6, 0], target: [0, 1.6, -1] }),
+      project: () => ({ x: 120, y: 80, visible: true }),
+      flyTo,
+      dispose,
+    });
+    const onHotspot = vi.fn();
+    const hotspots = [
+      {
+        id: 'ac',
+        label: 'Living room AC',
+        roomId: 'liv',
+        position: [3, 2, -3] as [number, number, number],
+      },
+    ];
+    const props = {
+      url: 'https://cdn.test/s.sog',
+      labels,
+      viewpoints: [
+        { roomId: 'ent', position: [0, 1.6, 0], target: [0, 1.6, -1] },
+        { roomId: 'liv', position: [4, 1.6, -1], target: [4, 1.6, -2] },
+      ] as never,
+      doorways: [{ a: 'ent', b: 'liv', position: [2, 0, 0] }] as never,
+      hotspots,
+      onHotspot,
+    };
+    const { rerender } = render(<Scene3D {...props} roomId="ent" focusId={null} />);
+    const pin = await screen.findByRole('button', { name: 'Living room AC' });
+    fireEvent.click(pin);
+    expect(onHotspot).toHaveBeenCalledWith('ac');
+    rerender(<Scene3D {...props} roomId="liv" focusId="ac" />);
+    await vi.waitFor(() => expect(flyTo).toHaveBeenCalledTimes(1));
+    const path = flyTo.mock.calls[0]![0] as { position: number[]; target: number[] }[];
+    expect(path.at(-1)).toEqual({ position: [4, 1.6, -1], target: [3, 2, -3] });
+    expect(path[1]!.position).toEqual([2, 1.6, 0]); // through the doorway
+    expect(
+      screen.getByRole('button', { name: 'Living room AC' }).getAttribute('aria-pressed'),
+    ).toBe('true');
+  });
 });
