@@ -2,6 +2,13 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-22: Capture app fixes from device testing
+
+- Bug: walkthroughs stayed in `recording` after their video uploaded (the app marks the session `recording` before queueing; completion only advanced `uploading`), so no 3D job could start. Migration `20261122002100_session_uploaded_from_recording.sql` (trigger on upload completion, both backends, plus backfill; applied to hosted, 2 sessions freed). Regression test in `capture.test.ts` (capture, R2, migrations: 41/41).
+- The app now submits the walkthrough for 3D processing as soon as its upload finishes.
+- Native iOS navigation (react-navigation native stack): system back button and swipe back on every pushed screen; recording and review are full-screen without the swipe.
+- Appliances and instructions (EN/AR, verify) in the app, reachable from the apartment with a count; latest walkthrough status with a plain explanation; all screens scroll; dark status bar.
+
 ## 2026-11-22: Stage 5.7 raw footage on Cloudflare R2 (implemented)
 
 - Migrations `20261122001700_r2_raw_footage.sql`, `20261122001800_hmac_lint.sql`; Worker `services/uploads-worker` (deployed); dispatcher R2 reads; dashboard and app R2 uploads (ADR-025).

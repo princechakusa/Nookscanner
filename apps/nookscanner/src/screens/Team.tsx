@@ -21,7 +21,7 @@ interface Member {
  * Team: members and roles; invite by email. The invitation is bound to that email (database
  * rule); the invitee signs in with it and enters the code under Account > Join a company.
  */
-export function Team({ onBack }: { onBack: () => void }) {
+export function Team() {
   const [orgId, setOrgId] = useState<string | null>(null);
   const [members, setMembers] = useState<(Member & { name: string | null })[]>([]);
   const [me, setMe] = useState<string | null>(null);
@@ -95,20 +95,14 @@ export function Team({ onBack }: { onBack: () => void }) {
 
   return (
     <ScrollView
-      contentContainerStyle={[styles.screen, { flexGrow: 1, paddingBottom: 40 }]}
+      style={styles.scrollView}
+      contentContainerStyle={[
+        styles.scrollContent,
+        styles.pushed,
+        { flexGrow: 1, paddingBottom: 40 },
+      ]}
       keyboardShouldPersistTaps="handled"
     >
-      <Pressable
-        accessibilityRole="button"
-        onPress={onBack}
-        hitSlop={10}
-        style={{ minHeight: 44, justifyContent: 'center' }}
-      >
-        <Text style={{ color: colors.primary, fontSize: 16, fontWeight: '600' }}>‹ Account</Text>
-      </Pressable>
-      <Text accessibilityRole="header" style={styles.title}>
-        Team
-      </Text>
       {members.map((m) => (
         <View key={m.user_id} style={[styles.card, { flexDirection: 'row', alignItems: 'center' }]}>
           <View style={{ flex: 1 }}>

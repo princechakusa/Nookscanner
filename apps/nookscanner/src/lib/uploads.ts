@@ -280,6 +280,12 @@ export async function runQueue(
         const recording = new File(job.fileUri);
         if (recording.exists) recording.delete();
         await saveQueue((await loadQueue()).filter((j) => j.uploadId !== job.uploadId));
+        // Start the 3D tour straight away. If it cannot start now (role, quota, offline), the
+        // walkthrough screen offers "Create 3D tour" again.
+        await supabase.rpc('submit_scan_for_processing', { p_session: job.sessionId }).then(
+          () => undefined,
+          () => undefined,
+        );
       }
     }
   } finally {

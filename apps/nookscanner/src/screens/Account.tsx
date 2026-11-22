@@ -151,7 +151,8 @@ export function Account({
   const version = Constants.expoConfig?.version ?? '';
   return (
     <ScrollView
-      contentContainerStyle={[styles.screen, { flexGrow: 1, paddingBottom: 40 }]}
+      style={styles.scrollView}
+      contentContainerStyle={[styles.scrollContent, { flexGrow: 1, paddingBottom: 40 }]}
       keyboardShouldPersistTaps="handled"
     >
       <Text accessibilityRole="header" style={styles.title}>

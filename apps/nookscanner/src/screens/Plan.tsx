@@ -2,7 +2,7 @@ import { checkpointPlan, type PlanRoom, type PlanStep, type RoomType } from '@no
 import { useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { supabase } from '../lib/supabase.ts';
-import { ArrowIcon, Button, ErrorText, Screen, colors, styles } from '../ui.tsx';
+import { ArrowIcon, Button, ErrorText, colors, styles } from '../ui.tsx';
 import type { ApartmentItem } from './Apartments.tsx';
 
 export interface CaptureJob {
@@ -18,11 +18,9 @@ export interface CaptureJob {
  */
 export function Plan({
   apartment,
-  onBack,
   onStart,
 }: {
   apartment: ApartmentItem;
-  onBack: () => void;
   onStart: (job: CaptureJob) => void;
 }) {
   const [rooms, setRooms] = useState<PlanRoom[] | null>(null);
@@ -74,7 +72,8 @@ export function Plan({
   }
 
   return (
-    <Screen title={apartment.name}>
+    <View style={[styles.screen, styles.pushed, { paddingBottom: 32 }]}>
+      <Text style={[styles.text, { fontWeight: '700' }]}>{apartment.name}</Text>
       {error ? <ErrorText>{error}</ErrorText> : null}
       {rooms && rooms.length === 0 ? (
         <Text style={styles.text}>
@@ -82,7 +81,7 @@ export function Plan({
           these rooms".
         </Text>
       ) : null}
-      <ScrollView contentContainerStyle={{ gap: 8 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 8, paddingBottom: 12 }}>
         <Text style={styles.muted}>
           Daylight plus all lights on. Hold the phone sideways at chest height and walk slowly along
           the walls; capture every corner and the floor. You can pause at any time.
@@ -134,7 +133,6 @@ export function Plan({
         busy={busy}
         disabled={!rooms?.length}
       />
-      <Button label="Back" variant="secondary" onPress={onBack} />
-    </Screen>
+    </View>
   );
 }

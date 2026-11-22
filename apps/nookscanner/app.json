@@ -19,7 +19,7 @@
       },
       "usesAppleSignIn": true
     },
-    "plugins": ["expo-secure-store", "expo-apple-authentication"],
+    "plugins": ["expo-secure-store", "expo-apple-authentication", "expo-status-bar"],
     "owner": "princechakusa",
     "extra": {
       "eas": {

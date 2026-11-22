@@ -11,7 +11,7 @@ interface Property {
 }
 
 /** New apartment: building (existing or new), name, unit, layout -> rooms (dashboard rules, RLS). */
-export function NewApartment({ onBack, onCreated }: { onBack: () => void; onCreated: () => void }) {
+export function NewApartment({ onCreated }: { onCreated: () => void }) {
   const [properties, setProperties] = useState<Property[]>([]);
   const [orgId, setOrgId] = useState<string | null>(null);
   const [propertyId, setPropertyId] = useState<string | 'new'>('new');
@@ -87,21 +87,14 @@ export function NewApartment({ onBack, onCreated }: { onBack: () => void; onCrea
   const ready = name.trim() && (propertyId !== 'new' || building.trim());
   return (
     <ScrollView
-      contentContainerStyle={[styles.screen, { flexGrow: 1, paddingBottom: 40 }]}
+      style={styles.scrollView}
+      contentContainerStyle={[
+        styles.scrollContent,
+        styles.pushed,
+        { flexGrow: 1, paddingBottom: 40 },
+      ]}
       keyboardShouldPersistTaps="handled"
     >
-      <Pressable
-        accessibilityRole="button"
-        onPress={onBack}
-        hitSlop={10}
-        style={{ minHeight: 44, justifyContent: 'center' }}
-      >
-        <Text style={{ color: colors.primary, fontSize: 16, fontWeight: '600' }}>‹ Apartments</Text>
-      </Pressable>
-      <Text accessibilityRole="header" style={styles.title}>
-        New apartment
-      </Text>
-
       <Text style={styles.label}>Building</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {[

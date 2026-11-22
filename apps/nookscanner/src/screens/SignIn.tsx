@@ -129,7 +129,8 @@ export function SignIn() {
 
   return (
     <ScrollView
-      contentContainerStyle={[styles.screen, { paddingTop: 80, flexGrow: 1 }]}
+      style={styles.scrollView}
+      contentContainerStyle={[styles.scrollContent, { paddingTop: 80, flexGrow: 1 }]}
       keyboardShouldPersistTaps="handled"
     >
       <Logo />

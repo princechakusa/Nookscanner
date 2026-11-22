@@ -68,6 +68,73 @@ export function Button({
   );
 }
 
+/** Small uppercase section heading. */
+export function SectionTitle({ children }: { children: ReactNode }) {
+  return (
+    <Text accessibilityRole="header" style={styles.section}>
+      {children}
+    </Text>
+  );
+}
+
+/** Tappable list row: title, optional detail and a right-side value or count, with a chevron. */
+export function ListRow({
+  title,
+  detail,
+  value,
+  onPress,
+  tone = 'default',
+}: {
+  title: string;
+  detail?: string | undefined;
+  value?: string | undefined;
+  onPress: () => void;
+  tone?: 'default' | 'primary';
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={[title, value, detail].filter(Boolean).join(', ')}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.card,
+        {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          minHeight: 56,
+          backgroundColor: pressed ? colors.primarySoft : colors.surface,
+        },
+      ]}
+    >
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text
+          style={[
+            styles.text,
+            { fontWeight: '600', color: tone === 'primary' ? colors.primary : colors.ink },
+          ]}
+        >
+          {title}
+        </Text>
+        {detail ? <Text style={styles.muted}>{detail}</Text> : null}
+      </View>
+      {value ? (
+        <Text style={{ color: colors.muted, fontSize: 15, fontWeight: '600' }}>{value}</Text>
+      ) : null}
+      <Svg width={10} height={16} viewBox="0 0 10 16">
+        <Path
+          d="M2 2l6 6-6 6"
+          fill="none"
+          stroke={colors.muted}
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </Svg>
+    </Pressable>
+  );
+}
+
 export function ErrorText({ children }: { children: ReactNode }) {
   return (
     <Text accessibilityRole="alert" style={styles.error}>
@@ -78,6 +145,13 @@ export function ErrorText({ children }: { children: ReactNode }) {
 
 export const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.canvas, padding: 20, paddingTop: 64, gap: 12 },
+  // Scrolling screens: the ScrollView fills the screen (scrollView); its CONTENT grows with what
+  // is in it (scrollContent). Never put flex: 1 on scroll content: it pins it to the screen height
+  // and everything below the fold becomes unreachable.
+  scrollView: { flex: 1, backgroundColor: colors.canvas },
+  scrollContent: { flexGrow: 1, padding: 20, paddingTop: 64, paddingBottom: 48, gap: 12 },
+  // Screens under the native navigation header need far less top space than tab screens.
+  pushed: { paddingTop: 12 },
   title: { fontSize: 26, fontWeight: '700', color: colors.ink },
   text: { fontSize: 16, color: colors.ink, lineHeight: 22 },
   muted: { fontSize: 14, color: colors.muted, lineHeight: 20 },
@@ -103,6 +177,14 @@ export const styles = StyleSheet.create({
   error: { color: colors.danger, fontSize: 15 },
   warning: { color: colors.warning, fontSize: 14, lineHeight: 20 },
   label: { fontSize: 13, fontWeight: '600', color: colors.ink },
+  section: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginTop: 14,
+  },
   card: {
     backgroundColor: colors.surface,
     borderRadius: 12,

@@ -21,7 +21,7 @@ import {
 } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { supabase } from '../lib/supabase.ts';
-import { Button, ErrorText, colors, styles } from '../ui.tsx';
+import { Button, ErrorText, ListRow, SectionTitle, colors, styles } from '../ui.tsx';
 import type { ApartmentItem } from './Apartments.tsx';
 
 const GUEST_BASE = process.env.EXPO_PUBLIC_GUEST_URL ?? 'https://nookscanner-guest.pages.dev';
@@ -55,12 +55,12 @@ interface Scan {
 /** One apartment: record, rooms (add, rename, reorder, delete, top up), walkthroughs, guest QR. */
 export function ApartmentDetail({
   apartment,
-  onBack,
   onRecord,
   onOpenScan,
+  onAppliances,
 }: {
   apartment: ApartmentItem;
-  onBack: () => void;
+  onAppliances: () => void;
   onRecord: (a: ApartmentItem) => void;
   onOpenScan: (scanId: string, apartmentName: string) => void;
 }) {
@@ -74,10 +74,11 @@ export function ApartmentDetail({
   const [newType, setNewType] = useState<RoomType>('bedroom');
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [applianceCount, setApplianceCount] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setError('');
-    const [r, s, a, q] = await Promise.all([
+    const [r, s, a, q, ap] = await Promise.all([
       supabase
         .from('rooms')
         .select('id, organization_id, apartment_id, name_en, name_ar, room_type, sort_order')
@@ -98,7 +99,12 @@ export function ApartmentDetail({
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(1),
+      supabase
+        .from('appliances')
+        .select('id', { count: 'exact', head: true })
+        .eq('apartment_id', apartment.id),
     ]);
+    setApplianceCount(ap.count ?? 0);
     if (r.error) setError('Could not load the rooms. Pull down to try again.');
     setRooms((r.data ?? []) as Room[]);
     setScans((s.data ?? []) as Scan[]);
@@ -220,7 +226,12 @@ export function ApartmentDetail({
     .join(' · ');
   return (
     <ScrollView
-      contentContainerStyle={[styles.screen, { flexGrow: 1, paddingBottom: 40 }]}
+      style={styles.scrollView}
+      contentContainerStyle={[
+        styles.scrollContent,
+        styles.pushed,
+        { flexGrow: 1, paddingBottom: 40 },
+      ]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -231,17 +242,6 @@ export function ApartmentDetail({
         />
       }
     >
-      <Pressable
-        accessibilityRole="button"
-        onPress={onBack}
-        hitSlop={10}
-        style={{ minHeight: 44, justifyContent: 'center' }}
-      >
-        <Text style={{ color: colors.primary, fontSize: 16, fontWeight: '600' }}>‹ Apartments</Text>
-      </Pressable>
-      <Text accessibilityRole="header" style={styles.title}>
-        {apartment.name}
-      </Text>
       {where ? <Text style={styles.muted}>{where}</Text> : null}
       <Button
         label={rooms.length ? 'Record a walkthrough' : 'Add rooms first'}
@@ -249,8 +249,27 @@ export function ApartmentDetail({
         disabled={rooms.length === 0}
       />
       {error ? <ErrorText>{error}</ErrorText> : null}
+      {scans[0] ? (
+        <ListRow
+          title="Latest walkthrough"
+          detail={statusHelp(scans[0].status)}
+          value={SCAN_LABEL[scans[0].status] ?? scans[0].status}
+          tone="primary"
+          onPress={() => onOpenScan(scans[0]!.id, apartment.name)}
+        />
+      ) : null}
+      <ListRow
+        title="Appliances and instructions"
+        detail={
+          applianceCount === 0
+            ? 'None yet. Add the AC, TV, Wi-Fi and kitchen so guests know how to use them.'
+            : 'What guests can tap in the 3D tour, with how-to steps.'
+        }
+        value={applianceCount === null ? undefined : String(applianceCount)}
+        onPress={onAppliances}
+      />
 
-      <Section title={`Rooms (${rooms.length})`} />
+      <SectionTitle>{`Rooms (${rooms.length})`}</SectionTitle>
       {rooms.map((r, i) => (
         <View key={r.id} style={[styles.card, { gap: 8 }]}>
           {editing === r.id ? (
@@ -344,33 +363,24 @@ export function ApartmentDetail({
         />
       </View>
 
-      <Section title="Walkthroughs" />
+      <SectionTitle>Walkthroughs</SectionTitle>
       {scans.length === 0 ? (
-        <Text style={styles.muted}>No walkthroughs yet.</Text>
+        <Text style={styles.muted}>
+          No walkthroughs yet. After you record, the video uploads from the Uploads tab; then the 3D
+          tour is created (about 20 to 40 minutes).
+        </Text>
       ) : (
         scans.map((s) => (
-          <Pressable
+          <ListRow
             key={s.id}
-            accessibilityRole="button"
+            title={new Date(s.created_at).toLocaleString()}
+            value={SCAN_LABEL[s.status] ?? s.status}
             onPress={() => onOpenScan(s.id, apartment.name)}
-            style={[styles.card, { flexDirection: 'row', alignItems: 'center' }]}
-          >
-            <Text style={[styles.text, { flex: 1 }]}>
-              {new Date(s.created_at).toLocaleString()}
-            </Text>
-            <Text
-              style={{
-                color: s.status === 'failed' ? colors.danger : colors.primary,
-                fontWeight: '700',
-              }}
-            >
-              {SCAN_LABEL[s.status] ?? s.status} ›
-            </Text>
-          </Pressable>
+          />
         ))
       )}
 
-      <Section title="Guest QR code" />
+      <SectionTitle>Guest QR code</SectionTitle>
       {qr ? (
         <View style={[styles.card, { alignItems: 'center', gap: 10 }]}>
           <View
@@ -401,12 +411,25 @@ export function ApartmentDetail({
   );
 }
 
-function Section({ title }: { title: string }) {
-  return (
-    <Text accessibilityRole="header" style={[styles.label, { fontSize: 15, marginTop: 8 }]}>
-      {title}
-    </Text>
-  );
+/** One line on what the walkthrough status means for the user. */
+function statusHelp(status: string): string {
+  switch (status) {
+    case 'draft':
+    case 'recording':
+    case 'uploading':
+      return 'Still uploading. Keep the app open on Wi-Fi (see the Uploads tab).';
+    case 'uploaded':
+      return 'Uploaded. Open it and tap Create 3D tour.';
+    case 'submitted':
+    case 'processing':
+      return 'The 3D tour is being created; this takes about 20 to 40 minutes.';
+    case 'succeeded':
+      return 'The 3D tour is ready. Open it to see the preview.';
+    case 'failed':
+      return 'Creating the 3D tour failed. Open it to see why.';
+    default:
+      return '';
+  }
 }
 function Small({
   label,

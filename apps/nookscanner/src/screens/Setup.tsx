@@ -71,7 +71,8 @@ export function Setup({ email, onDone }: { email: string | null; onDone: () => v
   const ready = company.trim() && building.trim() && apartment.trim();
   return (
     <ScrollView
-      contentContainerStyle={[styles.screen, { paddingTop: 72, flexGrow: 1 }]}
+      style={styles.scrollView}
+      contentContainerStyle={[styles.scrollContent, { paddingTop: 72, flexGrow: 1 }]}
       keyboardShouldPersistTaps="handled"
     >
       <Text accessibilityRole="header" style={styles.title}>

@@ -8,7 +8,7 @@ import {
   type ArtefactCheck,
 } from '@nookscanner/shared';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, Switch, Text, TextInput, View } from 'react-native';
+import { RefreshControl, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 import { supabase } from '../lib/supabase.ts';
 import { Button, ErrorText, colors, styles } from '../ui.tsx';
 
@@ -46,12 +46,10 @@ const CHECK_TEXT = { pass: 'Good', warn: 'Check', fail: 'Poor', missing: 'Not me
 export function ScanDetail({
   scanId,
   apartmentName,
-  onBack,
   onRecordAgain,
 }: {
   scanId: string;
   apartmentName: string;
-  onBack: () => void;
   onRecordAgain: () => void;
 }) {
   const [status, setStatus] = useState<string>('');
@@ -139,7 +137,12 @@ export function ScanDetail({
 
   return (
     <ScrollView
-      contentContainerStyle={[styles.screen, { flexGrow: 1, paddingBottom: 40 }]}
+      style={styles.scrollView}
+      contentContainerStyle={[
+        styles.scrollContent,
+        styles.pushed,
+        { flexGrow: 1, paddingBottom: 40 },
+      ]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -150,19 +153,7 @@ export function ScanDetail({
         />
       }
     >
-      <Pressable
-        accessibilityRole="button"
-        onPress={onBack}
-        hitSlop={10}
-        style={{ minHeight: 44, justifyContent: 'center' }}
-      >
-        <Text style={{ color: colors.primary, fontSize: 16, fontWeight: '600' }}>
-          ‹ {apartmentName}
-        </Text>
-      </Pressable>
-      <Text accessibilityRole="header" style={styles.title}>
-        Walkthrough
-      </Text>
+      <Text style={styles.muted}>{apartmentName}</Text>
 
       <Step
         title="1. Video uploaded"

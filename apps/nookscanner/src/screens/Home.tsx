@@ -75,7 +75,8 @@ export function Home({
 
   return (
     <ScrollView
-      contentContainerStyle={[styles.screen, { flexGrow: 1 }]}
+      style={styles.scrollView}
+      contentContainerStyle={[styles.scrollContent, { flexGrow: 1 }]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}

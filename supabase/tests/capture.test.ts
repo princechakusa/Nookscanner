@@ -702,6 +702,25 @@ describe('media uploads', () => {
     expect(allowed).toBe(false);
   });
 
+  it('a session the app marked recording becomes uploaded when its upload completes', async () => {
+    const session = await newSession(u.managerA, aptA1);
+    // What the capture app does after recording, before it queues the upload.
+    await asUser(db, u.managerA, (tx) =>
+      tx.query(`update public.scan_sessions set status = 'recording' where id = $1`, [session]),
+    );
+    const up = await registerUpload(u.managerA, session, 'video/mp4', 1000);
+    await storePart(up.part_path, 1000);
+    await asUser(db, u.managerA, (tx) =>
+      tx.query(`select public.complete_media_upload_part($1, 1)`, [up.id]),
+    );
+    const state = await one(
+      db.query<{ status: string }>(`select status::text from public.scan_sessions where id = $1`, [
+        session,
+      ]),
+    );
+    expect(state.status).toBe('uploaded');
+  });
+
   it('other orgs, viewers and editors cannot register uploads; no direct inserts', async () => {
     const session = await newSession(u.managerA, aptA1);
     for (const user of [u.ownerB, u.viewerA, u.editorA]) {
