@@ -9,6 +9,9 @@ import { Review } from './screens/Review.tsx';
 import { Setup } from './screens/Setup.tsx';
 import { SignIn } from './screens/SignIn.tsx';
 import { Account } from './screens/Account.tsx';
+import { ApartmentDetail } from './screens/ApartmentDetail.tsx';
+import { NewApartment } from './screens/NewApartment.tsx';
+import { ScanDetail } from './screens/ScanDetail.tsx';
 import { Home } from './screens/Home.tsx';
 import { Uploads } from './screens/Uploads.tsx';
 import { loadQueue } from './lib/uploads.ts';
@@ -18,6 +21,9 @@ import { Screen } from './ui.tsx';
 
 type Route =
   | { name: 'tabs' }
+  | { name: 'apartment'; apartment: ApartmentItem }
+  | { name: 'newApartment' }
+  | { name: 'scan'; scanId: string; apartmentName: string; apartment?: ApartmentItem | undefined }
   | { name: 'plan'; apartment: ApartmentItem }
   | { name: 'capture'; job: CaptureJob }
   | { name: 'review'; result: CaptureResult };
@@ -31,6 +37,8 @@ export default function App() {
   const [route, setRoute] = useState<Route>({ name: 'tabs' });
   const [tab, setTab] = useState<Tab>('home');
   const [uploading, setUploading] = useState(0);
+  // Bumped after a new apartment so the list reloads.
+  const [apartmentsVersion, setApartmentsVersion] = useState(0);
   // Badge on the Uploads tab, refreshed whenever the tabs are shown.
   useEffect(() => {
     if (route.name === 'tabs') void loadQueue().then((q) => setUploading(q.length));
@@ -80,8 +88,10 @@ export default function App() {
             )}
             {tab === 'apartments' && (
               <Apartments
-                onSelect={(apartment) => setRoute({ name: 'plan', apartment })}
+                key={apartmentsVersion}
+                onSelect={(apartment) => setRoute({ name: 'apartment', apartment })}
                 onUploads={() => setTab('uploads')}
+                onNew={() => setRoute({ name: 'newApartment' })}
               />
             )}
             {tab === 'uploads' && <Uploads onDone={() => setTab('home')} />}
@@ -91,6 +101,47 @@ export default function App() {
         </View>
       );
     }
+    case 'apartment':
+      return (
+        <ApartmentDetail
+          apartment={route.apartment}
+          onBack={() => setRoute({ name: 'tabs' })}
+          onRecord={(apartment) => setRoute({ name: 'plan', apartment })}
+          onOpenScan={(scanId, apartmentName) =>
+            setRoute({ name: 'scan', scanId, apartmentName, apartment: route.apartment })
+          }
+        />
+      );
+    case 'newApartment':
+      return (
+        <NewApartment
+          onBack={() => setRoute({ name: 'tabs' })}
+          onCreated={() => {
+            setApartmentsVersion((v) => v + 1);
+            setTab('apartments');
+            setRoute({ name: 'tabs' });
+          }}
+        />
+      );
+    case 'scan':
+      return (
+        <ScanDetail
+          scanId={route.scanId}
+          apartmentName={route.apartmentName}
+          onBack={() =>
+            setRoute(
+              route.apartment
+                ? { name: 'apartment', apartment: route.apartment }
+                : { name: 'tabs' },
+            )
+          }
+          onRecordAgain={() =>
+            setRoute(
+              route.apartment ? { name: 'plan', apartment: route.apartment } : { name: 'tabs' },
+            )
+          }
+        />
+      );
     case 'plan':
       return (
         <Plan

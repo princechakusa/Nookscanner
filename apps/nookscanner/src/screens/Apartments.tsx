@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Text, TextInput, View } from 'react-native';
 import { supabase } from '../lib/supabase.ts';
 import { loadQueue } from '../lib/uploads.ts';
 import { Button, ErrorText, HomeIcon, Screen, colors, styles } from '../ui.tsx';
@@ -16,10 +16,13 @@ export interface ApartmentItem {
 export function Apartments({
   onSelect,
   onUploads,
+  onNew,
 }: {
   onSelect: (a: ApartmentItem) => void;
   onUploads: () => void;
+  onNew: () => void;
 }) {
+  const [query, setQuery] = useState('');
   const [items, setItems] = useState<ApartmentItem[] | null>(null);
   const [pending, setPending] = useState(0);
   const [error, setError] = useState('');
@@ -64,7 +67,18 @@ export function Apartments({
   }
 
   return (
-    <Screen title="Choose an apartment">
+    <Screen title="Apartments">
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        <TextInput
+          style={[styles.input, { flex: 1 }]}
+          accessibilityLabel="Search apartments"
+          placeholder="Search by name, building or unit"
+          value={query}
+          onChangeText={setQuery}
+          autoCapitalize="none"
+        />
+      </View>
+      <Button label="+ New apartment" variant="secondary" onPress={onNew} />
       {pending > 0 ? (
         <Pressable
           accessibilityRole="button"
@@ -83,12 +97,14 @@ export function Apartments({
       {error ? <ErrorText>{error}</ErrorText> : null}
       {items && items.length === 0 ? (
         <Text style={styles.muted}>
-          No apartments yet. Add one in the Nookscanner dashboard, set its layout and create its
-          rooms.
+          No apartments yet. Tap “New apartment” to add one; its rooms are created from the layout.
         </Text>
       ) : null}
       <FlatList
-        data={items ?? []}
+        data={(items ?? []).filter((a) => {
+          const q = query.trim().toLowerCase();
+          return !q || [a.name, a.property, a.unit ?? ''].some((v) => v.toLowerCase().includes(q));
+        })}
         keyExtractor={(a) => a.id}
         contentContainerStyle={{ gap: 10 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} />}
@@ -134,7 +150,6 @@ export function Apartments({
           );
         }}
       />
-      <Button label="Sign out" variant="secondary" onPress={() => void supabase.auth.signOut()} />
     </Screen>
   );
 }

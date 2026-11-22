@@ -39,3 +39,4 @@ export * from './quality.ts';
 export * from './upload-queue.ts';
 export * from './scene-quality.ts';
 export * from './markdown.ts';
+export * from './processing-labels.ts';
