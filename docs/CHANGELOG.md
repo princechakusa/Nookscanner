@@ -2,6 +2,11 @@
 
 All notable changes. Newest first. Each stage entry lists implemented items, tests and results (real outputs only).
 
+## 2026-11-22: Stage 9.3 guest search (EN/AR)
+
+- `searchAppliances`: word-based matching across names, aliases and room names; Arabic article and digit normalisation.
+- Fixed: Arabic-Indic digits were stripped as if they were diacritics.
+
 ## 2026-11-22: Stage 9.2 guest 3D exploration, pins and highlight
 
 - `apps/guest/src/api.ts`: QR token -> guest-experience, validated; App states for inactive links, rate limits and errors (EN/AR, retry).

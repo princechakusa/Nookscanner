@@ -134,19 +134,37 @@ export function pick(value: Localized, locale: GuestLocale): string {
   return locale === 'ar' && value.ar ? value.ar : value.en;
 }
 
-/** Arabic search normalisation: strip diacritics/tatweel, unify alef/yaa/taa marbuta forms. */
+/**
+ * Search normalisation (EN/AR): lower case, NFKC, Arabic diacritics/tatweel removed, alef/yaa/
+ * taa-marbuta forms unified, Arabic-Indic digits to 0-9, punctuation to spaces.
+ */
 export function normalizeQuery(input: string): string {
   return input
     .toLowerCase()
     .normalize('NFKC')
+    // Harakat U+064B-U+065F, superscript alef U+0670, tatweel U+0640 (NOT the digits U+0660-9).
     .replace(/[ً-ٰٟـ]/g, '')
     .replace(/[إأآٱ]/g, 'ا')
     .replace(/ى/g, 'ي')
     .replace(/ة/g, 'ه')
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
     .replace(/[^\p{L}\p{N}\s]/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
+
+/** Words of a normalised text; the Arabic article "ال" is dropped ("المكيف" ~ "مكيف"). */
+function words(normalized: string): string[] {
+  return normalized
+    .split(' ')
+    .filter(Boolean)
+    .map((w) => (w.length > 3 && w.startsWith('ال') ? w.slice(2) : w));
+}
+
+/** Every query word is the start of some candidate word. */
+const allPrefixed = (query: string[], candidates: string[]) =>
+  query.every((q) => candidates.some((c) => c.startsWith(q)));
 
 export interface SearchHit {
   appliance: GuestAppliance;
@@ -166,32 +184,36 @@ export function searchAppliances(
 ): SearchHit[] {
   const q = normalizeQuery(query);
   if (!q) return [];
+  const qWords = words(q);
   const rooms = new Map(experience.rooms.map((r) => [r.id, r]));
   const hits: Array<SearchHit & { score: number }> = [];
   for (const appliance of experience.appliances) {
-    const names = [appliance.name.en, appliance.name.ar ?? ''].map(normalizeQuery);
+    const names = [appliance.name.en, appliance.name.ar ?? ''].map(normalizeQuery).filter(Boolean);
+    const nameWords = names.flatMap(words);
+    const room = rooms.get(appliance.roomId);
+    const roomWords = room
+      ? [room.name.en, room.name.ar ?? ''].map(normalizeQuery).flatMap(words)
+      : [];
     const aliases = [...appliance.aliases.en, ...appliance.aliases.ar];
     let score = 0;
     let matchedAlias: string | undefined;
-    if (names.some((n) => n === q)) score = 3;
-    else if (names.some((n) => n.split(' ').some((w) => w.startsWith(q)) || n.includes(q)))
-      score = 2;
+    if (names.some((n) => n === q)) score = 4;
+    else if (allPrefixed(qWords, nameWords) || names.some((n) => n.includes(q))) score = 3;
+    else if (allPrefixed(qWords, [...nameWords, ...roomWords])) score = 2;
     else {
-      const alias = aliases.find((a) => {
-        const n = normalizeQuery(a);
-        return n === q || n.startsWith(q) || n.split(' ').some((w) => w.startsWith(q));
-      });
-      if (alias) {
-        score = 1;
-        matchedAlias = alias;
+      // Aliases ("ac", "مكيف"), optionally narrowed by room words ("ac bedroom").
+      for (const alias of aliases) {
+        const aliasWords = words(normalizeQuery(alias));
+        const rest = qWords.filter((w) => !aliasWords.some((a) => a.startsWith(w)));
+        if (rest.length < qWords.length && allPrefixed(rest, [...nameWords, ...roomWords])) {
+          score = 1;
+          matchedAlias = alias;
+          break;
+        }
       }
     }
     if (score > 0) {
-      const hit: SearchHit & { score: number } = {
-        appliance,
-        room: rooms.get(appliance.roomId),
-        score,
-      };
+      const hit: SearchHit & { score: number } = { appliance, room, score };
       if (matchedAlias) hit.matchedAlias = matchedAlias;
       hits.push(hit);
     }

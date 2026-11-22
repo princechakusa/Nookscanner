@@ -97,3 +97,39 @@ describe('appliance search (SR, DESIGN_SYSTEM 9.4)', () => {
     expect(pick({ en: 'Oven', ar: 'فرن' }, 'ar')).toBe('فرن');
   });
 });
+
+describe('search 9.3: EN/AR, room words, Arabic spelling variants', () => {
+  const names = (q: string, locale: 'en' | 'ar' = 'en') =>
+    searchAppliances(exp, q, locale).map((h) => h.appliance.name.en);
+
+  it('"AC" returns every AC with its own room (acceptance)', () => {
+    const hits = searchAppliances(exp, 'AC', 'en');
+    expect(hits.map((h) => [h.appliance.name.en, h.room?.name.en])).toEqual([
+      ['Living room AC', 'Living room'],
+      ['Bedroom AC', 'Bedroom 1'],
+    ]);
+  });
+
+  it('room words narrow the result, in any order', () => {
+    expect(names('ac bedroom')).toEqual(['Bedroom AC']);
+    expect(names('living ac')).toEqual(['Living room AC']);
+    expect(names('air conditioner living')).toEqual(['Living room AC']);
+    expect(names('ac kitchen')).toEqual([]);
+  });
+
+  it('Arabic: the article, diacritics, alef forms and Arabic-Indic digits do not matter', () => {
+    expect(names('المكيف', 'ar')).toEqual(['Living room AC', 'Bedroom AC']);
+    expect(names('مُكَيِّف', 'ar')).toEqual(['Living room AC', 'Bedroom AC']);
+    expect(names('مكيف النوم', 'ar')).toEqual(['Bedroom AC']);
+    expect(names('مكيف غرفة النوم 1', 'ar')).toEqual(['Bedroom AC']);
+    expect(names('فرن', 'ar')).toEqual(['Oven']);
+    expect(normalizeQuery('غرفة النوم ١')).toBe('غرفه النوم 1');
+    expect(normalizeQuery('أإآ')).toBe('ااا');
+  });
+
+  it('mixes languages and keeps aliases visible', () => {
+    const [hit] = searchAppliances(exp, 'تكييف', 'ar');
+    expect(hit?.appliance.name.en).toBe('Bedroom AC');
+    expect(hit?.matchedAlias).toBe('تكييف');
+  });
+});
