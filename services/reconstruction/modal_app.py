@@ -91,30 +91,44 @@ def reconstruct(raw_job: dict) -> dict:
 
 
 @app.function(image=endpoint_image, secrets=[secret], timeout=60)
-@modal.fastapi_endpoint(method="POST")
-async def submit(request):  # type: ignore[no-untyped-def]
+@modal.asgi_app()
+def submit():  # type: ignore[no-untyped-def]
+    """Web endpoint (POST /). The handler is a plain Starlette route: it receives the request
+    object directly. As a FastAPI-inspected handler, `request` (untyped, or typed but
+    unresolvable because of `from __future__ import annotations`) became a required query field
+    and every dispatch got 422."""
+    from fastapi import FastAPI
     from fastapi.responses import JSONResponse
 
     from nookscanner_reconstruction.contract import ContractError, parse_job_request
     from nookscanner_reconstruction.runner import SIGNATURE_HEADER, TIMESTAMP_HEADER
     from nookscanner_reconstruction.signing import verify_payload
 
-    body = (await request.body()).decode("utf-8", errors="replace")
-    if len(body) > 512 * 1024:
-        return JSONResponse({"error": {"code": "PAYLOAD_TOO_LARGE"}}, status_code=413)
-    try:
-        timestamp = int(request.headers.get(TIMESTAMP_HEADER, "0"))
-    except ValueError:
-        timestamp = 0
-    ok, _reason = verify_payload(
-        os.environ["WORKER_HMAC_SECRET"], timestamp, body, request.headers.get(SIGNATURE_HEADER, "")
-    )
-    if not ok:
-        return JSONResponse({"error": {"code": "UNAUTHORIZED"}}, status_code=401)
-    try:
-        raw = json.loads(body)
-        parse_job_request(raw)
-    except (json.JSONDecodeError, ContractError):
-        return JSONResponse({"error": {"code": "VALIDATION_FAILED"}}, status_code=400)
-    await reconstruct.spawn.aio(raw)
-    return JSONResponse({"accepted": True}, status_code=202)
+    web = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+
+    async def handle(request):  # type: ignore[no-untyped-def]
+        body = (await request.body()).decode("utf-8", errors="replace")
+        if len(body) > 512 * 1024:
+            return JSONResponse({"error": {"code": "PAYLOAD_TOO_LARGE"}}, status_code=413)
+        try:
+            timestamp = int(request.headers.get(TIMESTAMP_HEADER, "0"))
+        except ValueError:
+            timestamp = 0
+        ok, _reason = verify_payload(
+            os.environ["WORKER_HMAC_SECRET"],
+            timestamp,
+            body,
+            request.headers.get(SIGNATURE_HEADER, ""),
+        )
+        if not ok:
+            return JSONResponse({"error": {"code": "UNAUTHORIZED"}}, status_code=401)
+        try:
+            raw = json.loads(body)
+            parse_job_request(raw)
+        except (json.JSONDecodeError, ContractError):
+            return JSONResponse({"error": {"code": "VALIDATION_FAILED"}}, status_code=400)
+        await reconstruct.spawn.aio(raw)
+        return JSONResponse({"accepted": True}, status_code=202)
+
+    web.add_route("/", handle, methods=["POST"])
+    return web

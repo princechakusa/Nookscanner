@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import shutil
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 
+from nookscanner_reconstruction import validate
 from nookscanner_reconstruction.validate import (
     BLOCK,
     INFO,
@@ -256,6 +258,20 @@ class TierSampleTests(unittest.TestCase):
         out = d / "joined.mov"
         concat_parts(parts, out, hashlib.sha256(data).hexdigest())
         self.assertEqual(validate_file(out).to_dict(), {**validate_file(self.t2).to_dict(), "facts": {**validate_file(self.t2).facts}})
+
+
+
+class DeviceTiersPathTest(unittest.TestCase):
+    def test_env_override_wins_and_default_points_at_the_repository(self) -> None:
+        old = os.environ.pop("NOOKSCANNER_DEVICE_TIERS", None)
+        try:
+            self.assertTrue(validate.device_tiers_path().is_file())
+            os.environ["NOOKSCANNER_DEVICE_TIERS"] = "/elsewhere/tiers.json"
+            self.assertEqual(validate.device_tiers_path(), Path("/elsewhere/tiers.json"))
+        finally:
+            os.environ.pop("NOOKSCANNER_DEVICE_TIERS", None)
+            if old is not None:
+                os.environ["NOOKSCANNER_DEVICE_TIERS"] = old
 
 
 if __name__ == "__main__":

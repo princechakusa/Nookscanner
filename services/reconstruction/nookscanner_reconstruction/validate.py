@@ -50,17 +50,22 @@ class Gates:
 
 DEFAULT_GATES = Gates()
 
-# Device tiers are shared with packages/shared (capture profiles). The container image copies the
-# file next to the package; locally it is read from the repository (override: env variable).
-_TIERS_FILE = Path(
-    os.environ.get(
-        "NOOKSCANNER_DEVICE_TIERS",
-        Path(__file__).resolve().parents[3] / "packages" / "shared" / "src" / "device-tiers.json",
-    )
-)
+# Device tiers are shared with packages/shared (capture profiles). The GPU image copies the file
+# and sets NOOKSCANNER_DEVICE_TIERS; locally it is read from the repository. Resolved lazily: in a
+# Modal container this module sits at /root/nookscanner_reconstruction, which has no
+# parents[3], and computing that at import crashed every container on start-up.
+def device_tiers_path() -> Path:
+    env = os.environ.get("NOOKSCANNER_DEVICE_TIERS")
+    if env:
+        return Path(env)
+    here = Path(__file__).resolve()
+    if len(here.parents) > 3:
+        return here.parents[3] / "packages" / "shared" / "src" / "device-tiers.json"
+    return here.parent / "device-tiers.json"
 
 
-def load_device_tiers(path: Path = _TIERS_FILE) -> dict[str, Any]:
+def load_device_tiers(path: Path | None = None) -> dict[str, Any]:
+    path = path or device_tiers_path()
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     if data.get("version") != 1 or len(data.get("tiers", [])) != 5:
         raise ValueError("unsupported device tier table")

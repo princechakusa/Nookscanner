@@ -197,6 +197,8 @@ Decision 2026-11-20 (user): **stay on the Supabase Free plan** (no Pro). Uploads
 9. **Guest 3D on real devices (Stage 7.1/7.5 acceptance):** once the pilot apartment is processed, open its guest link on your iPhone 16 Pro Max, the older iPhone and an Android phone (and a tablet if you have one); the page records load time, first frame, fps and quality level. Until then nothing is needed.
 8. **Capture app on real iPhones (Stage 5.4 acceptance):** follow `docs/CAPTURE_TEST_SCRIPT.md` section 1 (`cd apps/nookscanner`, `npx eas-cli device:create` for each test iPhone, `npx eas-cli build --profile development --platform ios`, install, `npx expo start --dev-client`), run the steps on the pilot iPhone 16 Pro Max and one older/non-Pro iPhone, and send back the results table. Uses your free EAS build quota; nothing is bought.
 
+13. **Redeploy the Modal worker (KI-036, 2026-11-23):** the 422 fix for `submit` is committed but the agent's `modal deploy` was refused by the permission check. Run `$env:PYTHONIOENCODING='utf-8'; python -m modal deploy services/reconstruction/modal_app.py` in a VS Code terminal, or allow the agent to run it; no walkthrough can start processing until this is deployed.
+
 ## 25. Session log
 | Date | Session summary |
 |---|---|
@@ -220,3 +222,4 @@ Decision 2026-11-20 (user): **stay on the Supabase Free plan** (no Pro). Uploads
 | 2026-11-20 (cont.) | Stage 5.6 background resumable app upload (shared queue + native background tasks); fixed a CI lint error from 5.5. |
 | 2026-11-20 (cont.) | Stage 6.1 reconstruction pipeline implemented and CPU-tested end to end (worker 53); GPU run blocked on Modal. |
 | 2026-11-21 | Stages 7.3 (alignment, implemented) and 7.4 (rooms, viewpoints, transitions, DONE): migrations 0800/0900, real-scene E2E; fixed scene reload on save, doorway/viewpoint heights. Modal logged in, worker secret set in Supabase + Modal; first deploy building. |
+| 2026-11-23 | Worker `submit` 422 fix (asgi_app Starlette route) and lazy tier-table path verified (worker 66/66); Modal redeploy refused by the permission check, added as Blocked on user 13 / KI-036. |
